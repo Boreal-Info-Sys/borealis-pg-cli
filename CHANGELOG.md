@@ -1,7 +1,7 @@
 # Change Log
 This project adheres to [Semantic Versioning](http://semver.org/). All notable changes will be documented in this file.
 
-## [Unreleased](https://github.com/OldSneerJaw/borealis-pg-cli/compare/v1.6.5...HEAD)
+## [1.6.6](https://github.com/OldSneerJaw/borealis-pg-cli/compare/v1.6.5...v1.6.6)
 - Fixed: Fall back to 127.0.0.1 when pg-tunnel.borealis-data.com cannot be resolved
 
 ## [1.6.5](https://github.com/OldSneerJaw/borealis-pg-cli/compare/v1.6.4...v1.6.5)
