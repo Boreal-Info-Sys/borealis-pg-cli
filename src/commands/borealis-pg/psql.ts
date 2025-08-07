@@ -10,7 +10,7 @@ import {
   cliOptions,
   consoleColours,
   formatCliOptionName,
-  localPgHostname,
+  getLocalPgHost,
   portOptionName,
   processAddonAttachmentInfo,
   writeAccessOptionName,
@@ -85,8 +85,10 @@ pgAdmin).`
       addonInfo,
       flags[writeAccessOptionName])
 
+    const localPgHost = await getLocalPgHost()
+
     this.executePsql(
-      {ssh: sshConnInfo, db: dbConnInfo, localPgPort: flags.port},
+      {ssh: sshConnInfo, db: dbConnInfo, localPgHost, localPgPort: flags.port},
       customBinaryPath ?? 'psql')
 
     // Prevent Ctrl+C from ending the process
@@ -139,7 +141,7 @@ pgAdmin).`
       sshClient => tunnelServices.childProcessFactory.spawn(psqlPath, {
         env: {
           ...tunnelServices.nodeProcess.env,
-          PGHOST: localPgHostname,
+          PGHOST: connInfo.localPgHost,
           PGPORT: connInfo.localPgPort.toString(),
           PGDATABASE: connInfo.db.dbName,
           PGUSER: connInfo.db.dbUsername,

@@ -3,10 +3,19 @@ import {flags} from '@heroku-cli/command'
 import {AddOnAttachment} from '@heroku-cli/schema'
 import {Args} from '@oclif/core'
 import dotenv from 'dotenv'
+import dns from 'node:dns/promises'
 import notifier from 'node-notifier'
 import path from 'path'
 
-dotenv.config({path: path.join(__dirname, '..', '.env')})
+dotenv.config({path: path.join(__dirname, '..', '.env'), quiet: true})
+
+const loopbackAddress = '127.0.0.1'
+
+// The corresponding DNS A record points to 127.0.0.1, just like localhost, so the result is
+// functionally identical (the client connects to the remote server through the local port
+// forwarding tunnel) but using this domain name should result in a less odd-looking connection
+// hostname and URL from a user's perspective than using "localhost" would
+const defaultLocalPgHostname = 'pg-tunnel.borealis-data.com'
 
 /* istanbul ignore next */
 export const addonServiceName = process.env.BOREALIS_PG_ADDON_SERVICE_NAME || 'borealis-pg'
@@ -22,12 +31,6 @@ export const consoleColours = {
   dataFieldValue: color.grey,
   pgExtension: color.green,
 }
-
-// The corresponding DNS A record points to 127.0.0.1, just like localhost, so the result is
-// functionally identical (the client connects to the remote server through the local port
-// forwarding tunnel) but using this domain name should result in a less odd-looking connection
-// hostname and URL from a user's perspective than using "localhost" would
-export const localPgHostname = 'pg-tunnel.borealis-data.com'
 
 export const defaultPorts = {
   pg: 5432,
@@ -109,5 +112,26 @@ export function processAddonAttachmentInfo(
     return {addonName, appName, attachmentName}
   } else {
     errorHandler('Add-on service is temporarily unavailable. Try again later.')
+  }
+}
+
+/**
+ * Retrieves the hostname or IP address to use for local port forwarding
+ */
+export async function getLocalPgHost() {
+  /* istanbul ignore else */
+  if (process.env.NODE_ENV === 'test') {
+    return defaultLocalPgHostname
+  } else {
+    // Check that the DNS record for pg-tunnel.borealis-data.com can be resolved; otherwise, fall
+    // back to the raw loopback address
+    let dnsRecords: string[]
+    try {
+      dnsRecords = await dns.resolve(defaultLocalPgHostname, 'A')
+    } catch {
+      dnsRecords = []
+    }
+
+    return dnsRecords.includes(loopbackAddress) ? defaultLocalPgHostname : loopbackAddress
   }
 }

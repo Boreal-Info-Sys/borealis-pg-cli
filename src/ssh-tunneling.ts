@@ -2,12 +2,7 @@ import childProcess, {SpawnOptions} from 'child_process'
 import {createServer, Server, Socket} from 'net'
 import {Client as PgClient, ClientConfig as PgClientConfig} from 'pg'
 import {Client as SshClient, ServerHostKeyAlgorithm} from 'ssh2'
-import {
-  defaultPorts,
-  formatCliOptionName,
-  localPgHostname,
-  portOptionName,
-} from './command-components'
+import {defaultPorts, formatCliOptionName, portOptionName} from './command-components'
 
 const addressInUseErrorCode = 'EADDRINUSE'
 const permissionDeniedErrorCode = 'EACCES'
@@ -66,7 +61,7 @@ function initProxyServer(
     })
 
     sshClient.forwardOut(
-      localPgHostname,
+      connInfo.localPgHost,
       connInfo.localPgPort,
       connInfo.db.dbHost,
       connInfo.db.dbPort ?? defaultPorts.pg,
@@ -96,7 +91,7 @@ function initProxyServer(
     } else {
       logger.error(err)
     }
-  }).listen(connInfo.localPgPort, localPgHostname)
+  }).listen(connInfo.localPgPort, connInfo.localPgHost)
 }
 
 function initSshClient(
@@ -147,6 +142,7 @@ export interface DbConnectionInfo {
 export interface FullConnectionInfo {
   db: DbConnectionInfo;
   ssh: SshConnectionInfo;
+  localPgHost: string;
   localPgPort: number;
 }
 
