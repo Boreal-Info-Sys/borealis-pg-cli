@@ -1,12 +1,12 @@
 {
   "name": "borealis-pg-cli",
   "description": "CLI for advanced interactions with Borealis Isolated Postgres add-ons",
-  "version": "1.6.5",
+  "version": "1.6.6",
   "author": "Boreal Information Systems Inc.",
-  "bugs": "https://github.com/OldSneerJaw/borealis-pg-cli/issues",
+  "bugs": "https://github.com/Boreal-Info-Sys/borealis-pg-cli/issues",
   "dependencies": {
-    "@heroku/http-call": "^5.5.0",
     "@heroku-cli/command": "^11.6.0",
+    "@heroku/http-call": "^5.5.0",
     "@oclif/core": "^2.16.0",
     "dotenv": "^17.2.1",
     "luxon": "^3.7.1",
@@ -21,14 +21,12 @@
     "@types/chai": "^4.3.16",
     "@types/chai-as-promised": "^7.1.8",
     "@types/chai-string": "^1.4.5",
-    "@types/glob": "^9.0.0",
     "@types/luxon": "^3.7.1",
     "@types/mocha": "^10.0.10",
     "@types/node": "^20.14.8",
     "@types/node-notifier": "^8.0.5",
     "@types/pg": "^8.15.5",
     "@types/ssh2": "^1.15.5",
-    "@types/supports-color": "^10.0.0",
     "chai": "^4.5.0",
     "chai-as-promised": "^7.1.2",
     "chai-string": "^1.6.0",
@@ -58,7 +56,7 @@
     "/oclif.manifest.json",
     "/yarn.lock"
   ],
-  "homepage": "https://github.com/OldSneerJaw/borealis-pg-cli",
+  "homepage": "https://github.com/Boreal-Info-Sys/borealis-pg-cli",
   "keywords": [
     "oclif-plugin"
   ],
@@ -66,6 +64,9 @@
   "main": "lib/index.js",
   "nyc": {
     "all": true,
+    "include": [
+      "src/**"
+    ],
     "reporter": [
       "html",
       "text"
@@ -100,7 +101,7 @@
       }
     }
   },
-  "repository": "OldSneerJaw/borealis-pg-cli",
+  "repository": "Boreal-Info-Sys/borealis-pg-cli",
   "scripts": {
     "build": "shx rm -rf lib && tsc -b",
     "clean": "shx rm -rf lib node_modules",
