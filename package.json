@@ -64,6 +64,9 @@
   "main": "lib/index.js",
   "nyc": {
     "all": true,
+    "include": [
+      "src/**"
+    ],
     "reporter": [
       "html",
       "text"
