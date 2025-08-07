@@ -14,7 +14,7 @@ import {
   consoleColours,
   defaultPorts,
   formatCliOptionName,
-  localPgHostname,
+  getLocalPgHost,
   portOptionName,
   processAddonAttachmentInfo,
   writeAccessOptionName,
@@ -149,7 +149,9 @@ like pgAdmin).`
       flags[personalUserOptionName],
       flags[writeAccessOptionName],
       typeof normalizedOutputFormat === 'undefined')
-    const fullConnInfo = {ssh: sshConnInfo, db: dbConnInfo, localPgPort: flags.port}
+
+    const localPgHost = await getLocalPgHost()
+    const fullConnInfo = {ssh: sshConnInfo, db: dbConnInfo, localPgHost, localPgPort: flags.port}
 
     if (dbCommand) {
       console.warn('Executing database command...')
@@ -269,7 +271,7 @@ like pgAdmin).`
       {debug: this.debug, info: this.log, warn: this.warn, error: this.error},
       sshClient => {
         const pgClient = tunnelServices.pgClientFactory.create({
-          host: localPgHostname,
+          host: connInfo.localPgHost,
           port: connInfo.localPgPort,
           database: connInfo.db.dbName,
           user: connInfo.db.dbUsername,
@@ -333,14 +335,14 @@ like pgAdmin).`
         const commandProc = tunnelServices.childProcessFactory.spawn(shellCommand, {
           env: {
             ...tunnelServices.nodeProcess.env,
-            PGHOST: localPgHostname,
+            PGHOST: connInfo.localPgHost,
             PGPORT: connInfo.localPgPort.toString(),
             PGDATABASE: connInfo.db.dbName,
             PGUSER: connInfo.db.dbUsername,
             PGPASSWORD: connInfo.db.dbPassword,
             DATABASE_URL:
               `postgres://${connInfo.db.dbUsername}:${connInfo.db.dbPassword}@` +
-              `${localPgHostname}:${connInfo.localPgPort}/${connInfo.db.dbName}`,
+              `${connInfo.localPgHost}:${connInfo.localPgPort}/${connInfo.db.dbName}`,
           },
           shell: true,
           stdio: ['ignore', null, null], // Disable stdin but use the defaults for stdout and stderr

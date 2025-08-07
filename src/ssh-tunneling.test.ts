@@ -51,6 +51,7 @@ const fakeCompleteConnInfo = {
     sshPrivateKey: fakeSshPrivateKey,
     publicSshHostKey: expectedSshHostKeyEntry,
   },
+  localPgHost: localPgHostname,
   localPgPort: customPgPort,
 }
 
@@ -67,6 +68,7 @@ const fakeNoPortsConnInfo = {
     sshPrivateKey: fakeSshPrivateKey,
     publicSshHostKey: expectedSshHostKeyEntry,
   },
+  localPgHost: localPgHostname,
   localPgPort: defaultPgPort,
 }
 

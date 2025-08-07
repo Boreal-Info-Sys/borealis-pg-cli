@@ -10,7 +10,7 @@ import {
   cliOptions,
   consoleColours,
   formatCliOptionName,
-  localPgHostname,
+  getLocalPgHost,
   portOptionName,
   processAddonAttachmentInfo,
   writeAccessOptionName,
@@ -72,7 +72,14 @@ ${consoleColours.cliCmdName('borealis-pg:psql')} command to launch an interactiv
     const [sshConnInfo, dbConnInfo] =
       await this.createPersonalUsers(addonName, flags[writeAccessOptionName])
 
-    const sshClient = this.connect({ssh: sshConnInfo, db: dbConnInfo, localPgPort: flags.port})
+    const localPgHost = await getLocalPgHost()
+
+    const sshClient = this.connect({
+      ssh: sshConnInfo,
+      db: dbConnInfo,
+      localPgHost,
+      localPgPort: flags.port,
+    })
 
     tunnelServices.nodeProcess.on('SIGINT', _ => {
       sshClient.end()
@@ -114,10 +121,9 @@ ${consoleColours.cliCmdName('borealis-pg:psql')} command to launch an interactiv
   }
 
   private connect(connInfo: FullConnectionInfo): SshClient {
-    const localPgPort = connInfo.localPgPort
+    const {db, localPgHost, localPgPort} = connInfo
     const dbUrl =
-      `postgres://${connInfo.db.dbUsername}:${connInfo.db.dbPassword}` +
-      `@${localPgHostname}:${localPgPort}/${connInfo.db.dbName}`
+      `postgres://${db.dbUsername}:${db.dbPassword}@${localPgHost}:${localPgPort}/${db.dbName}`
 
     return openSshTunnel(
       connInfo,
@@ -127,11 +133,11 @@ ${consoleColours.cliCmdName('borealis-pg:psql')} command to launch an interactiv
         this.log(
           'Secure tunnel established. Use the following values to connect to the database:')
 
-        this.log(`      ${connKeyColour('Username')}: ${connValueColour(connInfo.db.dbUsername)}`)
-        this.log(`      ${connKeyColour('Password')}: ${connValueColour(connInfo.db.dbPassword)}`)
-        this.log(`          ${connKeyColour('Host')}: ${connValueColour(localPgHostname)}`)
+        this.log(`      ${connKeyColour('Username')}: ${connValueColour(db.dbUsername)}`)
+        this.log(`      ${connKeyColour('Password')}: ${connValueColour(db.dbPassword)}`)
+        this.log(`          ${connKeyColour('Host')}: ${connValueColour(localPgHost)}`)
         this.log(`          ${connKeyColour('Port')}: ${connValueColour(localPgPort.toString())}`)
-        this.log(` ${connKeyColour('Database name')}: ${connValueColour(connInfo.db.dbName)}`)
+        this.log(` ${connKeyColour('Database name')}: ${connValueColour(db.dbName)}`)
         this.log(`           ${connKeyColour('URL')}: ${connValueColour(dbUrl)}`)
 
         this.log(`
