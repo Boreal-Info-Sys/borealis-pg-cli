@@ -242,10 +242,10 @@
     supports-color "^7.2.0"
     tslib "^1.9.3"
 
-"@heroku-cli/command@^11.6.0":
-  version "11.6.0"
-  resolved "https://registry.yarnpkg.com/@heroku-cli/command/-/command-11.6.0.tgz#b10c65e6e24c360d162ff8371feffdbaa37322ca"
-  integrity sha512-NPqJ7ISyOoTlLjLG1C/k4LH7LDxrTb3afji2SDCb46pabVIFOrjEnEv0lGuMPF6BgyxZBkBZl5/JuK3EGwu23w==
+"@heroku-cli/command@^11.7.0":
+  version "11.7.0"
+  resolved "https://registry.yarnpkg.com/@heroku-cli/command/-/command-11.7.0.tgz#22ae995c3850390d8d38bd997c3c470fe084394d"
+  integrity sha512-Or3/G9hT5EuwTcTHrFKLFoleSm0bBPl5fl3hRvzuwcFIQXlJOZ+62m/dTryZr3OjfaIgD1EBNChbh5pqofRZVw==
   dependencies:
     "@heroku-cli/color" "^2.0.1"
     "@heroku/http-call" "^5.5.0"
@@ -3692,9 +3692,14 @@ mute-stream@0.0.8:
   version "0.0.8"
   resolved "https://registry.npmjs.org/mute-stream/-/mute-stream-0.0.8.tgz"
 
-nan@^2.19.0, nan@^2.20.0:
+nan@^2.19.0:
   version "2.20.0"
   resolved "https://registry.yarnpkg.com/nan/-/nan-2.20.0.tgz#08c5ea813dd54ed16e5bd6505bf42af4f7838ca3"
+
+nan@^2.23.0:
+  version "2.23.0"
+  resolved "https://registry.yarnpkg.com/nan/-/nan-2.23.0.tgz#24aa4ddffcc37613a2d2935b97683c1ec96093c6"
+  integrity sha512-1UxuyYGdoQHcGg87Lkqm3FzefucTa0NAiOcuRsDmysep3c1LVCRK2krrUDafMWtjSG04htvAmvg96+SDknOmgQ==
 
 natural-compare@^1.4.0:
   version "1.4.0"
@@ -4958,15 +4963,16 @@ sprintf-js@~1.0.2:
   resolved "https://registry.npmjs.org/sprintf-js/-/sprintf-js-1.0.3.tgz"
   integrity "sha1-BOaSb2YolTVPPdAVIDYzuFcpfiw=sha512-D9cPgkvLlV3t3IzL0D0YLvGA9Ahk4PcvVwUbN0dSGr1aP0Nrt4AEnTUbuGvquEC0mA64Gqt1fzirlRs5ibXx8g== sha512-D9cPgkvLlV3t3IzL0D0YLvGA9Ahk4PcvVwUbN0dSGr1aP0Nrt4AEnTUbuGvquEC0mA64Gqt1fzirlRs5ibXx8g=="
 
-ssh2@^1.16.0:
-  version "1.16.0"
-  resolved "https://registry.yarnpkg.com/ssh2/-/ssh2-1.16.0.tgz#79221d40cbf4d03d07fe881149de0a9de928c9f0"
+ssh2@^1.17.0:
+  version "1.17.0"
+  resolved "https://registry.yarnpkg.com/ssh2/-/ssh2-1.17.0.tgz#dc686e8e3abdbd4ad95d46fa139615903c12258c"
+  integrity sha512-wPldCk3asibAjQ/kziWQQt1Wh3PgDFpC0XpwclzKcdT1vql6KeYxf5LIt4nlFkUeR8WuphYMKqUA56X4rjbfgQ==
   dependencies:
     asn1 "^0.2.6"
     bcrypt-pbkdf "^1.0.2"
   optionalDependencies:
     cpu-features "~0.0.10"
-    nan "^2.20.0"
+    nan "^2.23.0"
 
 ssri@^10.0.0:
   version "10.0.5"
