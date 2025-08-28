@@ -11,7 +11,7 @@ on:
   workflow_dispatch:  # Allows the workflow to be triggered manually
 
 env:
-  JOB_NODE_VERSION: '20.19.1'  # Chosen to match what is used internally by the Heroku CLI
+  JOB_NODE_VERSION: '20.19.4'  # Chosen to match what is used internally by the Heroku CLI
 
 jobs:
   lint:
