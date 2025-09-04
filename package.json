@@ -5,7 +5,7 @@
   "author": "Boreal Information Systems Inc.",
   "bugs": "https://github.com/Boreal-Info-Sys/borealis-pg-cli/issues",
   "dependencies": {
-    "@heroku-cli/command": "^11.7.0",
+    "@heroku-cli/command": "^11.8.0",
     "@heroku/http-call": "^5.5.0",
     "@oclif/core": "^2.16.0",
     "dotenv": "^17.2.2",
