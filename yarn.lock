@@ -242,10 +242,10 @@
     supports-color "^7.2.0"
     tslib "^1.9.3"
 
-"@heroku-cli/command@^11.7.0":
-  version "11.7.0"
-  resolved "https://registry.yarnpkg.com/@heroku-cli/command/-/command-11.7.0.tgz#22ae995c3850390d8d38bd997c3c470fe084394d"
-  integrity sha512-Or3/G9hT5EuwTcTHrFKLFoleSm0bBPl5fl3hRvzuwcFIQXlJOZ+62m/dTryZr3OjfaIgD1EBNChbh5pqofRZVw==
+"@heroku-cli/command@^11.8.0":
+  version "11.8.0"
+  resolved "https://registry.yarnpkg.com/@heroku-cli/command/-/command-11.8.0.tgz#cb8cf616236b01453e7ad0f7fa7d3cc8ddc4f196"
+  integrity sha512-8PVyWGlm9IVjKzBzpjnyP73H+Tso6m7VogiqbJut8EKXGYNCQ001UXv8VnqFawNoyzdUWEkCiYq2JIWBIbu80w==
   dependencies:
     "@heroku-cli/color" "^2.0.1"
     "@heroku/http-call" "^5.5.0"
