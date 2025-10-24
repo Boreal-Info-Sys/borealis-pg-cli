@@ -96,6 +96,9 @@
       "borealis-pg:restore": {
         "description": "manage add-on database restores/clones"
       },
+      "borealis-pg:upgrade": {
+        "description": "manage add-on PostgreSQL major version upgrades"
+      },
       "borealis-pg:users": {
         "description": "manage add-on database users"
       }

@@ -38,6 +38,7 @@ const addonStatuses: {[key: string]: string} = {
   configuring: 'Provisioning',
   maintenance: 'Undergoing maintenance',
   'maintenance-db-credentials-full-reset': 'Resetting DB credentials',
+  'maintenance-postgresql-major-version-upgrade': 'Upgrading PostgreSQL major version',
   'maintenance-plan-change': 'Changing add-on plan',
   'maintenance-restore-db-write-access': 'Restoring DB write access',
   'maintenance-revoke-db-write-access': 'Revoking DB write access',
