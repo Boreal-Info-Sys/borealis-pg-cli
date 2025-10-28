@@ -3,6 +3,7 @@ This project adheres to [Semantic Versioning](http://semver.org/). All notable c
 
 ## [Unreleased](https://github.com/Boreal-Info-Sys/borealis-pg-cli/compare/v1.6.5...HEAD)
 - Adds the `borealis-pg:upgrade:execute` command to start a PostgreSQL major version upgrade
+- Adds the `borealis-pg:upgrade:cancel` command to cancel a PostgreSQL major version upgrade that is in progress
 
 ## [1.6.6](https://github.com/Boreal-Info-Sys/borealis-pg-cli/compare/v1.6.5...v1.6.6)
 - Fixed: Fall back to 127.0.0.1 when pg-tunnel.borealis-data.com cannot be resolved
