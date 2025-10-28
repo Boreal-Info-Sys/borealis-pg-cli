@@ -47,6 +47,9 @@ the upgrade behind the scenes.`
         `Cancelling PostgreSQL major version upgrade for add-on ${color.addon(addonName)}`,
         this.cancelPgVersionUpgrade(addonName, authorization),
       )
+
+      console.warn()
+      console.warn('It may be several minutes before the add-on is ready to try another upgrade.')
     } finally {
       await removeHerokuAuth(this.heroku, authorization.id as string)
     }

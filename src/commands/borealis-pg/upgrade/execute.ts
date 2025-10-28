@@ -55,11 +55,12 @@ for details.`
         this.triggerPgVersionUpgrade(addonName, authorization),
       )
 
+      console.warn()
       console.warn(
         `${color.addon(addonName)} is being upgraded from PostgreSQL version ` +
         `${pgVersionUpgradeInfo.currentPgMajorVersion} to version ` +
-        `${pgVersionUpgradeInfo.targetPgMajorVersion} in the background. ` +
-        'The system will send an email when the upgrade process is complete.')
+        `${pgVersionUpgradeInfo.targetPgMajorVersion} in the background.`)
+      console.warn('The system will send an email when the upgrade process is complete.')
     } finally {
       await removeHerokuAuth(this.heroku, authorization.id as string)
     }
