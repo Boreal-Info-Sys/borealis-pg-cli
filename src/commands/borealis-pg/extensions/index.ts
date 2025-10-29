@@ -16,7 +16,8 @@ const pgExtensionColour = consoleColours.pgExtension
 const pgExtMetadataColour = consoleColours.dataFieldValue
 
 export default class ListPgExtensionsCommand extends Command {
-  static description = 'lists installed Postgres extensions for a Borealis Isolated Postgres add-on'
+  static description =
+    'List installed PostgreSQL extensions for a Borealis Isolated Postgres add-on'
 
   static flags = {
     [addonOptionName]: cliOptions.addon,

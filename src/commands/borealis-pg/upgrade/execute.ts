@@ -15,7 +15,7 @@ import {createHerokuAuth, fetchAddonAttachmentInfo, removeHerokuAuth} from '../.
 
 export default class PgVersionUpgradeCommand extends Command {
   static description =
-    `upgrades the PostgreSQL version of a Borealis Isolated Postgres add-on
+    `Upgrade the PostgreSQL version of a Borealis Isolated Postgres add-on
 
 Initiates an upgrade to the next major version of PostgreSQL. Upgrades are
 performed asynchronously and may take well over an hour to complete. The

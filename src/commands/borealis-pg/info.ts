@@ -54,7 +54,7 @@ const storageComplianceStatuses: {[key: string]: string} = {
 }
 
 export default class AddonInfoCommand extends Command {
-  static description = 'shows information about a Borealis Isolated Postgres add-on database'
+  static description = 'Show information about a Borealis Isolated Postgres add-on database'
 
   static flags = {
     [addonOptionName]: cliOptions.addon,

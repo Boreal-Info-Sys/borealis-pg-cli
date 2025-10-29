@@ -39,7 +39,7 @@ const cliCmdColour = consoleColours.cliCmdName
 const envVarColour = consoleColours.dataFieldName
 
 export default class RunCommand extends Command {
-  static description = `runs a command with a secure tunnel to a Borealis Isolated Postgres add-on
+  static description = `Run a command with a secure tunnel to a Borealis Isolated Postgres add-on
 
 An add-on Postgres database is, by design, inaccessible from outside of its
 virtual private cloud. As such, this operation establishes an ephemeral secure

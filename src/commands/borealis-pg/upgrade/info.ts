@@ -18,7 +18,7 @@ const valueColour = consoleColours.dataFieldValue
 
 export default class PgVersionInfoCommand extends Command {
   static description =
-    `shows PostgreSQL version upgrade status of a Borealis Isolated Postgres add-on
+    `Show PostgreSQL version upgrade info for a Borealis Isolated Postgres add-on
 
 Indicates whether an add-on can be upgraded to a newer PostgreSQL major
 version, and if so, to which version. If an upgrade is available, you can use

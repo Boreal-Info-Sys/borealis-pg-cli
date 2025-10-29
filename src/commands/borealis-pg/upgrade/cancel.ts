@@ -15,7 +15,7 @@ import {createHerokuAuth, fetchAddonAttachmentInfo, removeHerokuAuth} from '../.
 
 export default class PgVersionCancellationCommand extends Command {
   static description =
-    `cancels a PostgreSQL version upgrade of a Borealis Isolated Postgres add-on
+    `Cancel a PostgreSQL version upgrade of a Borealis Isolated Postgres add-on
 
 Run this command to cancel a PostgreSQL version upgrade that was started with
 the ${consoleColours.cliCmdName('borealis-pg:upgrade:execute')} command. Can only be used when an upgrade is

@@ -85,22 +85,22 @@
     ],
     "topics": {
       "borealis-pg": {
-        "description": "manage Borealis Isolated Postgres add-ons"
+        "description": "Manage Borealis Isolated Postgres add-ons"
       },
       "borealis-pg:extensions": {
-        "description": "manage add-on PostgreSQL extensions"
+        "description": "Manage add-on PostgreSQL extensions"
       },
       "borealis-pg:integrations": {
-        "description": "manage add-on data integrations"
+        "description": "Manage add-on data integrations"
       },
       "borealis-pg:restore": {
-        "description": "manage add-on database restores/clones"
+        "description": "Manage add-on database restores/clones"
       },
       "borealis-pg:upgrade": {
-        "description": "manage add-on PostgreSQL major version upgrades"
+        "description": "Manage add-on PostgreSQL major version upgrades"
       },
       "borealis-pg:users": {
-        "description": "manage add-on database users"
+        "description": "Manage add-on database users"
       }
     }
   },

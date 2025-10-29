@@ -19,7 +19,7 @@ const confirmOptionName = 'confirm'
 const dataIntegrationOptionName = 'name'
 
 export default class RemoveDataIntegrationCommand extends Command {
-  static description = 'removes a data integration from a Borealis Isolated Postgres add-on'
+  static description = 'Remove a data integration from a Borealis Isolated Postgres add-on'
 
   static examples = [
     `$ heroku borealis-pg:integrations:remove --${appOptionName} sushi --${dataIntegrationOptionName} my_integration1`,

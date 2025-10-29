@@ -39,7 +39,7 @@ const restoreToTimeOptionName = 'restore-to-time'
 const waitOptionName = 'wait'
 
 export default class DbRestoreExecuteCommand extends Command {
-  static description = `restores or clones a Borealis Isolated Postgres add-on database
+  static description = `Restore or clone a Borealis Isolated Postgres add-on database
 
 Qualifying add-on databases may be restored to an earlier point in time or
 cloned. This operation restores/clones the add-on database into a brand new
