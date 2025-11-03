@@ -24,7 +24,7 @@ const suppressConflictOptionName = 'suppress-conflict'
 
 export default class InstallPgExtensionsCommand extends Command {
   static description =
-    `installs a Postgres extension on a Borealis Isolated Postgres add-on database
+    `Install a PostgreSQL extension on a Borealis Isolated Postgres add-on database
 
 Each extension is typically installed with its own dedicated database schema,
 which may be used to store types, functions, tables or other objects that are

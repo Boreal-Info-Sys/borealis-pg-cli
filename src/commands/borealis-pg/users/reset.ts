@@ -17,7 +17,7 @@ const cliCmdColour = consoleColours.cliCmdName
 
 export default class ResetUsersCommand extends Command {
   static description =
-    `resets all database credentials for a Borealis Isolated Postgres add-on
+    `Reset all database credentials for a Borealis Isolated Postgres add-on
 
 The Heroku application's database user roles will be assigned new, random
 usernames and passwords and the application's config vars will be updated

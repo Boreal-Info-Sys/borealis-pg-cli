@@ -38,6 +38,7 @@ const addonStatuses: {[key: string]: string} = {
   configuring: 'Provisioning',
   maintenance: 'Undergoing maintenance',
   'maintenance-db-credentials-full-reset': 'Resetting DB credentials',
+  'maintenance-postgresql-major-version-upgrade': 'Upgrading PostgreSQL major version',
   'maintenance-plan-change': 'Changing add-on plan',
   'maintenance-restore-db-write-access': 'Restoring DB write access',
   'maintenance-revoke-db-write-access': 'Revoking DB write access',
@@ -53,7 +54,7 @@ const storageComplianceStatuses: {[key: string]: string} = {
 }
 
 export default class AddonInfoCommand extends Command {
-  static description = 'shows information about a Borealis Isolated Postgres add-on database'
+  static description = 'Show information about a Borealis Isolated Postgres add-on database'
 
   static flags = {
     [addonOptionName]: cliOptions.addon,

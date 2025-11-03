@@ -17,7 +17,7 @@ import {createHerokuAuth, fetchAddonAttachmentInfo, removeHerokuAuth} from '../.
 const cliCmdColour = consoleColours.cliCmdName
 
 export default class ListUsersCommand extends Command {
-  static description = `lists database user roles for a Borealis Isolated Postgres add-on
+  static description = `List database user roles for a Borealis Isolated Postgres add-on
 
 Note that this command's output only includes active add-on database user
 roles. The Heroku application's database user roles are always present.

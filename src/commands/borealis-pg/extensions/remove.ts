@@ -24,7 +24,7 @@ const addonResourceType = 'addon'
 
 export default class RemovePgExtensionCommand extends Command {
   static description =
-    'removes a Postgres extension from a Borealis Isolated Postgres add-on database'
+    'Remove a PostgreSQL extension from a Borealis Isolated Postgres add-on database'
 
   static examples = [
     `$ heroku borealis-pg:extensions:remove --${suppressMissingOptionName} --${appOptionName} sushi postgis`,

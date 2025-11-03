@@ -27,7 +27,7 @@ import {
 const binaryPathOptionName = 'binary-path'
 
 export default class PsqlCommand extends Command {
-  static description = `runs psql with a secure tunnel to a Borealis Isolated Postgres add-on
+  static description = `Run psql with a secure tunnel to a Borealis Isolated Postgres add-on
 
 This operation establishes a temporary secure tunnel to an add-on database to
 provide an interactive psql session. It requires that the psql command is

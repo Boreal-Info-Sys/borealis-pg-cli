@@ -45,7 +45,8 @@
     "typescript": "~4.9.5"
   },
   "resolutions": {
-    "ansi-regex": "^5.0.1"
+    "ansi-regex": "^5.0.1",
+    "tmp": "^0.2.5"
   },
   "engines": {
     "node": ">=16.20.2"
@@ -85,19 +86,22 @@
     ],
     "topics": {
       "borealis-pg": {
-        "description": "manage Borealis Isolated Postgres add-ons"
+        "description": "Manage Borealis Isolated Postgres add-ons"
       },
       "borealis-pg:extensions": {
-        "description": "manage add-on PostgreSQL extensions"
+        "description": "Manage add-on PostgreSQL extensions"
       },
       "borealis-pg:integrations": {
-        "description": "manage add-on data integrations"
+        "description": "Manage add-on data integrations"
       },
       "borealis-pg:restore": {
-        "description": "manage add-on database restores/clones"
+        "description": "Manage add-on database restores/clones"
+      },
+      "borealis-pg:upgrade": {
+        "description": "Manage add-on PostgreSQL major version upgrades"
       },
       "borealis-pg:users": {
-        "description": "manage add-on database users"
+        "description": "Manage add-on database users"
       }
     }
   },

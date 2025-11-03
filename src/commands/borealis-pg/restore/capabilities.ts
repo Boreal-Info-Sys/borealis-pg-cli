@@ -19,7 +19,7 @@ const cliCmdColour = consoleColours.cliCmdName
 
 export default class DbRestoreInfoCommand extends Command {
   static description =
-    `shows the restore capabilities of a Borealis Isolated Postgres add-on database
+    `Show the restore capabilities of a Borealis Isolated Postgres add-on database
 
 Qualifying add-on databases may be restored to an earlier point in time or
 cloned. This operation outputs the earliest and latest points in time to which

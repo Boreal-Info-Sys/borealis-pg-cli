@@ -29,7 +29,7 @@ const connKeyColour = consoleColours.dataFieldName
 const connValueColour = consoleColours.dataFieldValue
 
 export default class TunnelCommand extends Command {
-  static description = `establishes a secure tunnel to a Borealis Isolated Postgres add-on
+  static description = `Establish a secure tunnel to a Borealis Isolated Postgres add-on
 
 This operation allows for a secure, temporary session connection to an add-on
 Postgres database that is, by design, otherwise inaccessible from outside of

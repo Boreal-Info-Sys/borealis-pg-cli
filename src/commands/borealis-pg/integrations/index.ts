@@ -14,7 +14,7 @@ import {
 import {createHerokuAuth, fetchAddonAttachmentInfo, removeHerokuAuth} from '../../../heroku-api'
 
 export default class ListDataIntegrationsCommand extends Command {
-  static description = `lists registered data integrations for a Borealis Isolated Postgres add-on
+  static description = `List registered data integrations for a Borealis Isolated Postgres add-on
 
 A data integration allows a third party service access to an add-on database
 via a secure tunnel using semi-permanent SSH server and database credentials.`

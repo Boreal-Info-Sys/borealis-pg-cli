@@ -23,7 +23,7 @@ const dataIntegrationOptionName = 'name'
 
 export default class RegisterDataIntegrationsCommand extends Command {
   static description =
-    `registers a data integration with a Borealis Isolated Postgres add-on
+    `Register a data integration for a Borealis Isolated Postgres add-on
 
 A data integration allows a third party service access to an add-on database
 via a secure tunnel using semi-permanent SSH server and database credentials.
