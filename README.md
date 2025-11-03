@@ -35,12 +35,15 @@ $ heroku plugins:install borealis-pg-cli
 * [`heroku borealis-pg:restore:execute`](#heroku-borealis-pgrestoreexecute)
 * [`heroku borealis-pg:run`](#heroku-borealis-pgrun)
 * [`heroku borealis-pg:tunnel`](#heroku-borealis-pgtunnel)
+* [`heroku borealis-pg:upgrade:cancel`](#heroku-borealis-pgupgradecancel)
+* [`heroku borealis-pg:upgrade:execute`](#heroku-borealis-pgupgradeexecute)
+* [`heroku borealis-pg:upgrade:info`](#heroku-borealis-pgupgradeinfo)
 * [`heroku borealis-pg:users`](#heroku-borealis-pgusers)
 * [`heroku borealis-pg:users:reset`](#heroku-borealis-pgusersreset)
 
 ## `heroku borealis-pg`
 
-shows information about a Borealis Isolated Postgres add-on database
+Show information about a Borealis Isolated Postgres add-on database
 
 ```
 USAGE
@@ -51,14 +54,14 @@ FLAGS
   -o, --addon=<value>  name or ID of an add-on or one of its attachments
 
 DESCRIPTION
-  shows information about a Borealis Isolated Postgres add-on database
+  Show information about a Borealis Isolated Postgres add-on database
 ```
 
-_See code: [src/commands/borealis-pg/index.ts](https://github.com/Boreal-Info-Sys/borealis-pg-cli/blob/v1.6.6/src/commands/borealis-pg/index.ts)_
+_See code: [src/commands/borealis-pg/index.ts](https://github.com/Boreal-Info-Sys/borealis-pg-cli/blob/v1.7.0/src/commands/borealis-pg/index.ts)_
 
 ## `heroku borealis-pg:extensions`
 
-lists installed Postgres extensions for a Borealis Isolated Postgres add-on
+List installed PostgreSQL extensions for a Borealis Isolated Postgres add-on
 
 ```
 USAGE
@@ -69,14 +72,14 @@ FLAGS
   -o, --addon=<value>  name or ID of an add-on or one of its attachments
 
 DESCRIPTION
-  lists installed Postgres extensions for a Borealis Isolated Postgres add-on
+  List installed PostgreSQL extensions for a Borealis Isolated Postgres add-on
 ```
 
-_See code: [src/commands/borealis-pg/extensions/index.ts](https://github.com/Boreal-Info-Sys/borealis-pg-cli/blob/v1.6.6/src/commands/borealis-pg/extensions/index.ts)_
+_See code: [src/commands/borealis-pg/extensions/index.ts](https://github.com/Boreal-Info-Sys/borealis-pg-cli/blob/v1.7.0/src/commands/borealis-pg/extensions/index.ts)_
 
 ## `heroku borealis-pg:extensions:install PG_EXTENSION`
 
-installs a Postgres extension on a Borealis Isolated Postgres add-on database
+Install a PostgreSQL extension on a Borealis Isolated Postgres add-on database
 
 ```
 USAGE
@@ -92,7 +95,7 @@ FLAGS
   -s, --suppress-conflict  suppress nonzero exit code when an extension is already installed
 
 DESCRIPTION
-  installs a Postgres extension on a Borealis Isolated Postgres add-on database
+  Install a PostgreSQL extension on a Borealis Isolated Postgres add-on database
 
   Each extension is typically installed with its own dedicated database schema,
   which may be used to store types, functions, tables or other objects that are
@@ -112,11 +115,11 @@ EXAMPLES
   $ heroku borealis-pg:extensions:install --suppress-conflict --addon borealis-pg-hex-12345 pg_trgm
 ```
 
-_See code: [src/commands/borealis-pg/extensions/install.ts](https://github.com/Boreal-Info-Sys/borealis-pg-cli/blob/v1.6.6/src/commands/borealis-pg/extensions/install.ts)_
+_See code: [src/commands/borealis-pg/extensions/install.ts](https://github.com/Boreal-Info-Sys/borealis-pg-cli/blob/v1.7.0/src/commands/borealis-pg/extensions/install.ts)_
 
 ## `heroku borealis-pg:extensions:remove PG_EXTENSION`
 
-removes a Postgres extension from a Borealis Isolated Postgres add-on database
+Remove a PostgreSQL extension from a Borealis Isolated Postgres add-on database
 
 ```
 USAGE
@@ -132,7 +135,7 @@ FLAGS
   -s, --suppress-missing  suppress nonzero exit code when an extension is not installed
 
 DESCRIPTION
-  removes a Postgres extension from a Borealis Isolated Postgres add-on database
+  Remove a PostgreSQL extension from a Borealis Isolated Postgres add-on database
 
 EXAMPLES
   $ heroku borealis-pg:extensions:remove --suppress-missing --app sushi postgis
@@ -142,11 +145,11 @@ EXAMPLES
   $ heroku borealis-pg:extensions:remove --confirm uuid-ossp --addon borealis-pg-hex-12345 uuid-ossp
 ```
 
-_See code: [src/commands/borealis-pg/extensions/remove.ts](https://github.com/Boreal-Info-Sys/borealis-pg-cli/blob/v1.6.6/src/commands/borealis-pg/extensions/remove.ts)_
+_See code: [src/commands/borealis-pg/extensions/remove.ts](https://github.com/Boreal-Info-Sys/borealis-pg-cli/blob/v1.7.0/src/commands/borealis-pg/extensions/remove.ts)_
 
 ## `heroku borealis-pg:info`
 
-shows information about a Borealis Isolated Postgres add-on database
+Show information about a Borealis Isolated Postgres add-on database
 
 ```
 USAGE
@@ -157,14 +160,14 @@ FLAGS
   -o, --addon=<value>  name or ID of an add-on or one of its attachments
 
 DESCRIPTION
-  shows information about a Borealis Isolated Postgres add-on database
+  Show information about a Borealis Isolated Postgres add-on database
 ```
 
-_See code: [src/commands/borealis-pg/info.ts](https://github.com/Boreal-Info-Sys/borealis-pg-cli/blob/v1.6.6/src/commands/borealis-pg/info.ts)_
+_See code: [src/commands/borealis-pg/info.ts](https://github.com/Boreal-Info-Sys/borealis-pg-cli/blob/v1.7.0/src/commands/borealis-pg/info.ts)_
 
 ## `heroku borealis-pg:integrations`
 
-lists registered data integrations for a Borealis Isolated Postgres add-on
+List registered data integrations for a Borealis Isolated Postgres add-on
 
 ```
 USAGE
@@ -175,17 +178,17 @@ FLAGS
   -o, --addon=<value>  name or ID of an add-on or one of its attachments
 
 DESCRIPTION
-  lists registered data integrations for a Borealis Isolated Postgres add-on
+  List registered data integrations for a Borealis Isolated Postgres add-on
 
   A data integration allows a third party service access to an add-on database
   via a secure tunnel using semi-permanent SSH server and database credentials.
 ```
 
-_See code: [src/commands/borealis-pg/integrations/index.ts](https://github.com/Boreal-Info-Sys/borealis-pg-cli/blob/v1.6.6/src/commands/borealis-pg/integrations/index.ts)_
+_See code: [src/commands/borealis-pg/integrations/index.ts](https://github.com/Boreal-Info-Sys/borealis-pg-cli/blob/v1.7.0/src/commands/borealis-pg/integrations/index.ts)_
 
 ## `heroku borealis-pg:integrations:register SSH_PUBLIC_KEY`
 
-registers a data integration with a Borealis Isolated Postgres add-on
+Register a data integration for a Borealis Isolated Postgres add-on
 
 ```
 USAGE
@@ -201,7 +204,7 @@ FLAGS
   -w, --write-access   allow write access to the add-on Postgres database
 
 DESCRIPTION
-  registers a data integration with a Borealis Isolated Postgres add-on
+  Register a data integration for a Borealis Isolated Postgres add-on
 
   A data integration allows a third party service access to an add-on database
   via a secure tunnel using semi-permanent SSH server and database credentials.
@@ -230,11 +233,11 @@ EXAMPLES
   $ heroku borealis-pg:integrations:register --write-access --app sushi --name my_integration2 ssh-rsa SSHPUBLICKEY2===
 ```
 
-_See code: [src/commands/borealis-pg/integrations/register.ts](https://github.com/Boreal-Info-Sys/borealis-pg-cli/blob/v1.6.6/src/commands/borealis-pg/integrations/register.ts)_
+_See code: [src/commands/borealis-pg/integrations/register.ts](https://github.com/Boreal-Info-Sys/borealis-pg-cli/blob/v1.7.0/src/commands/borealis-pg/integrations/register.ts)_
 
 ## `heroku borealis-pg:integrations:remove`
 
-removes a data integration from a Borealis Isolated Postgres add-on
+Remove a data integration from a Borealis Isolated Postgres add-on
 
 ```
 USAGE
@@ -247,7 +250,7 @@ FLAGS
   -o, --addon=<value>    name or ID of an add-on or one of its attachments
 
 DESCRIPTION
-  removes a data integration from a Borealis Isolated Postgres add-on
+  Remove a data integration from a Borealis Isolated Postgres add-on
 
 ALIASES
   $ heroku borealis-pg:integrations:deregister
@@ -258,11 +261,11 @@ EXAMPLES
   $ heroku borealis-pg:integrations:remove --confirm my_integration2 --app sushi --name my_integration2
 ```
 
-_See code: [src/commands/borealis-pg/integrations/remove.ts](https://github.com/Boreal-Info-Sys/borealis-pg-cli/blob/v1.6.6/src/commands/borealis-pg/integrations/remove.ts)_
+_See code: [src/commands/borealis-pg/integrations/remove.ts](https://github.com/Boreal-Info-Sys/borealis-pg-cli/blob/v1.7.0/src/commands/borealis-pg/integrations/remove.ts)_
 
 ## `heroku borealis-pg:psql`
 
-runs psql with a secure tunnel to a Borealis Isolated Postgres add-on
+Run psql with a secure tunnel to a Borealis Isolated Postgres add-on
 
 ```
 USAGE
@@ -276,7 +279,7 @@ FLAGS
   -w, --write-access         allow write access to the add-on Postgres database
 
 DESCRIPTION
-  runs psql with a secure tunnel to a Borealis Isolated Postgres add-on
+  Run psql with a secure tunnel to a Borealis Isolated Postgres add-on
 
   This operation establishes a temporary secure tunnel to an add-on database to
   provide an interactive psql session. It requires that the psql command is
@@ -308,11 +311,11 @@ EXAMPLES
   $ heroku borealis-pg:psql --addon borealis-pg-hex-12345
 ```
 
-_See code: [src/commands/borealis-pg/psql.ts](https://github.com/Boreal-Info-Sys/borealis-pg-cli/blob/v1.6.6/src/commands/borealis-pg/psql.ts)_
+_See code: [src/commands/borealis-pg/psql.ts](https://github.com/Boreal-Info-Sys/borealis-pg-cli/blob/v1.7.0/src/commands/borealis-pg/psql.ts)_
 
 ## `heroku borealis-pg:restore:capabilities`
 
-shows the restore capabilities of a Borealis Isolated Postgres add-on database
+Show the restore capabilities of a Borealis Isolated Postgres add-on database
 
 ```
 USAGE
@@ -323,7 +326,7 @@ FLAGS
   -o, --addon=<value>  name or ID of an add-on or one of its attachments
 
 DESCRIPTION
-  shows the restore capabilities of a Borealis Isolated Postgres add-on database
+  Show the restore capabilities of a Borealis Isolated Postgres add-on database
 
   Qualifying add-on databases may be restored to an earlier point in time or
   cloned. This operation outputs the earliest and latest points in time to which
@@ -337,11 +340,11 @@ ALIASES
   $ heroku borealis-pg:restore:info
 ```
 
-_See code: [src/commands/borealis-pg/restore/capabilities.ts](https://github.com/Boreal-Info-Sys/borealis-pg-cli/blob/v1.6.6/src/commands/borealis-pg/restore/capabilities.ts)_
+_See code: [src/commands/borealis-pg/restore/capabilities.ts](https://github.com/Boreal-Info-Sys/borealis-pg-cli/blob/v1.7.0/src/commands/borealis-pg/restore/capabilities.ts)_
 
 ## `heroku borealis-pg:restore:execute`
 
-restores or clones a Borealis Isolated Postgres add-on database
+Restore or clone a Borealis Isolated Postgres add-on database
 
 ```
 USAGE
@@ -358,7 +361,7 @@ FLAGS
   --wait                         wait until the add-on has finished before exiting
 
 DESCRIPTION
-  restores or clones a Borealis Isolated Postgres add-on database
+  Restore or clone a Borealis Isolated Postgres add-on database
 
   Qualifying add-on databases may be restored to an earlier point in time or
   cloned. This operation restores/clones the add-on database into a brand new
@@ -378,11 +381,11 @@ EXAMPLES
   $ heroku borealis-pg:restore:execute --app sushi --destination-app my-other-app --new-plan x2-s100-p2-r8
 ```
 
-_See code: [src/commands/borealis-pg/restore/execute.ts](https://github.com/Boreal-Info-Sys/borealis-pg-cli/blob/v1.6.6/src/commands/borealis-pg/restore/execute.ts)_
+_See code: [src/commands/borealis-pg/restore/execute.ts](https://github.com/Boreal-Info-Sys/borealis-pg-cli/blob/v1.7.0/src/commands/borealis-pg/restore/execute.ts)_
 
 ## `heroku borealis-pg:run`
 
-runs a command with a secure tunnel to a Borealis Isolated Postgres add-on
+Run a command with a secure tunnel to a Borealis Isolated Postgres add-on
 
 ```
 USAGE
@@ -402,7 +405,7 @@ FLAGS
   -w, --write-access         allow write access to the add-on Postgres database
 
 DESCRIPTION
-  runs a command with a secure tunnel to a Borealis Isolated Postgres add-on
+  Run a command with a secure tunnel to a Borealis Isolated Postgres add-on
 
   An add-on Postgres database is, by design, inaccessible from outside of its
   virtual private cloud. As such, this operation establishes an ephemeral secure
@@ -452,11 +455,11 @@ EXAMPLES
   $ heroku borealis-pg:run --addon borealis-pg-hex-12345 --shell-cmd './manage.py migrate' --write-access
 ```
 
-_See code: [src/commands/borealis-pg/run.ts](https://github.com/Boreal-Info-Sys/borealis-pg-cli/blob/v1.6.6/src/commands/borealis-pg/run.ts)_
+_See code: [src/commands/borealis-pg/run.ts](https://github.com/Boreal-Info-Sys/borealis-pg-cli/blob/v1.7.0/src/commands/borealis-pg/run.ts)_
 
 ## `heroku borealis-pg:tunnel`
 
-establishes a secure tunnel to a Borealis Isolated Postgres add-on
+Establish a secure tunnel to a Borealis Isolated Postgres add-on
 
 ```
 USAGE
@@ -469,7 +472,7 @@ FLAGS
   -w, --write-access   allow write access to the add-on Postgres database
 
 DESCRIPTION
-  establishes a secure tunnel to a Borealis Isolated Postgres add-on
+  Establish a secure tunnel to a Borealis Isolated Postgres add-on
 
   This operation allows for a secure, temporary session connection to an add-on
   Postgres database that is, by design, otherwise inaccessible from outside of
@@ -498,11 +501,101 @@ EXAMPLES
   $ heroku borealis-pg:tunnel --addon borealis-pg-hex-12345 --write-access
 ```
 
-_See code: [src/commands/borealis-pg/tunnel.ts](https://github.com/Boreal-Info-Sys/borealis-pg-cli/blob/v1.6.6/src/commands/borealis-pg/tunnel.ts)_
+_See code: [src/commands/borealis-pg/tunnel.ts](https://github.com/Boreal-Info-Sys/borealis-pg-cli/blob/v1.7.0/src/commands/borealis-pg/tunnel.ts)_
+
+## `heroku borealis-pg:upgrade:cancel`
+
+Cancel a PostgreSQL version upgrade of a Borealis Isolated Postgres add-on
+
+```
+USAGE
+  $ heroku borealis-pg:upgrade:cancel [-o <value>] [-a <value>]
+
+FLAGS
+  -a, --app=<value>    app to which the add-on is attached
+  -o, --addon=<value>  name or ID of an add-on or one of its attachments
+
+DESCRIPTION
+  Cancel a PostgreSQL version upgrade of a Borealis Isolated Postgres add-on
+
+  Run this command to cancel a PostgreSQL version upgrade that was started with
+  the borealis-pg:upgrade:execute command. Can only be used when an upgrade is
+  still in progress.
+
+  There is no disruption to an add-on database's availability when this command
+  is executed. It simply discards the logical replica that was created to perform
+  the upgrade behind the scenes.
+
+EXAMPLES
+  $ heroku borealis-pg:upgrade:cancel --app sushi
+```
+
+_See code: [src/commands/borealis-pg/upgrade/cancel.ts](https://github.com/Boreal-Info-Sys/borealis-pg-cli/blob/v1.7.0/src/commands/borealis-pg/upgrade/cancel.ts)_
+
+## `heroku borealis-pg:upgrade:execute`
+
+Upgrade the PostgreSQL version of a Borealis Isolated Postgres add-on
+
+```
+USAGE
+  $ heroku borealis-pg:upgrade:execute [-o <value>] [-a <value>]
+
+FLAGS
+  -a, --app=<value>    app to which the add-on is attached
+  -o, --addon=<value>  name or ID of an add-on or one of its attachments
+
+DESCRIPTION
+  Upgrade the PostgreSQL version of a Borealis Isolated Postgres add-on
+
+  Initiates an upgrade to the next major version of PostgreSQL. Upgrades are
+  performed asynchronously and may take well over an hour to complete. The
+  system sends an email at the start and end of the upgrade process to all team
+  members and collaborators with access to the add-on.
+
+  Once the upgrade process has finished, the add-on database can't be rolled back
+  to the previous major version. It is generally a good idea to test an upgrade
+  on a clone that was created with the borealis-pg:restore:execute command before
+  upgrading a production add-on database.
+
+  The add-on database will remain online and usable throughout most of the
+  upgrade process, with some limitations. Check the documentation at
+  https://devcenter.heroku.com/articles/borealis-pg#postgresql-version-upgrades
+  for details.
+
+EXAMPLES
+  $ heroku borealis-pg:upgrade:execute --app sushi
+```
+
+_See code: [src/commands/borealis-pg/upgrade/execute.ts](https://github.com/Boreal-Info-Sys/borealis-pg-cli/blob/v1.7.0/src/commands/borealis-pg/upgrade/execute.ts)_
+
+## `heroku borealis-pg:upgrade:info`
+
+Show PostgreSQL version upgrade info for a Borealis Isolated Postgres add-on
+
+```
+USAGE
+  $ heroku borealis-pg:upgrade:info [-o <value>] [-a <value>]
+
+FLAGS
+  -a, --app=<value>    app to which the add-on is attached
+  -o, --addon=<value>  name or ID of an add-on or one of its attachments
+
+DESCRIPTION
+  Show PostgreSQL version upgrade info for a Borealis Isolated Postgres add-on
+
+  Indicates whether an add-on can be upgraded to a newer PostgreSQL major
+  version, and if so, to which version. If an upgrade is available, you can use
+  the borealis-pg:restore:execute command to begin.
+
+EXAMPLES
+  $ heroku borealis-pg:upgrade:info --app sushi
+```
+
+_See code: [src/commands/borealis-pg/upgrade/info.ts](https://github.com/Boreal-Info-Sys/borealis-pg-cli/blob/v1.7.0/src/commands/borealis-pg/upgrade/info.ts)_
 
 ## `heroku borealis-pg:users`
 
-lists database user roles for a Borealis Isolated Postgres add-on
+List database user roles for a Borealis Isolated Postgres add-on
 
 ```
 USAGE
@@ -513,7 +606,7 @@ FLAGS
   -o, --addon=<value>  name or ID of an add-on or one of its attachments
 
 DESCRIPTION
-  lists database user roles for a Borealis Isolated Postgres add-on
+  List database user roles for a Borealis Isolated Postgres add-on
 
   Note that this command's output only includes active add-on database user
   roles. The Heroku application's database user roles are always present.
@@ -526,11 +619,11 @@ DESCRIPTION
   borealis-pg:users:reset command).
 ```
 
-_See code: [src/commands/borealis-pg/users/index.ts](https://github.com/Boreal-Info-Sys/borealis-pg-cli/blob/v1.6.6/src/commands/borealis-pg/users/index.ts)_
+_See code: [src/commands/borealis-pg/users/index.ts](https://github.com/Boreal-Info-Sys/borealis-pg-cli/blob/v1.7.0/src/commands/borealis-pg/users/index.ts)_
 
 ## `heroku borealis-pg:users:reset`
 
-resets all database credentials for a Borealis Isolated Postgres add-on
+Reset all database credentials for a Borealis Isolated Postgres add-on
 
 ```
 USAGE
@@ -541,7 +634,7 @@ FLAGS
   -o, --addon=<value>  name or ID of an add-on or one of its attachments
 
 DESCRIPTION
-  resets all database credentials for a Borealis Isolated Postgres add-on
+  Reset all database credentials for a Borealis Isolated Postgres add-on
 
   The Heroku application's database user roles will be assigned new, random
   usernames and passwords and the application's config vars will be updated
@@ -565,5 +658,5 @@ DESCRIPTION
   borealis-pg:integrations:revoke command.
 ```
 
-_See code: [src/commands/borealis-pg/users/reset.ts](https://github.com/Boreal-Info-Sys/borealis-pg-cli/blob/v1.6.6/src/commands/borealis-pg/users/reset.ts)_
+_See code: [src/commands/borealis-pg/users/reset.ts](https://github.com/Boreal-Info-Sys/borealis-pg-cli/blob/v1.7.0/src/commands/borealis-pg/users/reset.ts)_
 <!-- commandsstop -->

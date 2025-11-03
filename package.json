@@ -1,7 +1,7 @@
 {
   "name": "borealis-pg-cli",
   "description": "CLI for advanced interactions with Borealis Isolated Postgres add-ons",
-  "version": "1.6.6",
+  "version": "1.7.0",
   "author": "Boreal Information Systems Inc.",
   "bugs": "https://github.com/Boreal-Info-Sys/borealis-pg-cli/issues",
   "dependencies": {

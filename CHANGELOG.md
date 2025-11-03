@@ -1,7 +1,7 @@
 # Change Log
 This project adheres to [Semantic Versioning](http://semver.org/). All notable changes will be documented in this file.
 
-## [Unreleased](https://github.com/Boreal-Info-Sys/borealis-pg-cli/compare/v1.6.5...HEAD)
+## [1.7.0](https://github.com/Boreal-Info-Sys/borealis-pg-cli/compare/v1.6.6...v1.7.0)
 - Adds the `borealis-pg:upgrade:execute` command to start a PostgreSQL major version upgrade
 - Adds the `borealis-pg:upgrade:cancel` command to cancel a PostgreSQL major version upgrade that is in progress
 - Adds the `borealis-pg:upgrade:info` command to check PostgreSQL version upgrade availability and status
