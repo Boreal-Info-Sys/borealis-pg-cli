@@ -77,7 +77,7 @@ describe('PostgreSQL version upgrade execution command', () => {
       api => api.post(`/heroku/resources/${fakeAddonName}/pg-version-upgrades`)
         .reply(400, {reason: 'Bad state!'}))
     .command(['borealis-pg:upgrade:execute', '--app', fakeHerokuAppName])
-    .catch('The add-on is in a state that prevents upgrades: Bad state!')
+    .catch('The add-on is in a state that prevents upgrades:\nBad state!')
     .it('exits with an error when there is a bad request', ctx => {
       expect(ctx.stdout).to.equal('')
     })

@@ -80,7 +80,7 @@ for details.`
     /* istanbul ignore else */
     if (err instanceof HTTPError) {
       if (err.statusCode === 400) {
-        this.error(`The add-on is in a state that prevents upgrades: ${err.body.reason.toString()}`)
+        this.error(`The add-on is in a state that prevents upgrades:\n${err.body.reason.toString()}`)
       } else if (err.statusCode === 403) {
         this.error('Add-on database write access has been revoked')
       } else if (err.statusCode === 404) {
