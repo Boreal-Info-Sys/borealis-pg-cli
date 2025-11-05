@@ -57,7 +57,7 @@ DESCRIPTION
   Show information about a Borealis Isolated Postgres add-on database
 ```
 
-_See code: [src/commands/borealis-pg/index.ts](https://github.com/Boreal-Info-Sys/borealis-pg-cli/blob/v1.7.0/src/commands/borealis-pg/index.ts)_
+_See code: [src/commands/borealis-pg/index.ts](https://github.com/Boreal-Info-Sys/borealis-pg-cli/blob/v1.7.1/src/commands/borealis-pg/index.ts)_
 
 ## `heroku borealis-pg:extensions`
 
@@ -75,7 +75,7 @@ DESCRIPTION
   List installed PostgreSQL extensions for a Borealis Isolated Postgres add-on
 ```
 
-_See code: [src/commands/borealis-pg/extensions/index.ts](https://github.com/Boreal-Info-Sys/borealis-pg-cli/blob/v1.7.0/src/commands/borealis-pg/extensions/index.ts)_
+_See code: [src/commands/borealis-pg/extensions/index.ts](https://github.com/Boreal-Info-Sys/borealis-pg-cli/blob/v1.7.1/src/commands/borealis-pg/extensions/index.ts)_
 
 ## `heroku borealis-pg:extensions:install PG_EXTENSION`
 
@@ -115,7 +115,7 @@ EXAMPLES
   $ heroku borealis-pg:extensions:install --suppress-conflict --addon borealis-pg-hex-12345 pg_trgm
 ```
 
-_See code: [src/commands/borealis-pg/extensions/install.ts](https://github.com/Boreal-Info-Sys/borealis-pg-cli/blob/v1.7.0/src/commands/borealis-pg/extensions/install.ts)_
+_See code: [src/commands/borealis-pg/extensions/install.ts](https://github.com/Boreal-Info-Sys/borealis-pg-cli/blob/v1.7.1/src/commands/borealis-pg/extensions/install.ts)_
 
 ## `heroku borealis-pg:extensions:remove PG_EXTENSION`
 
@@ -145,7 +145,7 @@ EXAMPLES
   $ heroku borealis-pg:extensions:remove --confirm uuid-ossp --addon borealis-pg-hex-12345 uuid-ossp
 ```
 
-_See code: [src/commands/borealis-pg/extensions/remove.ts](https://github.com/Boreal-Info-Sys/borealis-pg-cli/blob/v1.7.0/src/commands/borealis-pg/extensions/remove.ts)_
+_See code: [src/commands/borealis-pg/extensions/remove.ts](https://github.com/Boreal-Info-Sys/borealis-pg-cli/blob/v1.7.1/src/commands/borealis-pg/extensions/remove.ts)_
 
 ## `heroku borealis-pg:info`
 
@@ -163,7 +163,7 @@ DESCRIPTION
   Show information about a Borealis Isolated Postgres add-on database
 ```
 
-_See code: [src/commands/borealis-pg/info.ts](https://github.com/Boreal-Info-Sys/borealis-pg-cli/blob/v1.7.0/src/commands/borealis-pg/info.ts)_
+_See code: [src/commands/borealis-pg/info.ts](https://github.com/Boreal-Info-Sys/borealis-pg-cli/blob/v1.7.1/src/commands/borealis-pg/info.ts)_
 
 ## `heroku borealis-pg:integrations`
 
@@ -184,7 +184,7 @@ DESCRIPTION
   via a secure tunnel using semi-permanent SSH server and database credentials.
 ```
 
-_See code: [src/commands/borealis-pg/integrations/index.ts](https://github.com/Boreal-Info-Sys/borealis-pg-cli/blob/v1.7.0/src/commands/borealis-pg/integrations/index.ts)_
+_See code: [src/commands/borealis-pg/integrations/index.ts](https://github.com/Boreal-Info-Sys/borealis-pg-cli/blob/v1.7.1/src/commands/borealis-pg/integrations/index.ts)_
 
 ## `heroku borealis-pg:integrations:register SSH_PUBLIC_KEY`
 
@@ -233,7 +233,7 @@ EXAMPLES
   $ heroku borealis-pg:integrations:register --write-access --app sushi --name my_integration2 ssh-rsa SSHPUBLICKEY2===
 ```
 
-_See code: [src/commands/borealis-pg/integrations/register.ts](https://github.com/Boreal-Info-Sys/borealis-pg-cli/blob/v1.7.0/src/commands/borealis-pg/integrations/register.ts)_
+_See code: [src/commands/borealis-pg/integrations/register.ts](https://github.com/Boreal-Info-Sys/borealis-pg-cli/blob/v1.7.1/src/commands/borealis-pg/integrations/register.ts)_
 
 ## `heroku borealis-pg:integrations:remove`
 
@@ -261,7 +261,7 @@ EXAMPLES
   $ heroku borealis-pg:integrations:remove --confirm my_integration2 --app sushi --name my_integration2
 ```
 
-_See code: [src/commands/borealis-pg/integrations/remove.ts](https://github.com/Boreal-Info-Sys/borealis-pg-cli/blob/v1.7.0/src/commands/borealis-pg/integrations/remove.ts)_
+_See code: [src/commands/borealis-pg/integrations/remove.ts](https://github.com/Boreal-Info-Sys/borealis-pg-cli/blob/v1.7.1/src/commands/borealis-pg/integrations/remove.ts)_
 
 ## `heroku borealis-pg:psql`
 
@@ -311,7 +311,7 @@ EXAMPLES
   $ heroku borealis-pg:psql --addon borealis-pg-hex-12345
 ```
 
-_See code: [src/commands/borealis-pg/psql.ts](https://github.com/Boreal-Info-Sys/borealis-pg-cli/blob/v1.7.0/src/commands/borealis-pg/psql.ts)_
+_See code: [src/commands/borealis-pg/psql.ts](https://github.com/Boreal-Info-Sys/borealis-pg-cli/blob/v1.7.1/src/commands/borealis-pg/psql.ts)_
 
 ## `heroku borealis-pg:restore:capabilities`
 
@@ -340,7 +340,7 @@ ALIASES
   $ heroku borealis-pg:restore:info
 ```
 
-_See code: [src/commands/borealis-pg/restore/capabilities.ts](https://github.com/Boreal-Info-Sys/borealis-pg-cli/blob/v1.7.0/src/commands/borealis-pg/restore/capabilities.ts)_
+_See code: [src/commands/borealis-pg/restore/capabilities.ts](https://github.com/Boreal-Info-Sys/borealis-pg-cli/blob/v1.7.1/src/commands/borealis-pg/restore/capabilities.ts)_
 
 ## `heroku borealis-pg:restore:execute`
 
@@ -381,7 +381,7 @@ EXAMPLES
   $ heroku borealis-pg:restore:execute --app sushi --destination-app my-other-app --new-plan x2-s100-p2-r8
 ```
 
-_See code: [src/commands/borealis-pg/restore/execute.ts](https://github.com/Boreal-Info-Sys/borealis-pg-cli/blob/v1.7.0/src/commands/borealis-pg/restore/execute.ts)_
+_See code: [src/commands/borealis-pg/restore/execute.ts](https://github.com/Boreal-Info-Sys/borealis-pg-cli/blob/v1.7.1/src/commands/borealis-pg/restore/execute.ts)_
 
 ## `heroku borealis-pg:run`
 
@@ -455,7 +455,7 @@ EXAMPLES
   $ heroku borealis-pg:run --addon borealis-pg-hex-12345 --shell-cmd './manage.py migrate' --write-access
 ```
 
-_See code: [src/commands/borealis-pg/run.ts](https://github.com/Boreal-Info-Sys/borealis-pg-cli/blob/v1.7.0/src/commands/borealis-pg/run.ts)_
+_See code: [src/commands/borealis-pg/run.ts](https://github.com/Boreal-Info-Sys/borealis-pg-cli/blob/v1.7.1/src/commands/borealis-pg/run.ts)_
 
 ## `heroku borealis-pg:tunnel`
 
@@ -501,7 +501,7 @@ EXAMPLES
   $ heroku borealis-pg:tunnel --addon borealis-pg-hex-12345 --write-access
 ```
 
-_See code: [src/commands/borealis-pg/tunnel.ts](https://github.com/Boreal-Info-Sys/borealis-pg-cli/blob/v1.7.0/src/commands/borealis-pg/tunnel.ts)_
+_See code: [src/commands/borealis-pg/tunnel.ts](https://github.com/Boreal-Info-Sys/borealis-pg-cli/blob/v1.7.1/src/commands/borealis-pg/tunnel.ts)_
 
 ## `heroku borealis-pg:upgrade:cancel`
 
@@ -530,7 +530,7 @@ EXAMPLES
   $ heroku borealis-pg:upgrade:cancel --app sushi
 ```
 
-_See code: [src/commands/borealis-pg/upgrade/cancel.ts](https://github.com/Boreal-Info-Sys/borealis-pg-cli/blob/v1.7.0/src/commands/borealis-pg/upgrade/cancel.ts)_
+_See code: [src/commands/borealis-pg/upgrade/cancel.ts](https://github.com/Boreal-Info-Sys/borealis-pg-cli/blob/v1.7.1/src/commands/borealis-pg/upgrade/cancel.ts)_
 
 ## `heroku borealis-pg:upgrade:execute`
 
@@ -566,7 +566,7 @@ EXAMPLES
   $ heroku borealis-pg:upgrade:execute --app sushi
 ```
 
-_See code: [src/commands/borealis-pg/upgrade/execute.ts](https://github.com/Boreal-Info-Sys/borealis-pg-cli/blob/v1.7.0/src/commands/borealis-pg/upgrade/execute.ts)_
+_See code: [src/commands/borealis-pg/upgrade/execute.ts](https://github.com/Boreal-Info-Sys/borealis-pg-cli/blob/v1.7.1/src/commands/borealis-pg/upgrade/execute.ts)_
 
 ## `heroku borealis-pg:upgrade:info`
 
@@ -591,7 +591,7 @@ EXAMPLES
   $ heroku borealis-pg:upgrade:info --app sushi
 ```
 
-_See code: [src/commands/borealis-pg/upgrade/info.ts](https://github.com/Boreal-Info-Sys/borealis-pg-cli/blob/v1.7.0/src/commands/borealis-pg/upgrade/info.ts)_
+_See code: [src/commands/borealis-pg/upgrade/info.ts](https://github.com/Boreal-Info-Sys/borealis-pg-cli/blob/v1.7.1/src/commands/borealis-pg/upgrade/info.ts)_
 
 ## `heroku borealis-pg:users`
 
@@ -619,7 +619,7 @@ DESCRIPTION
   borealis-pg:users:reset command).
 ```
 
-_See code: [src/commands/borealis-pg/users/index.ts](https://github.com/Boreal-Info-Sys/borealis-pg-cli/blob/v1.7.0/src/commands/borealis-pg/users/index.ts)_
+_See code: [src/commands/borealis-pg/users/index.ts](https://github.com/Boreal-Info-Sys/borealis-pg-cli/blob/v1.7.1/src/commands/borealis-pg/users/index.ts)_
 
 ## `heroku borealis-pg:users:reset`
 
@@ -658,5 +658,5 @@ DESCRIPTION
   borealis-pg:integrations:revoke command.
 ```
 
-_See code: [src/commands/borealis-pg/users/reset.ts](https://github.com/Boreal-Info-Sys/borealis-pg-cli/blob/v1.7.0/src/commands/borealis-pg/users/reset.ts)_
+_See code: [src/commands/borealis-pg/users/reset.ts](https://github.com/Boreal-Info-Sys/borealis-pg-cli/blob/v1.7.1/src/commands/borealis-pg/users/reset.ts)_
 <!-- commandsstop -->

@@ -1,8 +1,8 @@
 # Change Log
 This project adheres to [Semantic Versioning](http://semver.org/). All notable changes will be documented in this file.
 
-## [Unreleased](https://github.com/Boreal-Info-Sys/borealis-pg-cli/compare/v1.7.0...HEAD)
-- Handle errors for commands that attempt DDL during a PostgreSQL major version upgrade
+## [1.7.1](https://github.com/Boreal-Info-Sys/borealis-pg-cli/compare/v1.7.0...v1.7.1)
+- Fixed: Handle errors for commands that attempt DDL during a PostgreSQL major version upgrade
 
 ## [1.7.0](https://github.com/Boreal-Info-Sys/borealis-pg-cli/compare/v1.6.6...v1.7.0)
 - Adds the `borealis-pg:upgrade:execute` command to start a PostgreSQL major version upgrade
