@@ -551,6 +551,28 @@ describe('interactive psql command', () => {
     .nock(
       borealisPgApiBaseUrl,
       api => api.post(`/heroku/resources/${fakeAddonName}/personal-ssh-users`)
+        .reply(
+          200,
+          {
+            sshHost: fakeSshHost,
+            sshPort: defaultSshPort,
+            sshUsername: fakeSshUsername,
+            sshPrivateKey: fakeSshPrivateKey,
+            publicSshHostKey: expectedSshHostKeyEntry,
+          })
+        .post(`/heroku/resources/${fakeAddonName}/personal-db-users`)
+        .reply(423, {reason: 'Locked'}))
+    .command(['borealis-pg:psql', '-a', fakeHerokuAppName])
+    .catch(/^Add-on is undergoing a PostgreSQL major version upgrade/)
+    .it('exits with an error if the add-on is undergoing a PostgreSQL version upgrade', () => {
+      verify(mockTcpServerFactoryType.create(anyFunction())).never()
+      verify(mockSshClientFactoryType.create()).never()
+    })
+
+  baseTestContext
+    .nock(
+      borealisPgApiBaseUrl,
+      api => api.post(`/heroku/resources/${fakeAddonName}/personal-ssh-users`)
         .reply(503, {reason: 'Server error!'})
         .post(`/heroku/resources/${fakeAddonName}/personal-db-users`)
         .reply(

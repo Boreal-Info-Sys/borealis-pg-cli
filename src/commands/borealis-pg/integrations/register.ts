@@ -139,6 +139,8 @@ supports it.`
         this.error('A data integration with that name is already registered')
       } else if (err.statusCode === 422) {
         this.error('Add-on is not finished provisioning')
+      } else if (err.statusCode === 423) {
+        this.error('Add-on is undergoing a PostgreSQL major version upgrade')
       } else {
         this.error('Add-on service is temporarily unavailable. Try again later.')
       }

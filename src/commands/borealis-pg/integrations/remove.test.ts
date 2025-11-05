@@ -189,6 +189,25 @@ describe('data integration removal command', () => {
   defaultTestContext
     .nock(
       borealisPgApiBaseUrl,
+      api => api.delete(`/heroku/resources/${fakeAddonName}/data-integrations/${fakeIntegration1}`)
+        .reply(423, {reason: 'Locked'}))
+    .command([
+      'borealis-pg:integrations:remove',
+      '-c',
+      fakeIntegration1,
+      '-a',
+      fakeHerokuAppName,
+      '-n',
+      fakeIntegration1,
+    ])
+    .catch('Add-on is undergoing a PostgreSQL major version upgrade')
+    .it('exits with an error if the add-on is undergoing a PostgreSQL version upgrade', ctx => {
+      expect(ctx.stdout).to.equal('')
+    })
+
+  defaultTestContext
+    .nock(
+      borealisPgApiBaseUrl,
       api => api.delete(`/heroku/resources/${fakeAddonName}/data-integrations/${fakeIntegration2}`)
         .reply(503, {reason: 'Something went wrong'}))
     .command([

@@ -108,6 +108,18 @@ describe('database credentials reset command', () => {
       borealisPgApiBaseUrl,
       {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}},
       api => api.delete(`/heroku/resources/${fakeAddonName}/db-users/credentials`)
+        .reply(423, {reason: 'Locked'}))
+    .command(['borealis-pg:users:reset', '-a', fakeHerokuAppName])
+    .catch(/^Add-on is undergoing a PostgreSQL major version upgrade/)
+    .it('exits with an error if the add-on is undergoing a PostgreSQL version upgrade', ctx => {
+      expect(ctx.stdout).to.equal('')
+    })
+
+  defaultTestContext
+    .nock(
+      borealisPgApiBaseUrl,
+      {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}},
+      api => api.delete(`/heroku/resources/${fakeAddonName}/db-users/credentials`)
         .reply(500, {reason: 'Server error'}))
     .command(['borealis-pg:users:reset', '-a', fakeHerokuAppName])
     .catch('Add-on service is temporarily unavailable. Try again later.')
