@@ -206,6 +206,24 @@ describe('extension removal command', () => {
   defaultTestContext
     .nock(
       borealisPgApiBaseUrl,
+      api => api.delete(`/heroku/resources/${fakeAddonName}/pg-extensions/${fakeExt1}`)
+        .reply(423, {reason: 'Locked'}))
+    .command([
+      'borealis-pg:extensions:remove',
+      '-c',
+      fakeExt1,
+      '-a',
+      fakeHerokuAppName,
+      fakeExt1,
+    ])
+    .catch('Add-on is undergoing a PostgreSQL major version upgrade')
+    .it('exits with an error if the add-on is undergoing a PostgreSQL version upgrade', ctx => {
+      expect(ctx.stdout).to.equal('')
+    })
+
+  defaultTestContext
+    .nock(
+      borealisPgApiBaseUrl,
       api => api.delete(`/heroku/resources/${fakeAddonName}/pg-extensions/${fakeExt2}`)
         .reply(503, {reason: 'Something went wrong'}))
     .command([

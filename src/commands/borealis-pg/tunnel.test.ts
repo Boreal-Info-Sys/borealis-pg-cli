@@ -457,6 +457,27 @@ describe('secure tunnel command', () => {
     .nock(
       borealisPgApiBaseUrl,
       api => api.post(`/heroku/resources/${fakeAddonName}/personal-db-users`)
+        .reply(423, {reason: 'Locked'})
+        .post(`/heroku/resources/${fakeAddonName}/personal-ssh-users`)
+        .reply(200, {
+          sshHost: fakeSshHost,
+          sshPort: defaultSshPort,
+          sshUsername: fakeSshUsername,
+          sshPrivateKey: fakeSshPrivateKey,
+          publicSshHostKey: expectedSshHostKeyEntry,
+        }))
+    .command(['borealis-pg:tunnel', '-a', fakeHerokuAppName])
+    .catch(/^Add-on is undergoing a PostgreSQL major version upgrade/)
+    .it('exits with an error if the add-on is undergoing a PostgreSQL version upgrade', () => {
+      verify(mockTcpServerFactoryType.create(anyFunction())).never()
+      verify(mockSshClientFactoryType.create()).never()
+    })
+
+  baseTestContext
+    .nock(herokuApiBaseUrl, api => mockAddonAttachmentRequests(api))
+    .nock(
+      borealisPgApiBaseUrl,
+      api => api.post(`/heroku/resources/${fakeAddonName}/personal-db-users`)
         .reply(403, {reason: 'DB write access revoked'})
         .post(`/heroku/resources/${fakeAddonName}/personal-ssh-users`)
         .reply(

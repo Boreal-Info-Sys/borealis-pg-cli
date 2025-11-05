@@ -279,6 +279,24 @@ describe('data integration registration command', () => {
     .nock(
       borealisPgApiBaseUrl,
       api => api.post(`/heroku/resources/${fakeAddonName}/data-integrations`)
+        .reply(423, {reason: 'Locked'}))
+    .command([
+      'borealis-pg:integrations:register',
+      '-a',
+      fakeHerokuAppName,
+      '-n',
+      fakeIntegrationName,
+      fakeSshPublicKey,
+    ])
+    .catch('Add-on is undergoing a PostgreSQL major version upgrade')
+    .it('exits with an error if the add-on is undergoing a PostgreSQL version upgrade', ctx => {
+      expect(ctx.stdout).to.equal('')
+    })
+
+  defaultTestContext
+    .nock(
+      borealisPgApiBaseUrl,
+      api => api.post(`/heroku/resources/${fakeAddonName}/data-integrations`)
         .reply(500, {reason: 'Something went wrong'}))
     .command([
       'borealis-pg:integrations:register',

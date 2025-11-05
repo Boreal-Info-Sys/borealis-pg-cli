@@ -270,6 +270,17 @@ describe('extension installation command', () => {
     .nock(
       borealisPgApiBaseUrl,
       api => api.post(`/heroku/resources/${fakeAddonName}/pg-extensions`)
+        .reply(423, {reason: 'Locked'}))
+    .command(['borealis-pg:extensions:install', '-a', fakeHerokuAppName, fakeExt1])
+    .catch('Add-on is undergoing a PostgreSQL major version upgrade')
+    .it('exits with an error if the add-on is undergoing a PostgreSQL version upgrade', ctx => {
+      expect(ctx.stdout).to.equal('')
+    })
+
+  defaultTestContext
+    .nock(
+      borealisPgApiBaseUrl,
+      api => api.post(`/heroku/resources/${fakeAddonName}/pg-extensions`)
         .reply(500, {reason: 'Something went wrong'}))
     .command(['borealis-pg:extensions:install', '-a', fakeHerokuAppName, fakeExt1])
     .catch('Add-on service is temporarily unavailable. Try again later.')

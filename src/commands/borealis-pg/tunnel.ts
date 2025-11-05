@@ -166,6 +166,10 @@ steps are required to use a graphical user interface (e.g. pgAdmin).`)
         this.error('Add-on is not a Borealis Isolated Postgres add-on')
       } else if (err.statusCode === 422) {
         this.error('Add-on is not finished provisioning')
+      } else if (err.statusCode === 423) {
+        this.error('Add-on is undergoing a PostgreSQL major version upgrade.\n' +
+          `Try again later or run ${consoleColours.cliCmdName('borealis-pg:upgrade:cancel')} to cancel the upgrade process.`,
+        )
       } else {
         this.error('Add-on service is temporarily unavailable. Try again later.')
       }
