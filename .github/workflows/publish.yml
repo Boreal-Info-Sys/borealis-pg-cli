@@ -10,7 +10,7 @@ on:
         type: string
 
 env:
-  JOB_NODE_VERSION: '20.19.5'  # Chosen to match what is used internally by the Heroku CLI
+  JOB_NODE_VERSION: '20.19.6'  # Chosen to match what is used internally by the Heroku CLI
 
 permissions:
   id-token: write
