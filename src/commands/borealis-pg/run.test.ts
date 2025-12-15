@@ -421,8 +421,8 @@ describe('noninteractive run command', () => {
       verify(mockPgClientType.on('end', anyFunction())).once()
       verify(mockPgClientType.on('error', anyFunction())).once()
       for (let pgClientListenerIndex = 0; pgClientListenerIndex < 2; pgClientListenerIndex++) {
-        const [pgClientEvent, pgClientListener] = capture(mockPgClientType.on)
-          .byCallIndex(pgClientListenerIndex)
+        const [pgClientEvent, pgClientListener] =
+          capture((a: any, b: any) => mockPgClientType.on(a, b)).byCallIndex(pgClientListenerIndex)
 
         if (pgClientEvent === 'end') {
           const pgClientEndListener: () => void = pgClientListener
