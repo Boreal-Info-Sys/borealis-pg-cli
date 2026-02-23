@@ -37,7 +37,7 @@
     "globby": "^11.1.0",
     "mocha": "^10.8.2",
     "nock": "^14.0.11",
-    "nyc": "^15.1.0",
+    "nyc": "^18.0.0",
     "oclif": "^3.17.2",
     "shx": "^0.4.0",
     "ts-mockito": "^2.6.1",
@@ -47,7 +47,7 @@
   "resolutions": {
     "@oclif/plugin-warn-if-update-available": "^3.1.54",
     "ansi-regex": "^5.0.1",
-    "tar": "^7.5.7",
+    "tar": "^7.5.9",
     "tmp": "^0.2.5"
   },
   "engines": {
