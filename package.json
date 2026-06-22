@@ -21,7 +21,7 @@
     "@types/chai": "^5.2.3",
     "@types/chai-as-promised": "^8.0.2",
     "@types/chai-string": "^1.4.5",
-    "@types/luxon": "^3.7.1",
+    "@types/luxon": "^3.7.2",
     "@types/mocha": "^10.0.10",
     "@types/node": "^20.14.8",
     "@types/node-notifier": "^8.0.5",
