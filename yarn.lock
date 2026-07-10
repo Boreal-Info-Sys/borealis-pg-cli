@@ -237,10 +237,10 @@
   resolved "https://registry.yarnpkg.com/@heroku-cli/schema/-/schema-1.0.25.tgz#175d489d82c2ff0be700fe9fab8590b64c7e4f39"
   integrity sha512-7V6/WdTHrsvpqeqttm4zhzVJyt/Us/Cz9oS4yure4JdLtwlr2eF6PvlDLA5ZIvBybMtSDyxhHid0PeshKLtwxw==
 
-"@heroku/http-call@^5.5.0", "@heroku/http-call@^5.5.3":
-  version "5.5.3"
-  resolved "https://registry.yarnpkg.com/@heroku/http-call/-/http-call-5.5.3.tgz#92c84226f26a110647b0b7dde02d33ce050ef548"
-  integrity sha512-2YFK1z/kz0sK5k4XWu1DAh9jW+Tbct2//UB7bcMioDavy19KxmX6rP2flI9DNtVoeRmSS6p1LMSoOBFkzAY/bQ==
+"@heroku/http-call@^5.5.0", "@heroku/http-call@^5.6.0":
+  version "5.6.0"
+  resolved "https://registry.yarnpkg.com/@heroku/http-call/-/http-call-5.6.0.tgz#8d7d608d866261a736c19d092d2a502df6d8efa6"
+  integrity sha512-lXJLFUT12Xk68nW1kDDLmd+AGcDlRarVad/ylAvKKPcZFGLr1o/8wzYS+oek2Os/+Xsnwy/6Wz4Biu8bm/xpng==
   dependencies:
     chalk "^4.1.2"
     content-type "^1.0.5"
