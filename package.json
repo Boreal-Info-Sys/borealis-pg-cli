@@ -48,6 +48,7 @@
     "@heroku-cli/command/**/uuid": "^11.1.1",
     "node-notifier/**/uuid": "^11.1.1",
     "oclif/**/@oclif/plugin-warn-if-update-available": "^3.1.68",
+    "oclif/**/sigstore": "^4.1.1",
     "oclif/**/tar": "^7.5.22",
     "oclif/**/uuid": "^11.1.1",
     "oclif/**/yeoman-environment": "^6.1.0"
