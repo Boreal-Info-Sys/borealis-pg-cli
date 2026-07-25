@@ -45,12 +45,12 @@
     "typescript": "~4.9.5"
   },
   "resolutions": {
-    "@oclif/plugin-warn-if-update-available": "^3.1.65",
-    "ansi-regex": "^5.0.1",
-    "tar": "^7.5.15",
-    "tmp": "^0.2.7",
-    "uuid": "11.1.1",
-    "yeoman-environment": "^6.1.0"
+    "@heroku-cli/command/**/uuid": "^11.1.1",
+    "node-notifier/**/uuid": "^11.1.1",
+    "oclif/**/@oclif/plugin-warn-if-update-available": "^3.1.68",
+    "oclif/**/tar": "^7.5.22",
+    "oclif/**/uuid": "^11.1.1",
+    "oclif/**/yeoman-environment": "^6.1.0"
   },
   "engines": {
     "node": ">=16.20.2"
