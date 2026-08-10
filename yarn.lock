@@ -1216,10 +1216,10 @@
   resolved "https://registry.yarnpkg.com/@types/lodash/-/lodash-4.17.25.tgz#69765ac7bcddb0eb072961cf292524a8f5b3c2c0"
   integrity sha512-+K1NIO8I+F9/wNulfVvu23QYd0Pe9/OCqRrim4NoYIf1VoEDL90Ve4ClzpyqBLc7NpGGWRvYNCKZ1BE/Jpf8dQ==
 
-"@types/luxon@^3.7.3":
-  version "3.7.3"
-  resolved "https://registry.yarnpkg.com/@types/luxon/-/luxon-3.7.3.tgz#8e5e6bc12f6c0b14ca665245b6f2542e883e5432"
-  integrity sha512-pE7BSbKHiojpl4v7iEzdfFLXXJaH5RPJxI3Wr4x3HU59l83PJfhcUx4mGPWq245+DCAENAzRF/+ZoYr2tJCe/g==
+"@types/luxon@^3.7.4":
+  version "3.7.4"
+  resolved "https://registry.yarnpkg.com/@types/luxon/-/luxon-3.7.4.tgz#31da310d06b55214ea0e918b2d75704ab0df581b"
+  integrity sha512-V536ZAd6ZJztrrBlLcDFaaZrXNAL2E5uGmssWf/dpSiLkmkLScXUYhUBnWPmtW+cIqnNHzf6//TCMpIc9SCRRQ==
 
 "@types/minimatch@^3.0.3":
   version "3.0.5"
@@ -1264,10 +1264,10 @@
   resolved "https://registry.yarnpkg.com/@types/normalize-package-data/-/normalize-package-data-2.4.4.tgz#56e2cc26c397c038fab0e3a917a12d5c5909e901"
   integrity sha512-37i+OaWTh9qeK4LSHPsyRC7NahnGotNuZvjLSgcPzblpHB3rrCJxAOgI5gCdKm7coonsaX1Of0ILiTcnZjbfxA==
 
-"@types/pg@^8.20.3":
-  version "8.20.4"
-  resolved "https://registry.yarnpkg.com/@types/pg/-/pg-8.20.4.tgz#b00123de804f6c07124e5c67010a818d2a35da73"
-  integrity sha512-Jz7UDOlIiFJuacC0TlBoLyNtmwlA/wpIyPDd3tvUqlRM+HzkWy2xUgpFpaXtbfTAFF6sIGq5lsCDBdJnhky1Xg==
+"@types/pg@^8.21.0":
+  version "8.21.0"
+  resolved "https://registry.yarnpkg.com/@types/pg/-/pg-8.21.0.tgz#338b10ccdce0cc0ca811bc7d7936268a61ac1ec8"
+  integrity sha512-AYdtudzabjLZgVgRZmAnU8bAnVUXzuJX2IYHeSIiIHm68olD+LgQYCGWdtcNYnP0uq9c4S4NibVG3Ni7VbKW7Q==
   dependencies:
     "@types/node" "*"
     pg-protocol "*"
