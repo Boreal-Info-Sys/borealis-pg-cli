@@ -22,3 +22,7 @@ updates:
       interval: daily
     cooldown:
       default-days: 10
+    groups:
+      github-actions:
+        patterns:
+          - '*'
