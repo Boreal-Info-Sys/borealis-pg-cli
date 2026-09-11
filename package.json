@@ -37,7 +37,7 @@
     "mocha": "^12.0.0",
     "nock": "^14.0.17",
     "nyc": "^18.0.0",
-    "oclif": "^3.17.2",
+    "oclif": "^5.0.0",
     "shx": "^0.4.0",
     "ts-mockito": "^2.6.1",
     "ts-node": "^10.9.2",
@@ -45,12 +45,7 @@
   },
   "resolutions": {
     "@heroku-cli/command/**/uuid": "^11.1.1",
-    "node-notifier/**/uuid": "^11.1.1",
-    "oclif/**/@oclif/plugin-warn-if-update-available": "^3.1.68",
-    "oclif/**/sigstore": "^4.1.1",
-    "oclif/**/tar": "^7.5.22",
-    "oclif/**/uuid": "^11.1.1",
-    "oclif/**/yeoman-environment": "^6.1.0"
+    "node-notifier/**/uuid": "^11.1.1"
   },
   "engines": {
     "node": ">=16.20.2"
