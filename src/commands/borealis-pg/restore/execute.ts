@@ -157,7 +157,6 @@ latest restorable times of an add-on.`
   }
 
   private async waitForProvisioning(addonName: string) {
-    /* eslint-disable no-await-in-loop */
     // First wait until the Heroku API considers the add-on provisioned
     let herokuAddonStatus = herokuProvisioningAddonStatus
     while (herokuAddonStatus === herokuProvisioningAddonStatus) {

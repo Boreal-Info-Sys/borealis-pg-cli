@@ -85,10 +85,10 @@ describe('data integration list command', () => {
         `Fetching data integration list for add-on ${fakeAddonName}... done\n`)
 
       expect(ctx.stdout).to.containIgnoreSpaces(
-        ' Data Integration    DB Username    SSH Username    Write Access    Created At')
+        '| Data Integration | DB Username | SSH Username | Write Access | Created At |')
       expect(ctx.stdout).to.containIgnoreSpaces(
-        ` ${fakeIntegration1Name} ${fakeIntegration1DbUsername} ${fakeIntegration1SshUsername} ${fakeIntegration1WriteAccess} ${DateTime.fromISO(fakeIntegration1CreatedAt).toISO()}\n` +
-        ` ${fakeIntegration2Name} ${fakeIntegration2DbUsername} ${fakeIntegration2SshUsername} ${fakeIntegration2WriteAccess} ${DateTime.fromISO(fakeIntegration2CreatedAt).toISO()}`)
+        `| ${fakeIntegration1Name} | ${fakeIntegration1DbUsername} | ${fakeIntegration1SshUsername} | ${fakeIntegration1WriteAccess} | ${DateTime.fromISO(fakeIntegration1CreatedAt).toISO()} |\n` +
+        `| ${fakeIntegration2Name} | ${fakeIntegration2DbUsername} | ${fakeIntegration2SshUsername} | ${fakeIntegration2WriteAccess} | ${DateTime.fromISO(fakeIntegration2CreatedAt).toISO()} |`)
     })
 
   defaultTestContext

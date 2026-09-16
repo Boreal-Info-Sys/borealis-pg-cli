@@ -275,7 +275,6 @@ describe('secure tunnel command', () => {
         customPgPort,
         anyFunction())).once()
 
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const [_, _1, _2, _3, portForwardListener] = capture(mockSshClientType.forwardOut).last()
       assert(typeof portForwardListener !== 'undefined')
       portForwardListener(undefined, mockSshStreamInstance)
@@ -294,7 +293,6 @@ describe('secure tunnel command', () => {
       verify(mockNodeProcessType.on(anyString(), anyFunction())).once()
       verify(mockNodeProcessType.on('SIGINT', anyFunction())).once()
 
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const [_, processListener] = capture(mockNodeProcessType.on).last()
       const sigintListener = (processListener as unknown) as NodeJS.SignalsListener
       sigintListener('SIGINT')
@@ -350,7 +348,6 @@ describe('secure tunnel command', () => {
       customPgPort.toString(),
     ])
     .it('handles a local port conflict', ctx => {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const [_, listener] = capture(mockTcpServerType.on).last()
       const errorListener = listener as ((err: unknown) => void)
 
@@ -363,7 +360,6 @@ describe('secure tunnel command', () => {
   defaultTestContext
     .command(['borealis-pg:tunnel', '-a', fakeHerokuAppName])
     .it('handles a generic proxy server error', () => {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const [_, listener] = capture(mockTcpServerType.on).last()
       const errorListener = listener as ((err: unknown) => void)
 
@@ -383,7 +379,6 @@ describe('secure tunnel command', () => {
       const [tcpConnectionListener] = capture(mockTcpServerFactoryType.create).last()
       tcpConnectionListener(mockTcpSocketInstance)
 
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const [_, _1, _2, _3, portForwardListener] = capture(mockSshClientType.forwardOut).last()
       assert(typeof portForwardListener !== 'undefined')
 

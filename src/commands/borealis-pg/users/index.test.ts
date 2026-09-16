@@ -88,11 +88,12 @@ describe('database users command', () => {
       expect(ctx.stderr).to.contain(`Fetching user list for add-on ${fakeAddonName}... done`)
 
       expect(ctx.stdout).to.containIgnoreSpaces(
-        ' Add-on User             DB Read-only Username DB Read/Write Username \n' +
-        ' ─────────────────────── ───────────────────── ────────────────────── \n' +
-        ` Heroku App User ${fakeAppReadOnlyUsername} ${fakeAppReadWriteUsername} \n` +
-        ` ${fakePersonalUser1} ${fakePersonalReadOnlyUsername1} ${fakePersonalReadWriteUsername1} \n` +
-        ` ${fakePersonalUser2} ${fakePersonalReadOnlyUsername2} ${fakePersonalReadWriteUsername2} \n`)
+        '| Add-on User | DB Read-only Username | DB Read/Write Username |')
+
+      expect(ctx.stdout).to.containIgnoreSpaces(
+        `| Heroku App User | ${fakeAppReadOnlyUsername} | ${fakeAppReadWriteUsername} |\n` +
+        `| ${fakePersonalUser1} | ${fakePersonalReadOnlyUsername1} | ${fakePersonalReadWriteUsername1} |\n` +
+        `| ${fakePersonalUser2} | ${fakePersonalReadOnlyUsername2} | ${fakePersonalReadWriteUsername2} |\n`)
     })
 
   defaultTestContext

@@ -1,8 +1,8 @@
 import {HTTP, HTTPError} from '@heroku/http-call'
 import color from '@heroku-cli/color'
 import {Command} from '@heroku-cli/command'
-import {ux} from '@oclif/core'
 import {DateTime} from 'luxon'
+import Table, {Header} from 'tty-table'
 import {applyActionSpinner} from '../../../async-actions'
 import {getBorealisPgApiUrl, getBorealisPgAuthHeader} from '../../../borealis-api'
 import {
@@ -40,14 +40,44 @@ via a secure tunnel using semi-permanent SSH server and database credentials.`
 
       const responseBody = response.body as {integrations: Array<DataIntegrationInfo>}
       if (responseBody.integrations.length > 0) {
-        const columns: {[name: string]: any} = {
-          name: {header: 'Data Integration'},
-          dbUsername: {header: 'DB Username'},
-          sshUsername: {header: 'SSH Username'},
-          writeAccess: {header: 'Write Access'},
-          createdAt: {header: 'Created At'},
-        }
-        const normalizedIntegrations = responseBody.integrations.map(value => {
+        const headers: Header[] = [
+          {
+            alias: 'Data Integration',
+            value: 'name',
+            headerAlign: 'left',
+            align: 'left',
+            headerColor: 'white',
+          },
+          {
+            alias: 'DB Username',
+            value: 'dbUsername',
+            headerAlign: 'left',
+            align: 'left',
+          },
+          {
+            alias: 'SSH Username',
+            value: 'sshUsername',
+            headerAlign: 'left',
+            align: 'left',
+            headerColor: 'white',
+          },
+          {
+            alias: 'Write Access',
+            value: 'writeAccess',
+            headerAlign: 'left',
+            align: 'left',
+            headerColor: 'white',
+          },
+          {
+            alias: 'Created At',
+            value: 'createdAt',
+            headerAlign: 'left',
+            align: 'left',
+            headerColor: 'white',
+          },
+        ]
+
+        const normalizedRows = responseBody.integrations.map(value => {
           return {
             name: value.name,
             dbUsername: value.dbUsername,
@@ -57,8 +87,13 @@ via a secure tunnel using semi-permanent SSH server and database credentials.`
           }
         })
 
-        this.log()
-        ux.table(normalizedIntegrations, columns, {'no-truncate': true})
+        const table = Table(
+          headers,
+          normalizedRows,
+          {truncate: false, borderStyle: 'dashed', compact: true},
+        )
+
+        this.log(table.render())
       } else {
         this.warn('No data integrations found')
       }
@@ -67,7 +102,7 @@ via a secure tunnel using semi-permanent SSH server and database credentials.`
     }
   }
 
-  async catch(err: any) {
+  async catch(err: Error) {
     /* istanbul ignore else */
     if (err instanceof HTTPError) {
       if (err.statusCode === 404) {

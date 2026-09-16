@@ -237,7 +237,6 @@ describe('openSshTunnel', () => {
       customPgPort,
       anyFunction())).once()
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [_, _1, _2, _3, portForwardListener] = capture(mockSshClientType.forwardOut).last()
     assert(typeof portForwardListener !== 'undefined')
     portForwardListener(undefined, mockSshStreamInstance)
@@ -263,7 +262,6 @@ describe('openSshTunnel', () => {
       defaultPgPort,
       anyFunction())).once()
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [_, _1, _2, _3, portForwardListener] = capture(mockSshClientType.forwardOut).last()
     assert(typeof portForwardListener !== 'undefined')
     portForwardListener(undefined, mockSshStreamInstance)
@@ -287,7 +285,6 @@ describe('openSshTunnel', () => {
   it('handles a local port conflict', () => {
     openSshTunnel(fakeCompleteConnInfo, mockLoggerInstance, _ => true)
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [_, listener] = capture(mockTcpServerType.on).last()
     const errorListener = listener as ((err: unknown) => void)
 
@@ -305,7 +302,6 @@ describe('openSshTunnel', () => {
   it('handles permission denied for port', () => {
     openSshTunnel(fakeCompleteConnInfo, mockLoggerInstance, _ => true)
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [_, listener] = capture(mockTcpServerType.on).last()
     const errorListener = listener as ((err: unknown) => void)
 
@@ -323,7 +319,6 @@ describe('openSshTunnel', () => {
   it('handles a generic proxy server error', () => {
     openSshTunnel(fakeCompleteConnInfo, mockLoggerInstance, _ => true)
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [_, listener] = capture(mockTcpServerType.on).last()
     const errorListener = listener as ((err: unknown) => void)
 
@@ -343,7 +338,6 @@ describe('openSshTunnel', () => {
     const [tcpConnectionListener] = capture(mockTcpServerFactoryType.create).last()
     tcpConnectionListener(mockTcpSocketInstance)
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [_, _1, _2, _3, portForwardListener] = capture(mockSshClientType.forwardOut).last()
     assert(typeof portForwardListener !== 'undefined')
 

@@ -63,7 +63,7 @@ ${cliCmdColour('borealis-pg:integrations:revoke')} command.`
     }
   }
 
-  async catch(err: any) {
+  async catch(err: Error) {
     /* istanbul ignore else */
     if (err instanceof HTTPError) {
       if (err.statusCode === 400) {

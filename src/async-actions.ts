@@ -16,7 +16,7 @@ export async function applyActionSpinner<T>(message: string, action: Promise<T>)
     ux.action.stop()
 
     return result
-  } catch (error: any) {
+  } catch (error) {
     ux.action.stop(color.bold.redBright('!'))
 
     throw error

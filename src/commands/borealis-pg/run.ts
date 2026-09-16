@@ -2,9 +2,9 @@ import {HTTP, HTTPError} from '@heroku/http-call'
 import color from '@heroku-cli/color'
 import {Command, flags} from '@heroku-cli/command'
 import {ConfigVars} from '@heroku-cli/schema'
-import {ux} from '@oclif/core'
 import {readFileSync} from 'fs'
 import {QueryResult} from 'pg'
+import Table, {Header} from 'tty-table'
 import {applyActionSpinner} from '../../async-actions'
 import {getBorealisPgApiUrl, getBorealisPgAuthHeader} from '../../borealis-api'
 import {
@@ -300,24 +300,28 @@ like pgAdmin).`
               const resultInstance = Array.isArray(results) ? results[results.length - 1] : results
 
               if (resultInstance.fields && resultInstance.fields.length > 0) {
-                const columns = resultInstance.fields.reduce(
-                  (accumulator: {[name: string]: any}, field) => {
-                    accumulator[field.name] = {header: field.name}
+                const headers: Header[] = resultInstance.fields.map(field => (
+                  {
+                    value: field.name,
+                    headerAlign: 'left',
+                    align: 'left',
+                    headerColor: 'white',
+                    formatter: (cellValue) =>
+                      (cellValue instanceof Date) ? cellValue.toISOString() : cellValue,
+                  }))
 
-                    return accumulator
-                  },
-                  {})
-
-                ux.table(
+                const table = Table(
+                  headers,
                   resultInstance.rows,
-                  columns,
-                  {'no-truncate': true, output: outputFormat})
+                  {truncate: false, borderStyle: 'dashed', compact: true, },
+                )
+
+                this.log(table.render())
               }
 
-              if (!outputFormat) {
+              if (!outputFormat || outputFormat === defaultOutputFormat) {
                 // Only show the row count for the default format (undefined aka "table")
                 const rowSuffix = resultInstance.rowCount === 1 ? 'row' : 'rows'
-                this.log()
                 this.log(`(${resultInstance.rowCount ?? 0} ${rowSuffix})`)
               }
 
@@ -384,7 +388,7 @@ like pgAdmin).`
     }
   }
 
-  async catch(err: any) {
+  async catch(err: Error) {
     /* istanbul ignore else */
     if (err instanceof HTTPError) {
       if (err.statusCode === 403) {

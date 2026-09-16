@@ -1,7 +1,7 @@
 import {HTTP, HTTPError} from '@heroku/http-call'
 import color from '@heroku-cli/color'
 import {Command, flags} from '@heroku-cli/command'
-import {ux} from '@oclif/core'
+import inquirer from 'inquirer'
 import {applyActionSpinner} from '../../../async-actions'
 import {getBorealisPgApiUrl, getBorealisPgAuthHeader} from '../../../borealis-api'
 import {
@@ -45,9 +45,7 @@ export default class RemoveDataIntegrationCommand extends Command {
   async run() {
     const {flags} = await this.parse(RemoveDataIntegrationCommand)
     const integrationName = flags[dataIntegrationOptionName]
-    const confirmation = flags.confirm ?
-      flags.confirm :
-      (await ux.prompt('Enter the name of the data integration to confirm its removal'))
+    const confirmation: string = flags.confirm ? flags.confirm : await promptForConfirmation()
 
     if (confirmation.trim() !== integrationName) {
       this.error(
@@ -71,7 +69,7 @@ export default class RemoveDataIntegrationCommand extends Command {
     }
   }
 
-  async catch(err: any) {
+  async catch(err: Error) {
     /* istanbul ignore else */
     if (err instanceof HTTPError) {
       if (err.statusCode === 403) {
@@ -89,4 +87,14 @@ export default class RemoveDataIntegrationCommand extends Command {
       throw err
     }
   }
+}
+
+async function promptForConfirmation(): Promise<string> {
+  const result = await inquirer.prompt({
+    type: 'input',
+    name: 'confirmation',
+    message: 'Enter the name of the extension to confirm its removal'
+  })
+
+  return result.confirmation
 }

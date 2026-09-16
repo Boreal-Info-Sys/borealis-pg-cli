@@ -76,7 +76,7 @@ See the ${cliCmdColour('borealis-pg:restore:execute')} command to perform a rest
     this.log(`          ${keyColour('Latest Restorable Time')}: ${valueColour(latestRestoreTimeDisplay)}`)
   }
 
-  async catch(err: any) {
+  async catch(err: Error) {
     /* istanbul ignore else */
     if (err instanceof HTTPError) {
       if (err.statusCode === 404) {

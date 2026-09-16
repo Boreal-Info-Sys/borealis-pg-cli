@@ -453,11 +453,11 @@ describe('noninteractive run command', () => {
         rowCount: 2,
       })
 
-      expect(ctx.stdout).to.contain(
-        ' id value1 value2 \n' +
-        ' ── ────── ────── \n' +
-        ' 21 test1         \n' +
-        ' 33 test2  test3  \n')
+      expect(ctx.stdout).to.containIgnoreSpaces(
+        '| id | value1 | value2 |')
+      expect(ctx.stdout).to.containIgnoreSpaces(
+        '| 21 | test1 | |\n' +
+        '| 33 | test2 | test3 |\n')
       expect(ctx.stdout).to.contain('(2 rows)')
 
       verify(mockPgClientType.end()).once()
@@ -636,13 +636,13 @@ describe('noninteractive run command', () => {
         rowCount: 4,
       })
 
-      expect(ctx.stdout).to.contain(
-        ' id  foo  \n' +
-        ' ─── ──── \n' +
-        ' 9   val1 \n' +
-        ' 104 val2 \n' +
-        ' 23       \n' +
-        ' 1   one  \n')
+      expect(ctx.stdout).to.containIgnoreSpaces(
+        '| id | foo |')
+      expect(ctx.stdout).to.containIgnoreSpaces(
+        '| 9 | val1 |\n' +
+        '| 104 | val2 |\n' +
+        '| 23 | |\n' +
+        '| 1 | one |\n')
       expect(ctx.stdout).to.contain('(4 rows)')
 
       verify(mockPgClientType.end()).once()
@@ -719,7 +719,6 @@ describe('noninteractive run command', () => {
 
       verify(mockPgClientType.query(fakeDbCommand, anyFunction())).once()
 
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const [_, queryArg2] = capture(mockPgClientType.query).last()
       const queryCallback = (queryArg2 as unknown) as ((err: any, results: any) => void)
 
@@ -843,7 +842,6 @@ describe('noninteractive run command', () => {
         customPgPort,
         anyFunction())).once()
 
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const [_, _1, _2, _3, portForwardListener] = capture(mockSshClientType.forwardOut).last()
       assert(typeof portForwardListener !== 'undefined')
       portForwardListener(undefined, mockSshStreamInstance)
@@ -996,7 +994,6 @@ describe('noninteractive run command', () => {
       fakeShellCommand,
     ])
     .it('handles a local port conflict', ctx => {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const [_, listener] = capture(mockTcpServerType.on).last()
       const errorListener = listener as ((err: unknown) => void)
 
@@ -1009,7 +1006,6 @@ describe('noninteractive run command', () => {
   defaultTestContext
     .command(['borealis-pg:run', '-a', fakeHerokuAppName, '-e', fakeShellCommand])
     .it('handles a generic proxy server error', () => {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const [_, listener] = capture(mockTcpServerType.on).last()
       const errorListener = listener as ((err: unknown) => void)
 
@@ -1029,7 +1025,6 @@ describe('noninteractive run command', () => {
       const [tcpConnectionListener] = capture(mockTcpServerFactoryType.create).last()
       tcpConnectionListener(mockTcpSocketInstance)
 
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const [_, _1, _2, _3, portForwardListener] = capture(mockSshClientType.forwardOut).last()
       assert(typeof portForwardListener !== 'undefined')
 
@@ -1252,7 +1247,6 @@ describe('noninteractive run command', () => {
     verify(mockPgClientType.query(anyString(), anyFunction())).once()
     verify(mockPgClientType.query(expectedDbCommand, anyFunction())).once()
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [_, queryArg2] = capture(mockPgClientType.query).last()
 
     return (queryArg2 as unknown) as ((err: any, results: any) => void)

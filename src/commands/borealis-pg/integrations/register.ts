@@ -124,7 +124,7 @@ supports it.`
     this.log(` ${keyColour('SSH Server Public Host Key')}: ${valueColour(dataIntegrationInfo.publicSshHostKey)}`)
   }
 
-  async catch(err: any) {
+  async catch(err: Error) {
     /* istanbul ignore else */
     if (err instanceof HTTPError) {
       if (err.statusCode === 400) {
