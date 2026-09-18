@@ -2,7 +2,7 @@ import { defineConfig, globalIgnores } from 'eslint/config';
 import tseslint from 'typescript-eslint'
 
 export default defineConfig([
-  globalIgnores(['/lib']),
+  globalIgnores(['dist']),
   {
     extends: tseslint.configs.recommended,
 

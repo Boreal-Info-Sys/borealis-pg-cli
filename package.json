@@ -51,7 +51,7 @@
     "node": ">=20.0.0"
   },
   "files": [
-    "/lib",
+    "/dist",
     "/npm-shrinkwrap.json",
     "/oclif.manifest.json",
     "/yarn.lock"
@@ -61,7 +61,7 @@
     "oclif-plugin"
   ],
   "license": "MIT",
-  "main": "lib/index.js",
+  "main": "dist/index.js",
   "nyc": {
     "all": true,
     "include": [
@@ -78,7 +78,7 @@
     "statements": 100
   },
   "oclif": {
-    "commands": "./lib/commands",
+    "commands": "./dist/commands",
     "bin": "heroku",
     "devPlugins": [
       "@oclif/plugin-help"
@@ -106,8 +106,8 @@
   },
   "repository": "Boreal-Info-Sys/borealis-pg-cli",
   "scripts": {
-    "build": "shx rm -rf lib && tsc -b",
-    "clean": "shx rm -rf lib node_modules",
+    "build": "shx rm -rf dist && tsc --project tsconfig.prod.json",
+    "clean": "shx rm -rf dist node_modules .nyc_output coverage tsconfig.tsbuildinfo",
     "lint": "eslint --max-warnings 0 --ext .ts --config eslint.config.mjs .",
     "install": "node -e 'console.warn(\"NOTE: It is safe to ignore errors from gyp (if any) in the preceding output\")'",
     "postpack": "shx rm -f oclif.manifest.json",
