@@ -1,7 +1,7 @@
 import {AddOnAttachment} from '@heroku-cli/schema'
-import {expect} from 'fancy-test'
 import {anyString, anything, instance, mock, verify, when} from 'ts-mockito'
-import {consoleColours, formatCliOptionName, processAddonAttachmentInfo} from './command-components'
+import {consoleColours, formatCliOptionName, getLocalPgHost, processAddonAttachmentInfo} from './command-components'
+import {expect} from './test-utils'
 
 describe('formatCliOptionName', () => {
   it('returns a formatted CLI option name', () => {
@@ -101,5 +101,13 @@ describe('processAddonAttachmentInfo', () => {
       .to.throw()
 
     verify(errorHandlerMockType.func(expectedMessage)).once()
+  })
+})
+
+describe('getLocalPgHost', () => {
+  it('always returns the default PG tunnel hostname in test mode', async () => {
+    const result = await getLocalPgHost()
+
+    expect(result).to.equal('pg-tunnel.borealis-data.com')
   })
 })

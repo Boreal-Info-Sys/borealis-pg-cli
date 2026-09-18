@@ -3,18 +3,15 @@ import chaiAsPromised from 'chai-as-promised'
 import chaiString from 'chai-string'
 import path from 'path'
 import {globSync} from 'tinyglobby'
-import {test as oclifTest} from '@oclif/test'
-
-process.env.BOREALIS_PG_ADDON_SERVICE_NAME = 'borealis-pg'
-process.env.BOREALIS_PG_API_BASE_URL = 'https://pg-heroku-addon-api.borealis-data.com'
 
 const customizedChai = chai.use(chaiString).use(chaiAsPromised)
-export const expect = customizedChai.expect
-
-export const test = oclifTest
+export const expect: Chai.ExpectStatic = customizedChai.expect
 
 export const herokuApiBaseUrl = 'https://api.heroku.com'
 export const borealisPgApiBaseUrl = 'https://pg-heroku-addon-api.borealis-data.com'
+
+process.env.BOREALIS_PG_ADDON_SERVICE_NAME = 'borealis-pg'
+process.env.BOREALIS_PG_API_BASE_URL = borealisPgApiBaseUrl
 
 // The following is a workaround for broken line number reporting in oclif commands (see
 // https://github.com/oclif/test/issues/50 and https://github.com/oclif/oclif/issues/314)
