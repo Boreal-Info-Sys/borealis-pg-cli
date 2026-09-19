@@ -1,5 +1,7 @@
-import {consoleColours} from '../../../command-components'
-import {borealisPgApiBaseUrl, expect, herokuApiBaseUrl, test} from '../../../test-utils'
+import {runCommand} from '@oclif/test'
+import {MockSTDIN, stdin} from 'mock-stdin'
+import nock from 'nock'
+import {borealisPgApiBaseUrl, expect, herokuApiBaseUrl} from '../../../test-utils'
 
 const fakeAddonId = 'd5e50676-9b3d-4e46-bf7f-653169a1154b'
 const fakeAddonName = 'borealis-pg-my-fake-addon'
@@ -16,11 +18,13 @@ const fakeHerokuAuthId = 'my-fake-heroku-auth'
 const fakeExt1 = 'my-first-fake-pg-extension'
 const fakeExt2 = 'my-second-fake-pg-extension'
 
-const defaultTestContext = test.stdout()
-  .stderr()
-  .nock(
-    herokuApiBaseUrl,
-    api => api
+describe('extension removal command', () => {
+  let mockStdin: MockSTDIN
+
+  beforeEach(() => {
+    mockStdin = stdin()
+
+    nock(herokuApiBaseUrl)
       .post('/oauth/authorizations', {
         description: 'Borealis PG CLI plugin temporary auth token',
         expires_in: 180,
@@ -46,16 +50,20 @@ const defaultTestContext = test.stdout()
           id: fakeAttachmentId,
           name: fakeAttachmentName,
         },
-      ]))
+      ])
+  })
 
-describe('extension removal command', () => {
-  defaultTestContext
-    .nock(
-      borealisPgApiBaseUrl,
-      {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}},
-      api => api.delete(`/heroku/resources/${fakeAddonName}/pg-extensions/${fakeExt1}`)
-        .reply(200, {success: true}))
-    .command([
+  afterEach(() => {
+    mockStdin.reset(true)
+    nock.cleanAll()
+  })
+
+  it('removes the requested extension', async () => {
+    nock(borealisPgApiBaseUrl, {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}})
+      .delete(`/heroku/resources/${fakeAddonName}/pg-extensions/${fakeExt1}`)
+      .reply(200, {success: true})
+
+    const {stdout, stderr} = await runCommand([
       'borealis-pg:extensions:remove',
       '--confirm',
       fakeExt1,
@@ -63,62 +71,63 @@ describe('extension removal command', () => {
       fakeHerokuAppName,
       fakeExt1,
     ])
-    .it('removes the requested extension', ctx => {
-      expect(ctx.stderr).to.endWith(
-        `Removing Postgres extension ${fakeExt1} from add-on ${fakeAddonName}... done\n`)
-      expect(ctx.stdout).to.equal('')
+
+    expect(stderr).to.endWith(
+      `Removing Postgres extension ${fakeExt1} from add-on ${fakeAddonName}... done\n`)
+    expect(stdout).to.equal('')
+    expect(nock.pendingMocks()).to.be.empty
+  })
+
+  it(
+    'suppresses errors with the --suppress-missing option when an extension is not installed',
+    async () => {
+      nock(borealisPgApiBaseUrl, {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}})
+        .delete(`/heroku/resources/${fakeAddonName}/pg-extensions/${fakeExt1}`)
+        .reply(404, {resourceType: 'extension'})
+
+      const {stdout, stderr} = await runCommand([
+        'borealis-pg:extensions:remove',
+        '--confirm',
+        fakeExt1,
+        '--app',
+        fakeHerokuAppName,
+        '--suppress-missing',
+        fakeExt1,
+      ])
+
+      expect(stderr).to.contain(
+        `Removing Postgres extension ${fakeExt1} from add-on ${fakeAddonName}... !`)
+      expect(stderr).to.contain(`Extension ${fakeExt1} is not installed`)
+      expect(stdout).to.equal('')
+      expect(nock.pendingMocks()).to.be.empty
     })
 
-  defaultTestContext
-    .nock(
-      borealisPgApiBaseUrl,
-      {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}},
-      api => api.delete(`/heroku/resources/${fakeAddonName}/pg-extensions/${fakeExt1}`)
-        .reply(404, {resourceType: 'extension'}))
-    .command([
-      'borealis-pg:extensions:remove',
-      '--confirm',
-      fakeExt1,
-      '--app',
-      fakeHerokuAppName,
-      '--suppress-missing',
-      fakeExt1,
-    ])
-    .it(
-      'suppresses errors with the --suppress-missing option when an extension is not installed',
-      ctx => {
-        expect(ctx.stderr).to.contain(
-          `Removing Postgres extension ${fakeExt1} from add-on ${fakeAddonName}... !`)
-        expect(ctx.stderr).to.contain(`Extension ${fakeExt1} is not installed`)
-        expect(ctx.stdout).to.equal('')
-      })
+  it('removes the requested extension after a successful confirmation prompt', async () => {
+    nock(borealisPgApiBaseUrl, {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}})
+      .delete(`/heroku/resources/${fakeAddonName}/pg-extensions/${fakeExt1}`)
+      .reply(200, {success: true})
 
-  defaultTestContext
-    .nock(
-      borealisPgApiBaseUrl,
-      {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}},
-      api => api.delete(`/heroku/resources/${fakeAddonName}/pg-extensions/${fakeExt1}`)
-        .reply(200, {success: true}))
-    .stdin(` ${fakeExt1} `, 1200) // Fakes keyboard input for the confirmation prompt
-    .command(['borealis-pg:extensions:remove', '-a', fakeHerokuAppName, fakeExt1])
-    .it('removes the requested extension after a successful confirmation prompt', ctx => {
-      expect(ctx.stderr).to.endWith(
-        `Removing Postgres extension ${fakeExt1} from add-on ${fakeAddonName}... done\n`)
-      expect(ctx.stdout).to.equal('')
-    })
+    setTimeout(() => mockStdin.send(` ${fakeExt1} \n`), 1000)
 
-  test.stdout()
-    .stderr()
-    .stdin('WRONG!', 1200) // Fakes keyboard input for the confirmation prompt
-    .command(['borealis-pg:extensions:remove', '-a', fakeHerokuAppName, fakeExt2])
-    .catch(/^Invalid confirmation provided/)
-    .it('exits with an error if the confirmation prompt fails', ctx => {
-      expect(ctx.stdout).to.equal('')
-    })
+    const {stderr} = await runCommand(
+      ['borealis-pg:extensions:remove', '-a', fakeHerokuAppName, fakeExt1])
 
-  test.stdout()
-    .stderr()
-    .command([
+    expect(stderr).to.endWith(
+      `Removing Postgres extension ${fakeExt1} from add-on ${fakeAddonName}... done\n`)
+    expect(nock.pendingMocks()).to.be.empty
+  })
+
+  it('exits with an error if the confirmation prompt fails', async () => {
+    setTimeout(() => mockStdin.send('WRONG!\n'), 1000)
+
+    const {error} = await runCommand(
+      ['borealis-pg:extensions:remove', '-a', fakeHerokuAppName, fakeExt2])
+
+    expect(error?.message).to.contain('Invalid confirmation provided')
+  })
+
+  it('exits with an error if the --confirm option has the wrong value', async () => {
+    const {error} = await runCommand([
       'borealis-pg:extensions:remove',
       '-c',
       'WRONG!',
@@ -126,17 +135,16 @@ describe('extension removal command', () => {
       fakeHerokuAppName,
       fakeExt2,
     ])
-    .catch(/^Invalid confirmation provided/)
-    .it('exits with an error if the --confirm option has the wrong value', ctx => {
-      expect(ctx.stdout).to.equal('')
-    })
 
-  defaultTestContext
-    .nock(
-      borealisPgApiBaseUrl,
-      api => api.delete(`/heroku/resources/${fakeAddonName}/pg-extensions/${fakeExt1}`)
-        .reply(404, {reason: 'Add-on does not exist', resourceType: 'addon'}))
-    .command([
+    expect(error?.message).to.contain('Invalid confirmation provided')
+  })
+
+  it('exits with an error if the add-on was not found', async () => {
+    nock(borealisPgApiBaseUrl)
+      .delete(`/heroku/resources/${fakeAddonName}/pg-extensions/${fakeExt1}`)
+      .reply(404, {reason: 'Add-on does not exist', resourceType: 'addon'})
+
+    const {error} = await runCommand([
       'borealis-pg:extensions:remove',
       '-c',
       fakeExt1,
@@ -144,17 +152,16 @@ describe('extension removal command', () => {
       fakeHerokuAppName,
       fakeExt1,
     ])
-    .catch('Add-on is not a Borealis Isolated Postgres add-on')
-    .it('exits with an error if the add-on was not found', ctx => {
-      expect(ctx.stdout).to.equal('')
-    })
 
-  defaultTestContext
-    .nock(
-      borealisPgApiBaseUrl,
-      api => api.delete(`/heroku/resources/${fakeAddonName}/pg-extensions/${fakeExt1}`)
-        .reply(400, {reason: 'Extension has dependents'}))
-    .command([
+    expect(error?.message).to.contain('Add-on is not a Borealis Isolated Postgres add-on')
+  })
+
+  it('exits with an error if the extension has dependents', async () => {
+    nock(borealisPgApiBaseUrl)
+      .delete(`/heroku/resources/${fakeAddonName}/pg-extensions/${fakeExt1}`)
+      .reply(400, {reason: 'Extension has dependents'})
+
+    const {error} = await runCommand([
       'borealis-pg:extensions:remove',
       '-c',
       fakeExt1,
@@ -162,17 +169,16 @@ describe('extension removal command', () => {
       fakeHerokuAppName,
       fakeExt1,
     ])
-    .catch(new RegExp(`^Extension .*${fakeExt1}.* has dependent extensions or objects`))
-    .it('exits with an error if the extension has dependents', ctx => {
-      expect(ctx.stdout).to.equal('')
-    })
 
-  defaultTestContext
-    .nock(
-      borealisPgApiBaseUrl,
-      api => api.delete(`/heroku/resources/${fakeAddonName}/pg-extensions/${fakeExt2}`)
-        .reply(404, {reason: 'Extension does not exist', resourceType: 'extension'}))
-    .command([
+    expect(error?.message).to.contain(`Extension ${fakeExt1} has dependent extensions or objects`)
+  })
+
+  it('exits with an error if the extension is not installed', async () => {
+    nock(borealisPgApiBaseUrl)
+      .delete(`/heroku/resources/${fakeAddonName}/pg-extensions/${fakeExt2}`)
+      .reply(404, {reason: 'Extension does not exist', resourceType: 'extension'})
+
+    const {error} = await runCommand([
       'borealis-pg:extensions:remove',
       '-c',
       fakeExt2,
@@ -180,17 +186,16 @@ describe('extension removal command', () => {
       fakeHerokuAppName,
       fakeExt2,
     ])
-    .catch(`Extension ${consoleColours.pgExtension(fakeExt2)} is not installed`)
-    .it('exits with an error if the extension is not installed', ctx => {
-      expect(ctx.stdout).to.equal('')
-    })
 
-  defaultTestContext
-    .nock(
-      borealisPgApiBaseUrl,
-      api => api.delete(`/heroku/resources/${fakeAddonName}/pg-extensions/${fakeExt1}`)
-        .reply(422, {reason: 'Not ready yet'}))
-    .command([
+    expect(error?.message).to.contain(`Extension ${fakeExt2} is not installed`)
+  })
+
+  it('exits with an error if the add-on is not fully provisioned', async () => {
+    nock(borealisPgApiBaseUrl)
+      .delete(`/heroku/resources/${fakeAddonName}/pg-extensions/${fakeExt1}`)
+      .reply(422, {reason: 'Not ready yet'})
+
+    const {error} = await runCommand([
       'borealis-pg:extensions:remove',
       '-c',
       fakeExt1,
@@ -198,17 +203,16 @@ describe('extension removal command', () => {
       fakeHerokuAppName,
       fakeExt1,
     ])
-    .catch('Add-on is not finished provisioning')
-    .it('exits with an error if the add-on is not fully provisioned', ctx => {
-      expect(ctx.stdout).to.equal('')
-    })
 
-  defaultTestContext
-    .nock(
-      borealisPgApiBaseUrl,
-      api => api.delete(`/heroku/resources/${fakeAddonName}/pg-extensions/${fakeExt1}`)
-        .reply(423, {reason: 'Locked'}))
-    .command([
+    expect(error?.message).to.contain('Add-on is not finished provisioning')
+  })
+
+  it('exits with an error if the add-on is undergoing a PostgreSQL version upgrade', async () => {
+    nock(borealisPgApiBaseUrl)
+      .delete(`/heroku/resources/${fakeAddonName}/pg-extensions/${fakeExt1}`)
+      .reply(423, {reason: 'Locked'})
+
+    const {error} = await runCommand([
       'borealis-pg:extensions:remove',
       '-c',
       fakeExt1,
@@ -216,17 +220,16 @@ describe('extension removal command', () => {
       fakeHerokuAppName,
       fakeExt1,
     ])
-    .catch('Add-on is undergoing a PostgreSQL major version upgrade')
-    .it('exits with an error if the add-on is undergoing a PostgreSQL version upgrade', ctx => {
-      expect(ctx.stdout).to.equal('')
-    })
 
-  defaultTestContext
-    .nock(
-      borealisPgApiBaseUrl,
-      api => api.delete(`/heroku/resources/${fakeAddonName}/pg-extensions/${fakeExt2}`)
-        .reply(503, {reason: 'Something went wrong'}))
-    .command([
+    expect(error?.message).to.contain('Add-on is undergoing a PostgreSQL major version upgrade')
+  })
+
+  it('exits with an error if the Borealis PG API indicates a server error', async () => {
+    nock(borealisPgApiBaseUrl)
+      .delete(`/heroku/resources/${fakeAddonName}/pg-extensions/${fakeExt2}`)
+      .reply(503, {reason: 'Something went wrong'})
+
+    const {error} = await runCommand([
       'borealis-pg:extensions:remove',
       '-c',
       fakeExt2,
@@ -234,16 +237,13 @@ describe('extension removal command', () => {
       fakeHerokuAppName,
       fakeExt2,
     ])
-    .catch('Add-on service is temporarily unavailable. Try again later.')
-    .it('exits with an error if the Borealis PG API indicates a server error', ctx => {
-      expect(ctx.stdout).to.equal('')
-    })
 
-  test.stdout()
-    .stderr()
-    .command(['borealis-pg:extensions:remove', '-a', fakeHerokuAppName])
-    .catch(/^Missing 1 required arg:/)
-    .it('exits with an error if there is no Postgres extension argument', ctx => {
-      expect(ctx.stdout).to.equal('')
-    })
+    expect(error?.message).to.contain('Add-on service is temporarily unavailable. Try again later.')
+  })
+
+  it('exits with an error if there is no Postgres extension argument', async () => {
+    const {error} = await runCommand(['borealis-pg:extensions:remove', '-a', fakeHerokuAppName])
+
+    expect(error?.message).to.contain('Missing 1 required arg')
+  })
 })
