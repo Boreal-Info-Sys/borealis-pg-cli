@@ -1,4 +1,7 @@
-import {borealisPgApiBaseUrl, expect, herokuApiBaseUrl, test} from '../../../test-utils'
+import {runCommand} from '@oclif/test'
+import {MockSTDIN, stdin} from 'mock-stdin'
+import nock from 'nock'
+import {borealisPgApiBaseUrl, expect, herokuApiBaseUrl} from '../../../test-utils'
 
 const fakeAddonId = 'd5e50676-9b3d-4e46-bf7f-653169a1154b'
 const fakeAddonName = 'borealis-pg-my-fake-addon'
@@ -15,11 +18,13 @@ const fakeHerokuAuthId = 'my-fake-heroku-auth'
 const fakeIntegration1 = 'my-first-fake-data-integration'
 const fakeIntegration2 = 'my-second-fake-data-integration'
 
-const defaultTestContext = test.stdout()
-  .stderr()
-  .nock(
-    herokuApiBaseUrl,
-    api => api
+describe('data integration removal command', () => {
+  let mockStdin: MockSTDIN
+
+  beforeEach(() => {
+    mockStdin = stdin()
+
+    nock(herokuApiBaseUrl)
       .post('/oauth/authorizations', {
         description: 'Borealis PG CLI plugin temporary auth token',
         expires_in: 180,
@@ -45,16 +50,20 @@ const defaultTestContext = test.stdout()
           id: fakeAttachmentId,
           name: fakeAttachmentName,
         },
-      ]))
+      ])
+  })
 
-describe('data integration removal command', () => {
-  defaultTestContext
-    .nock(
-      borealisPgApiBaseUrl,
-      {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}},
-      api => api.delete(`/heroku/resources/${fakeAddonName}/data-integrations/${fakeIntegration1}`)
-        .reply(200, {success: true}))
-    .command([
+  afterEach(() => {
+    mockStdin.reset(true)
+    nock.cleanAll()
+  })
+
+  it('removes the requested data integration', async () => {
+    nock(borealisPgApiBaseUrl, {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}})
+      .delete(`/heroku/resources/${fakeAddonName}/data-integrations/${fakeIntegration1}`)
+      .reply(200, {success: true})
+
+    const {stdout, stderr} = await runCommand([
       'borealis-pg:integrations:remove',
       '--confirm',
       fakeIntegration1,
@@ -63,19 +72,20 @@ describe('data integration removal command', () => {
       '--name',
       fakeIntegration1,
     ])
-    .it('removes the requested data integration', ctx => {
-      expect(ctx.stderr).to.endWith(
-        `Removing data integration from add-on ${fakeAddonName}... done\n`)
-      expect(ctx.stdout).to.equal('')
-    })
 
-  defaultTestContext
-    .nock(
-      borealisPgApiBaseUrl,
-      {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}},
-      api => api.delete(`/heroku/resources/${fakeAddonName}/data-integrations/${fakeIntegration1}`)
-        .reply(200, {success: true}))
-    .command([
+    expect(stderr).to.endWith(
+      `Removing data integration from add-on ${fakeAddonName}... done\n`)
+    expect(stdout).to.equal('')
+
+    expect(nock.pendingMocks()).to.be.empty
+  })
+
+  it('removes the requested data integration via the command alias', async () => {
+    nock(borealisPgApiBaseUrl, {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}})
+      .delete(`/heroku/resources/${fakeAddonName}/data-integrations/${fakeIntegration1}`)
+      .reply(200, {success: true})
+
+    const {stdout, stderr} = await runCommand([
       'borealis-pg:integrations:deregister',
       '-c',
       fakeIntegration1,
@@ -84,38 +94,41 @@ describe('data integration removal command', () => {
       '-n',
       fakeIntegration1,
     ])
-    .it('removes the requested data integration via the command alias', ctx => {
-      expect(ctx.stderr).to.endWith(
-        `Removing data integration from add-on ${fakeAddonName}... done\n`)
-      expect(ctx.stdout).to.equal('')
-    })
 
-  defaultTestContext
-    .nock(
-      borealisPgApiBaseUrl,
-      {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}},
-      api => api.delete(`/heroku/resources/${fakeAddonName}/data-integrations/${fakeIntegration1}`)
-        .reply(200, {success: true}))
-    .stdin(` ${fakeIntegration1} `, 1200) // Fakes keyboard input for the confirmation prompt
-    .command(['borealis-pg:integrations:remove', '-a', fakeHerokuAppName, '-n', fakeIntegration1])
-    .it('removes the requested data integration after a successful confirmation prompt', ctx => {
-      expect(ctx.stderr).to.endWith(
-        `Removing data integration from add-on ${fakeAddonName}... done\n`)
-      expect(ctx.stdout).to.equal('')
-    })
+    expect(stderr).to.endWith(
+      `Removing data integration from add-on ${fakeAddonName}... done\n`)
+    expect(stdout).to.equal('')
 
-  test.stdout()
-    .stderr()
-    .stdin('WRONG!', 1200) // Fakes keyboard input for the confirmation prompt
-    .command(['borealis-pg:integrations:remove', '-a', fakeHerokuAppName, '-n', fakeIntegration2])
-    .catch(/^Invalid confirmation provided/)
-    .it('exits with an error if the confirmation prompt fails', ctx => {
-      expect(ctx.stdout).to.equal('')
-    })
+    expect(nock.pendingMocks()).to.be.empty
+  })
 
-  test.stdout()
-    .stderr()
-    .command([
+  it('removes the requested data integration after a successful confirmation prompt', async () => {
+    nock(borealisPgApiBaseUrl, {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}})
+      .delete(`/heroku/resources/${fakeAddonName}/data-integrations/${fakeIntegration1}`)
+      .reply(200, {success: true})
+
+    setTimeout(() => mockStdin.send(` ${fakeIntegration1} \n`), 1000)
+
+    const {stderr} = await runCommand(
+      ['borealis-pg:integrations:remove', '-a', fakeHerokuAppName, '-n', fakeIntegration1])
+
+    expect(stderr).to.endWith(
+      `Removing data integration from add-on ${fakeAddonName}... done\n`)
+
+    expect(nock.pendingMocks()).to.be.empty
+  })
+
+  it('exits with an error if the confirmation prompt fails', async () => {
+    setTimeout(() => mockStdin.send('INCORRECT!\n'), 1000)
+
+    const {error} = await runCommand(
+      ['borealis-pg:integrations:remove', '-a', fakeHerokuAppName, '-n', fakeIntegration2])
+
+    expect(error?.message).to.contain('Invalid confirmation provided')
+  })
+
+  it('exits with an error if the --confirm option has the wrong value', async () => {
+    const {error} = await runCommand([
       'borealis-pg:integrations:remove',
       '-c',
       'WRONG!',
@@ -124,17 +137,16 @@ describe('data integration removal command', () => {
       '-n',
       fakeIntegration2,
     ])
-    .catch(/^Invalid confirmation provided/)
-    .it('exits with an error if the --confirm option has the wrong value', ctx => {
-      expect(ctx.stdout).to.equal('')
-    })
 
-  defaultTestContext
-    .nock(
-      borealisPgApiBaseUrl,
-      api => api.delete(`/heroku/resources/${fakeAddonName}/data-integrations/${fakeIntegration2}`)
-        .reply(403, {reason: 'DB write access revoked!'}))
-    .command([
+    expect(error?.message).to.contain('Invalid confirmation provided')
+  })
+
+  it('exits with an error if add-on DB write access has been revoked', async () => {
+    nock(borealisPgApiBaseUrl)
+      .delete(`/heroku/resources/${fakeAddonName}/data-integrations/${fakeIntegration2}`)
+      .reply(403, {reason: 'DB write access revoked!'})
+
+    const {stdout, error} = await runCommand([
       'borealis-pg:integrations:remove',
       '-c',
       fakeIntegration2,
@@ -143,17 +155,17 @@ describe('data integration removal command', () => {
       '-n',
       fakeIntegration2,
     ])
-    .catch('Add-on database write access has been revoked')
-    .it('exits with an error if add-on DB write access has been revoked', ctx => {
-      expect(ctx.stdout).to.equal('')
-    })
 
-  defaultTestContext
-    .nock(
-      borealisPgApiBaseUrl,
-      api => api.delete(`/heroku/resources/${fakeAddonName}/data-integrations/${fakeIntegration2}`)
-        .reply(404, {reason: 'That data integration could not be found'}))
-    .command([
+    expect(stdout).to.equal('')
+    expect(error?.message).to.contain('Add-on database write access has been revoked')
+  })
+
+  it('exits with an error if the data integration is not register', async () => {
+    nock(borealisPgApiBaseUrl)
+      .delete(`/heroku/resources/${fakeAddonName}/data-integrations/${fakeIntegration2}`)
+      .reply(404, {reason: 'That data integration could not be found'})
+
+    const {stdout, error} = await runCommand([
       'borealis-pg:integrations:remove',
       '-c',
       fakeIntegration2,
@@ -162,36 +174,17 @@ describe('data integration removal command', () => {
       '-n',
       fakeIntegration2,
     ])
-    .catch('Data integration does not exist')
-    .it('exits with an error if the data integration is not register', ctx => {
-      expect(ctx.stdout).to.equal('')
-    })
 
-  defaultTestContext
-    .nock(
-      borealisPgApiBaseUrl,
-      api => api.delete(`/heroku/resources/${fakeAddonName}/data-integrations/${fakeIntegration1}`)
-        .reply(422, {reason: 'Not ready yet'}))
-    .command([
-      'borealis-pg:integrations:remove',
-      '-c',
-      fakeIntegration1,
-      '-a',
-      fakeHerokuAppName,
-      '-n',
-      fakeIntegration1,
-    ])
-    .catch('Add-on is not finished provisioning')
-    .it('exits with an error if the add-on is not fully provisioned', ctx => {
-      expect(ctx.stdout).to.equal('')
-    })
+    expect(stdout).to.equal('')
+    expect(error?.message).to.contain('Data integration does not exist')
+  })
 
-  defaultTestContext
-    .nock(
-      borealisPgApiBaseUrl,
-      api => api.delete(`/heroku/resources/${fakeAddonName}/data-integrations/${fakeIntegration1}`)
-        .reply(423, {reason: 'Locked'}))
-    .command([
+  it('exits with an error if the add-on is not fully provisioned', async () => {
+    nock(borealisPgApiBaseUrl)
+      .delete(`/heroku/resources/${fakeAddonName}/data-integrations/${fakeIntegration1}`)
+      .reply(422, {reason: 'Not ready yet'})
+
+    const {stdout, error} = await runCommand([
       'borealis-pg:integrations:remove',
       '-c',
       fakeIntegration1,
@@ -200,17 +193,36 @@ describe('data integration removal command', () => {
       '-n',
       fakeIntegration1,
     ])
-    .catch('Add-on is undergoing a PostgreSQL major version upgrade')
-    .it('exits with an error if the add-on is undergoing a PostgreSQL version upgrade', ctx => {
-      expect(ctx.stdout).to.equal('')
-    })
 
-  defaultTestContext
-    .nock(
-      borealisPgApiBaseUrl,
-      api => api.delete(`/heroku/resources/${fakeAddonName}/data-integrations/${fakeIntegration2}`)
-        .reply(503, {reason: 'Something went wrong'}))
-    .command([
+    expect(stdout).to.equal('')
+    expect(error?.message).to.contain('Add-on is not finished provisioning')
+  })
+
+  it('exits with an error if the add-on is undergoing a PostgreSQL version upgrade', async () => {
+    nock(borealisPgApiBaseUrl)
+      .delete(`/heroku/resources/${fakeAddonName}/data-integrations/${fakeIntegration1}`)
+      .reply(423, {reason: 'Locked'})
+
+    const {stdout, error} = await runCommand([
+      'borealis-pg:integrations:remove',
+      '-c',
+      fakeIntegration1,
+      '-a',
+      fakeHerokuAppName,
+      '-n',
+      fakeIntegration1,
+    ])
+
+    expect(stdout).to.equal('')
+    expect(error?.message).to.contain('Add-on is undergoing a PostgreSQL major version upgrade')
+  })
+
+  it('exits with an error if the Borealis PG API indicates a server error', async () => {
+    nock(borealisPgApiBaseUrl)
+      .delete(`/heroku/resources/${fakeAddonName}/data-integrations/${fakeIntegration2}`)
+      .reply(503, {reason: 'Something went wrong'})
+
+    const {stdout, error} = await runCommand([
       'borealis-pg:integrations:remove',
       '-c',
       fakeIntegration2,
@@ -219,16 +231,16 @@ describe('data integration removal command', () => {
       '-n',
       fakeIntegration2,
     ])
-    .catch('Add-on service is temporarily unavailable. Try again later.')
-    .it('exits with an error if the Borealis PG API indicates a server error', ctx => {
-      expect(ctx.stdout).to.equal('')
-    })
 
-  test.stdout()
-    .stderr()
-    .command(['borealis-pg:integrations:remove', '-a', fakeHerokuAppName])
-    .catch(/.*Missing required flag name.*/)
-    .it('exits with an error if the data integration option is missing', ctx => {
-      expect(ctx.stdout).to.equal('')
-    })
+    expect(stdout).to.equal('')
+    expect(error?.message).to.contain('Add-on service is temporarily unavailable. Try again later.')
+  })
+
+  it('exits with an error if the data integration option is missing', async () => {
+    const {stdout, error} = await runCommand(
+      ['borealis-pg:integrations:remove', '-a', fakeHerokuAppName])
+
+    expect(stdout).to.equal('')
+    expect(error?.message).to.contain('Missing required flag name')
+  })
 })

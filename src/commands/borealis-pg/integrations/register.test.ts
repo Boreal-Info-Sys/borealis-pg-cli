@@ -1,4 +1,6 @@
-import {borealisPgApiBaseUrl, expect, herokuApiBaseUrl, test} from '../../../test-utils'
+import {runCommand} from '@oclif/test'
+import nock from 'nock'
+import {borealisPgApiBaseUrl, expect, herokuApiBaseUrl} from '../../../test-utils'
 
 const fakeAddonId = 'bde71749-e560-42d7-b9ab-ccb6d91b17b5'
 const fakeAddonName = 'borealis-pg-my-fake-addon'
@@ -42,11 +44,9 @@ const expectedResponseContent = {
   publicSshHostKey: fakePublicSshHostKey,
 }
 
-const defaultTestContext = test.stdout()
-  .stderr()
-  .nock(
-    herokuApiBaseUrl,
-    api => api
+describe('data integration registration command', () => {
+  beforeEach(() => {
+    nock(herokuApiBaseUrl)
       .post('/oauth/authorizations', {
         description: 'Borealis PG CLI plugin temporary auth token',
         expires_in: 180,
@@ -72,23 +72,25 @@ const defaultTestContext = test.stdout()
           id: fakeAttachmentId,
           name: fakeAttachmentName,
         },
-      ]))
+      ])
+  })
 
-describe('data integration registration command', () => {
-  defaultTestContext
-    .nock(
-      borealisPgApiBaseUrl,
-      {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}},
-      api => api
-        .post(
-          `/heroku/resources/${fakeAddonName}/data-integrations`,
-          {
-            integrationName: fakeIntegrationName,
-            sshPublicKey: fakeSshPublicKey,
-            enableWriteAccess: false,
-          })
-        .reply(201, expectedResponseContent))
-    .command([
+  afterEach(() => {
+    nock.cleanAll()
+  })
+
+  it('registers a data integration without write access', async () => {
+    nock(borealisPgApiBaseUrl, {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}})
+      .post(
+        `/heroku/resources/${fakeAddonName}/data-integrations`,
+        {
+          integrationName: fakeIntegrationName,
+          sshPublicKey: fakeSshPublicKey,
+          enableWriteAccess: false,
+        })
+      .reply(201, expectedResponseContent)
+
+    const {stdout, stderr} = await runCommand([
       'borealis-pg:integrations:register',
       '--app',
       fakeHerokuAppName,
@@ -96,35 +98,36 @@ describe('data integration registration command', () => {
       fakeIntegrationName,
       fakeSshPublicKey,
     ])
-    .it('registers a data integration without write access', ctx => {
-      expect(ctx.stderr).to.endWith(
-        `Registering data integration with add-on ${fakeAddonName}... done\n`)
-      expect(ctx.stdout).to.containIgnoreSpaces(`Database Host: ${fakeDbHost}`)
-      expect(ctx.stdout).to.containIgnoreSpaces(`Database Port: ${fakeDbPort}`)
-      expect(ctx.stdout).to.containIgnoreSpaces(`Database Name: ${fakeDbName}`)
-      expect(ctx.stdout).to.containIgnoreSpaces(`Database Username: ${fakeDbUsername}`)
-      expect(ctx.stdout).to.containIgnoreSpaces(`Database Password: ${fakeDbPassword}`)
-      expect(ctx.stdout).to.containIgnoreSpaces(`SSH Host: ${fakeSshHost}`)
-      expect(ctx.stdout).to.containIgnoreSpaces(`SSH Port: ${fakeSshPort}`)
-      expect(ctx.stdout).to.containIgnoreSpaces(`SSH Username: ${fakeSshUsername}`)
-      expect(ctx.stdout).to.containIgnoreSpaces(
-        `SSH Server Public Host Key: ${fakePublicSshHostKey}`)
-    })
 
-  defaultTestContext
-    .nock(
-      borealisPgApiBaseUrl,
-      {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}},
-      api => api
-        .post(
-          `/heroku/resources/${fakeAddonName}/data-integrations`,
-          {
-            integrationName: fakeIntegrationName,
-            sshPublicKey: fakeSshPublicKey,
-            enableWriteAccess: true,
-          })
-        .reply(201, expectedResponseContent))
-    .command([
+    expect(stderr).to.endWith(
+      `Registering data integration with add-on ${fakeAddonName}... done\n`)
+
+    expect(stdout).to.containIgnoreSpaces(`Database Host: ${fakeDbHost}`)
+    expect(stdout).to.containIgnoreSpaces(`Database Port: ${fakeDbPort}`)
+    expect(stdout).to.containIgnoreSpaces(`Database Name: ${fakeDbName}`)
+    expect(stdout).to.containIgnoreSpaces(`Database Username: ${fakeDbUsername}`)
+    expect(stdout).to.containIgnoreSpaces(`Database Password: ${fakeDbPassword}`)
+    expect(stdout).to.containIgnoreSpaces(`SSH Host: ${fakeSshHost}`)
+    expect(stdout).to.containIgnoreSpaces(`SSH Port: ${fakeSshPort}`)
+    expect(stdout).to.containIgnoreSpaces(`SSH Username: ${fakeSshUsername}`)
+    expect(stdout).to.containIgnoreSpaces(
+      `SSH Server Public Host Key: ${fakePublicSshHostKey}`)
+
+    expect(nock.pendingMocks()).to.be.empty
+  })
+
+  it('registers a data integration with write access', async () => {
+    nock(borealisPgApiBaseUrl, {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}})
+      .post(
+        `/heroku/resources/${fakeAddonName}/data-integrations`,
+        {
+          integrationName: fakeIntegrationName,
+          sshPublicKey: fakeSshPublicKey,
+          enableWriteAccess: true,
+        })
+      .reply(201, expectedResponseContent)
+
+    const {stdout, stderr} = await runCommand([
       'borealis-pg:integrations:register',
       '-a',
       fakeHerokuAppName,
@@ -133,35 +136,36 @@ describe('data integration registration command', () => {
       '-w',
       fakeSshPublicKey,
     ])
-    .it('registers a data integration with write access', ctx => {
-      expect(ctx.stderr).to.endWith(
-        `Registering data integration with add-on ${fakeAddonName}... done\n`)
-      expect(ctx.stdout).to.containIgnoreSpaces(`Database Host: ${fakeDbHost}`)
-      expect(ctx.stdout).to.containIgnoreSpaces(`Database Port: ${fakeDbPort}`)
-      expect(ctx.stdout).to.containIgnoreSpaces(`Database Name: ${fakeDbName}`)
-      expect(ctx.stdout).to.containIgnoreSpaces(`Database Username: ${fakeDbUsername}`)
-      expect(ctx.stdout).to.containIgnoreSpaces(`Database Password: ${fakeDbPassword}`)
-      expect(ctx.stdout).to.containIgnoreSpaces(`SSH Host: ${fakeSshHost}`)
-      expect(ctx.stdout).to.containIgnoreSpaces(`SSH Port: ${fakeSshPort}`)
-      expect(ctx.stdout).to.containIgnoreSpaces(`SSH Username: ${fakeSshUsername}`)
-      expect(ctx.stdout).to.containIgnoreSpaces(
-        `SSH Server Public Host Key: ${fakePublicSshHostKey}`)
-    })
 
-  defaultTestContext
-    .nock(
-      borealisPgApiBaseUrl,
-      {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}},
-      api => api
-        .post(
-          `/heroku/resources/${fakeAddonName}/data-integrations`,
-          {
-            integrationName: fakeIntegrationName,
-            sshPublicKey: fakeSshPublicKey,
-            enableWriteAccess: false,
-          })
-        .reply(201, expectedResponseContent))
-    .command([
+    expect(stderr).to.endWith(
+      `Registering data integration with add-on ${fakeAddonName}... done\n`)
+
+    expect(stdout).to.containIgnoreSpaces(`Database Host: ${fakeDbHost}`)
+    expect(stdout).to.containIgnoreSpaces(`Database Port: ${fakeDbPort}`)
+    expect(stdout).to.containIgnoreSpaces(`Database Name: ${fakeDbName}`)
+    expect(stdout).to.containIgnoreSpaces(`Database Username: ${fakeDbUsername}`)
+    expect(stdout).to.containIgnoreSpaces(`Database Password: ${fakeDbPassword}`)
+    expect(stdout).to.containIgnoreSpaces(`SSH Host: ${fakeSshHost}`)
+    expect(stdout).to.containIgnoreSpaces(`SSH Port: ${fakeSshPort}`)
+    expect(stdout).to.containIgnoreSpaces(`SSH Username: ${fakeSshUsername}`)
+    expect(stdout).to.containIgnoreSpaces(
+      `SSH Server Public Host Key: ${fakePublicSshHostKey}`)
+
+    expect(nock.pendingMocks()).to.be.empty
+  })
+
+  it('registers a data integration with an unquoted SSH public key', async () => {
+    nock(borealisPgApiBaseUrl, {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}})
+      .post(
+        `/heroku/resources/${fakeAddonName}/data-integrations`,
+        {
+          integrationName: fakeIntegrationName,
+          sshPublicKey: fakeSshPublicKey,
+          enableWriteAccess: false,
+        })
+      .reply(201, expectedResponseContent)
+
+    const {stdout, stderr} = await runCommand([
       'borealis-pg:integrations:register',
       '--app',
       fakeHerokuAppName,
@@ -169,27 +173,30 @@ describe('data integration registration command', () => {
       fakeIntegrationName,
       ...fakeSshPublicKeyPieces,  // Note that the SSH public key is split across two separate args
     ])
-    .it('registers a data integration with an unquoted SSH public key', ctx => {
-      expect(ctx.stderr).to.endWith(
-        `Registering data integration with add-on ${fakeAddonName}... done\n`)
-      expect(ctx.stdout).to.containIgnoreSpaces(`Database Host: ${fakeDbHost}`)
-      expect(ctx.stdout).to.containIgnoreSpaces(`Database Port: ${fakeDbPort}`)
-      expect(ctx.stdout).to.containIgnoreSpaces(`Database Name: ${fakeDbName}`)
-      expect(ctx.stdout).to.containIgnoreSpaces(`Database Username: ${fakeDbUsername}`)
-      expect(ctx.stdout).to.containIgnoreSpaces(`Database Password: ${fakeDbPassword}`)
-      expect(ctx.stdout).to.containIgnoreSpaces(`SSH Host: ${fakeSshHost}`)
-      expect(ctx.stdout).to.containIgnoreSpaces(`SSH Port: ${fakeSshPort}`)
-      expect(ctx.stdout).to.containIgnoreSpaces(`SSH Username: ${fakeSshUsername}`)
-      expect(ctx.stdout).to.containIgnoreSpaces(
-        `SSH Server Public Host Key: ${fakePublicSshHostKey}`)
-    })
 
-  defaultTestContext
-    .nock(
-      borealisPgApiBaseUrl,
-      api => api.post(`/heroku/resources/${fakeAddonName}/data-integrations`)
-        .reply(400, {reason: 'Bad integration name'}))
-    .command([
+    expect(stderr).to.endWith(
+      `Registering data integration with add-on ${fakeAddonName}... done\n`)
+
+    expect(stdout).to.containIgnoreSpaces(`Database Host: ${fakeDbHost}`)
+    expect(stdout).to.containIgnoreSpaces(`Database Port: ${fakeDbPort}`)
+    expect(stdout).to.containIgnoreSpaces(`Database Name: ${fakeDbName}`)
+    expect(stdout).to.containIgnoreSpaces(`Database Username: ${fakeDbUsername}`)
+    expect(stdout).to.containIgnoreSpaces(`Database Password: ${fakeDbPassword}`)
+    expect(stdout).to.containIgnoreSpaces(`SSH Host: ${fakeSshHost}`)
+    expect(stdout).to.containIgnoreSpaces(`SSH Port: ${fakeSshPort}`)
+    expect(stdout).to.containIgnoreSpaces(`SSH Username: ${fakeSshUsername}`)
+    expect(stdout).to.containIgnoreSpaces(
+      `SSH Server Public Host Key: ${fakePublicSshHostKey}`)
+
+    expect(nock.pendingMocks()).to.be.empty
+  })
+
+  it('exits with an error if the request was invalid', async () => {
+    nock(borealisPgApiBaseUrl)
+      .post(`/heroku/resources/${fakeAddonName}/data-integrations`)
+      .reply(400, {reason: 'Bad integration name'})
+
+    const {stdout, error} = await runCommand([
       'borealis-pg:integrations:register',
       '--write-access',
       '--app',
@@ -198,17 +205,17 @@ describe('data integration registration command', () => {
       'invalid-integration-name!',
       fakeSshPublicKey,
     ])
-    .catch('Bad integration name')
-    .it('exits with an error if the request was invalid', ctx => {
-      expect(ctx.stdout).to.equal('')
-    })
 
-  defaultTestContext
-    .nock(
-      borealisPgApiBaseUrl,
-      api => api.post(`/heroku/resources/${fakeAddonName}/data-integrations`)
-        .reply(403, {reason: 'DB write access disabled'}))
-    .command([
+    expect(stdout).to.equal('')
+    expect(error?.message).to.contain('Bad integration name')
+  })
+
+  it('exits with an error if DB write access was revoked', async () => {
+    nock(borealisPgApiBaseUrl)
+      .post(`/heroku/resources/${fakeAddonName}/data-integrations`)
+      .reply(403, {reason: 'DB write access disabled'})
+
+    const {stdout, error} = await runCommand([
       'borealis-pg:integrations:register',
       '-a',
       fakeHerokuAppName,
@@ -216,17 +223,17 @@ describe('data integration registration command', () => {
       fakeIntegrationName,
       fakeSshPublicKey,
     ])
-    .catch('Add-on database write access has been revoked')
-    .it('exits with an error if DB write access was revoked', ctx => {
-      expect(ctx.stdout).to.equal('')
-    })
 
-  defaultTestContext
-    .nock(
-      borealisPgApiBaseUrl,
-      api => api.post(`/heroku/resources/${fakeAddonName}/data-integrations`)
-        .reply(404, {reason: 'Add-on does not exist'}))
-    .command([
+    expect(stdout).to.equal('')
+    expect(error?.message).to.contain('Add-on database write access has been revoked')
+  })
+
+  it('exits with an error if the add-on was not found', async () => {
+    nock(borealisPgApiBaseUrl)
+      .post(`/heroku/resources/${fakeAddonName}/data-integrations`)
+      .reply(404, {reason: 'Add-on does not exist'})
+
+    const {stdout, error} = await runCommand([
       'borealis-pg:integrations:register',
       '-a',
       fakeHerokuAppName,
@@ -234,17 +241,17 @@ describe('data integration registration command', () => {
       fakeIntegrationName,
       fakeSshPublicKey,
     ])
-    .catch('Add-on is not a Borealis Isolated Postgres add-on')
-    .it('exits with an error if the add-on was not found', ctx => {
-      expect(ctx.stdout).to.equal('')
-    })
 
-  defaultTestContext
-    .nock(
-      borealisPgApiBaseUrl,
-      api => api.post(`/heroku/resources/${fakeAddonName}/data-integrations`)
-        .reply(409, {reason: 'Already registered'}))
-    .command([
+    expect(stdout).to.equal('')
+    expect(error?.message).to.contain('Add-on is not a Borealis Isolated Postgres add-on')
+  })
+
+  it('exits with an error if the data integration is already registered', async () => {
+    nock(borealisPgApiBaseUrl)
+      .post(`/heroku/resources/${fakeAddonName}/data-integrations`)
+      .reply(409, {reason: 'Already registered'})
+
+    const {stdout, error} = await runCommand([
       'borealis-pg:integrations:register',
       '--app',
       fakeHerokuAppName,
@@ -252,17 +259,17 @@ describe('data integration registration command', () => {
       'invalid-integration-name!',
       fakeSshPublicKey,
     ])
-    .catch('A data integration with that name is already registered')
-    .it('exits with an error if the data integration is already registered', ctx => {
-      expect(ctx.stdout).to.equal('')
-    })
 
-  defaultTestContext
-    .nock(
-      borealisPgApiBaseUrl,
-      api => api.post(`/heroku/resources/${fakeAddonName}/data-integrations`)
-        .reply(422, {reason: 'Not ready yet'}))
-    .command([
+    expect(stdout).to.equal('')
+    expect(error?.message).to.contain('A data integration with that name is already registered')
+  })
+
+  it('exits with an error if the add-on is not fully provisioned', async () => {
+    nock(borealisPgApiBaseUrl)
+      .post(`/heroku/resources/${fakeAddonName}/data-integrations`)
+      .reply(422, {reason: 'Not ready yet'})
+
+    const {stdout, error} = await runCommand([
       'borealis-pg:integrations:register',
       '-a',
       fakeHerokuAppName,
@@ -270,17 +277,17 @@ describe('data integration registration command', () => {
       fakeIntegrationName,
       fakeSshPublicKey,
     ])
-    .catch('Add-on is not finished provisioning')
-    .it('exits with an error if the add-on is not fully provisioned', ctx => {
-      expect(ctx.stdout).to.equal('')
-    })
 
-  defaultTestContext
-    .nock(
-      borealisPgApiBaseUrl,
-      api => api.post(`/heroku/resources/${fakeAddonName}/data-integrations`)
-        .reply(423, {reason: 'Locked'}))
-    .command([
+    expect(stdout).to.equal('')
+    expect(error?.message).to.contain('Add-on is not finished provisioning')
+  })
+
+  it('exits with an error if the add-on is undergoing a PostgreSQL version upgrade', async () => {
+    nock(borealisPgApiBaseUrl)
+      .post(`/heroku/resources/${fakeAddonName}/data-integrations`)
+      .reply(423, {reason: 'Locked'})
+
+    const {stdout, error} = await runCommand([
       'borealis-pg:integrations:register',
       '-a',
       fakeHerokuAppName,
@@ -288,17 +295,17 @@ describe('data integration registration command', () => {
       fakeIntegrationName,
       fakeSshPublicKey,
     ])
-    .catch('Add-on is undergoing a PostgreSQL major version upgrade')
-    .it('exits with an error if the add-on is undergoing a PostgreSQL version upgrade', ctx => {
-      expect(ctx.stdout).to.equal('')
-    })
 
-  defaultTestContext
-    .nock(
-      borealisPgApiBaseUrl,
-      api => api.post(`/heroku/resources/${fakeAddonName}/data-integrations`)
-        .reply(500, {reason: 'Something went wrong'}))
-    .command([
+    expect(stdout).to.equal('')
+    expect(error?.message).to.contain('Add-on is undergoing a PostgreSQL major version upgrade')
+  })
+
+  it('exits with an error if the Borealis PG API indicates a server error', async () => {
+    nock(borealisPgApiBaseUrl)
+      .post(`/heroku/resources/${fakeAddonName}/data-integrations`)
+      .reply(500, {reason: 'Something went wrong'})
+
+    const {stdout, error} = await runCommand([
       'borealis-pg:integrations:register',
       '-a',
       fakeHerokuAppName,
@@ -306,30 +313,29 @@ describe('data integration registration command', () => {
       fakeIntegrationName,
       fakeSshPublicKey,
     ])
-    .catch('Add-on service is temporarily unavailable. Try again later.')
-    .it('exits with an error if the Borealis PG API indicates a server error', ctx => {
-      expect(ctx.stdout).to.equal('')
-    })
 
-  test.stdout()
-    .stderr()
-    .command([
+    expect(stdout).to.equal('')
+    expect(error?.message).to.contain('Add-on service is temporarily unavailable. Try again later.')
+  })
+
+  it('exits with an error if there is no SSH public key argument', async () => {
+    const {stdout, error} = await runCommand([
       'borealis-pg:integrations:register',
       '-a',
       fakeHerokuAppName,
       '-n',
       fakeIntegrationName,
     ])
-    .catch(/.*Missing 1 required arg:.*/)
-    .it('exits with an error if there is no SSH public key argument', ctx => {
-      expect(ctx.stdout).to.equal('')
-    })
 
-  test.stdout()
-    .stderr()
-    .command(['borealis-pg:integrations:register', '-a', fakeHerokuAppName, fakeSshPublicKey])
-    .catch(/.*Missing required flag name.*/)
-    .it('exits with an error if there is no integration name option', ctx => {
-      expect(ctx.stdout).to.equal('')
-    })
+    expect(stdout).to.equal('')
+    expect(error?.message).to.contain('Missing 1 required arg')
+  })
+
+  it('exits with an error if there is no integration name option', async () => {
+    const {stdout, error} = await runCommand(
+      ['borealis-pg:integrations:register', '-a', fakeHerokuAppName, fakeSshPublicKey])
+
+    expect(stdout).to.equal('')
+    expect(error?.message).to.contain('Missing required flag name')
+  })
 })
