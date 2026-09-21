@@ -1,4 +1,6 @@
-import {borealisPgApiBaseUrl, expect, herokuApiBaseUrl, test} from '../../../test-utils'
+import {runCommand} from '@oclif/test'
+import nock from 'nock'
+import {borealisPgApiBaseUrl, expect, herokuApiBaseUrl} from '../../../test-utils'
 
 const fakeHerokuAuthToken = 'my-fake-heroku-auth-token'
 const fakeHerokuAuthId = 'my-fake-heroku-auth'
@@ -22,11 +24,9 @@ const fakeOAuthPostResponseBody = {id: fakeHerokuAuthId, access_token: {token: f
 const fakeCurrentVersion = '16'
 const fakeTargetVersion = '17'
 
-const baseTestContext = test.stdout()
-  .stderr()
-  .nock(
-    herokuApiBaseUrl,
-    api => api
+describe('PostgreSQL version upgrade execution command', () => {
+  beforeEach(() => {
+    nock(herokuApiBaseUrl)
       .post('/oauth/authorizations', fakeOAuthPostRequestBody)
       .reply(201, fakeOAuthPostResponseBody)
       .delete(`/oauth/authorizations/${fakeHerokuAuthId}`)
@@ -48,97 +48,103 @@ const baseTestContext = test.stdout()
           id: fakeAttachmentId,
           name: fakeAttachmentName,
         },
-      ]))
+      ])
+  })
 
-describe('PostgreSQL version upgrade execution command', () => {
-  baseTestContext
-    .nock(
-      borealisPgApiBaseUrl,
-      {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}},
-      api => api.post(`/heroku/resources/${fakeAddonName}/pg-version-upgrades`)
-        .reply(
-          202,
-          {
-            currentPgMajorVersion: fakeCurrentVersion,
-            targetPgMajorVersion: fakeTargetVersion,
-          }))
-    .command(['borealis-pg:upgrade:execute', '--app', fakeHerokuAppName])
-    .it('starts an upgrade', ctx => {
-      expect(ctx.stderr).to.contain(
-        `Starting PostgreSQL major version upgrade for add-on ${fakeAddonName}... done`)
-      expect(ctx.stderr).to.match(new RegExp(
-        `.*${fakeAddonName} is being upgraded from PostgreSQL version ${fakeCurrentVersion} to version ${fakeTargetVersion} in the background.*`))
-    })
+  afterEach(() => {
+    nock.cleanAll()
+  })
 
-  baseTestContext
-    .nock(
-      borealisPgApiBaseUrl,
-      {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}},
-      api => api.post(`/heroku/resources/${fakeAddonName}/pg-version-upgrades`)
-        .reply(400, {reason: 'Bad state!'}))
-    .command(['borealis-pg:upgrade:execute', '--app', fakeHerokuAppName])
-    .catch('The add-on is in a state that prevents upgrades:\nBad state!')
-    .it('exits with an error when there is a bad request', ctx => {
-      expect(ctx.stdout).to.equal('')
-    })
+  it('starts an upgrade', async () => {
+    nock(borealisPgApiBaseUrl, {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}})
+      .post(`/heroku/resources/${fakeAddonName}/pg-version-upgrades`)
+      .reply(
+        202,
+        {
+          currentPgMajorVersion: fakeCurrentVersion,
+          targetPgMajorVersion: fakeTargetVersion,
+        })
 
-  baseTestContext
-    .nock(
-      borealisPgApiBaseUrl,
-      {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}},
-      api => api.post(`/heroku/resources/${fakeAddonName}/pg-version-upgrades`)
-        .reply(403, {reason: 'No write access'}))
-    .command(['borealis-pg:upgrade:execute', '--app', fakeHerokuAppName])
-    .catch('Add-on database write access has been revoked')
-    .it('exits with an error when write access has been revoked', ctx => {
-      expect(ctx.stdout).to.equal('')
-    })
+    const {stderr} = await runCommand(['borealis-pg:upgrade:execute', '--app', fakeHerokuAppName])
 
-  baseTestContext
-    .nock(
-      borealisPgApiBaseUrl,
-      {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}},
-      api => api.post(`/heroku/resources/${fakeAddonName}/pg-version-upgrades`)
-        .reply(404, {reason: 'Not found!'}))
-    .command(['borealis-pg:upgrade:execute', '--app', fakeHerokuAppName])
-    .catch('Add-on is not a Borealis Isolated Postgres add-on')
-    .it('exits with an error when the add-on does not exist', ctx => {
-      expect(ctx.stdout).to.equal('')
-    })
+    expect(stderr).to.contain(
+      `Starting PostgreSQL major version upgrade for add-on ${fakeAddonName}... done`)
+    expect(stderr).to.match(new RegExp(
+      `.*${fakeAddonName} is being upgraded from PostgreSQL version ${fakeCurrentVersion} to version ${fakeTargetVersion} in the background.*`))
+    expect(nock.pendingMocks()).to.be.empty
+  })
 
-  baseTestContext
-    .nock(
-      borealisPgApiBaseUrl,
-      {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}},
-      api => api.post(`/heroku/resources/${fakeAddonName}/pg-version-upgrades`)
-        .reply(409, {reason: 'Under maintenance'}))
-    .command(['borealis-pg:upgrade:execute', '--app', fakeHerokuAppName])
-    .catch('Add-on database is currently undergoing maintenance. Please try again later.')
-    .it('exits with an error when the add-on is already under maintenance', ctx => {
-      expect(ctx.stdout).to.equal('')
-    })
+  it('exits with an error when there is a bad request', async () => {
+    nock(borealisPgApiBaseUrl, {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}})
+      .post(`/heroku/resources/${fakeAddonName}/pg-version-upgrades`)
+      .reply(400, {reason: 'Bad state!'})
 
-  baseTestContext
-    .nock(
-      borealisPgApiBaseUrl,
-      {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}},
-      api => api.post(`/heroku/resources/${fakeAddonName}/pg-version-upgrades`)
-        .reply(422, {reason: 'Still provisioning!'}))
-    .command(['borealis-pg:upgrade:execute', '--app', fakeHerokuAppName])
-    .catch('Add-on is not finished provisioning')
-    .it('exits with an error when the add-on is not fully provisioned', ctx => {
-      expect(ctx.stdout).to.equal('')
-    })
+    const {stdout, error} = await runCommand(
+      ['borealis-pg:upgrade:execute', '--app', fakeHerokuAppName])
 
-  baseTestContext
-    .nock(
-      borealisPgApiBaseUrl,
-      {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}},
-      api => api.post(`/heroku/resources/${fakeAddonName}/pg-version-upgrades`)
-        .reply(500, {reason: 'Unexpected error!'}))
-    .command(['borealis-pg:upgrade:execute', '--app', fakeHerokuAppName])
-    .catch('Add-on service is temporarily unavailable. Try again later.')
-    .it('exits with an error when there is a server-side error', ctx => {
-      expect(ctx.stdout).to.equal('')
-    })
+    expect(stdout).to.equal('')
+    expect(error?.message).to.contain(
+      'The add-on is in a state that prevents upgrades:\nBad state!')
+  })
+
+  it('exits with an error when write access has been revoked', async () => {
+    nock(borealisPgApiBaseUrl, {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}})
+      .post(`/heroku/resources/${fakeAddonName}/pg-version-upgrades`)
+      .reply(403, {reason: 'No write access'})
+
+    const {stdout, error} = await runCommand(
+      ['borealis-pg:upgrade:execute', '--app', fakeHerokuAppName])
+
+    expect(stdout).to.equal('')
+    expect(error?.message).to.contain('Add-on database write access has been revoked')
+  })
+
+  it('exits with an error when the add-on does not exist', async () => {
+    nock(borealisPgApiBaseUrl, {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}})
+      .post(`/heroku/resources/${fakeAddonName}/pg-version-upgrades`)
+      .reply(404, {reason: 'Not found!'})
+
+    const {stdout, error} = await runCommand(
+      ['borealis-pg:upgrade:execute', '--app', fakeHerokuAppName])
+
+    expect(stdout).to.equal('')
+    expect(error?.message).to.contain('Add-on is not a Borealis Isolated Postgres add-on')
+  })
+
+  it('exits with an error when the add-on is already under maintenance', async () => {
+    nock(borealisPgApiBaseUrl, {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}})
+      .post(`/heroku/resources/${fakeAddonName}/pg-version-upgrades`)
+      .reply(409, {reason: 'Under maintenance'})
+
+    const {stdout, error} = await runCommand(
+      ['borealis-pg:upgrade:execute', '--app', fakeHerokuAppName])
+
+    expect(stdout).to.equal('')
+    expect(error?.message).to.contain(
+      'Add-on database is currently undergoing maintenance. Please try again later.')
+  })
+
+  it('exits with an error when the add-on is not fully provisioned', async () => {
+    nock(borealisPgApiBaseUrl, {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}})
+      .post(`/heroku/resources/${fakeAddonName}/pg-version-upgrades`)
+      .reply(422, {reason: 'Still provisioning!'})
+
+    const {stdout, error} = await runCommand(
+      ['borealis-pg:upgrade:execute', '--app', fakeHerokuAppName])
+
+    expect(stdout).to.equal('')
+    expect(error?.message).to.contain('Add-on is not finished provisioning')
+  })
+
+  it('exits with an error when there is a server-side error', async () => {
+    nock(borealisPgApiBaseUrl, {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}})
+      .post(`/heroku/resources/${fakeAddonName}/pg-version-upgrades`)
+      .reply(500, {reason: 'Unexpected error!'})
+
+    const {stdout, error} = await runCommand(
+      ['borealis-pg:upgrade:execute', '--app', fakeHerokuAppName])
+
+    expect(stdout).to.equal('')
+    expect(error?.message).to.contain('Add-on service is temporarily unavailable. Try again later.')
+  })
 })
