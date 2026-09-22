@@ -394,6 +394,8 @@ describe('noninteractive run command', () => {
   })
 
   it('executes a database command with the default (table) format', async () => {
+    const fakeInputDate = new Date(2026, 9, 22, 13, 15, 45, 928)
+
     initDefaultRequestMocks()
 
     const {stderr: cmdStderr} = await runCommand(
@@ -448,15 +450,20 @@ describe('noninteractive run command', () => {
       command: 'SELECT',
       fields: [{name: 'id'}, {name: 'value1'}, {name: 'value2'}],
       oid: 32_304,
-      rows: [{id: 21, value1: 'test1', value2: null}, {id: 33, value1: 'test2', value2: 'test3'}],
+      rows: [
+        {id: 10, value1: fakeInputDate, value2: 137.9},
+        {id: 21, value1: 'test1', value2: null},
+        {id: 33, value1: 'test2', value2: 'test3'},
+      ],
       rowCount: 2,
     }))
 
     expect(stdout).to.containIgnoreSpaces(
       '| id | value1 | value2 |')
     expect(stdout).to.containIgnoreSpaces(
+      `| 10 | ${fakeInputDate.toISOString()} | 137.9 |\n` +
       '| 21 | test1 | |\n' +
-        '| 33 | test2 | test3 |\n')
+      '| 33 | test2 | test3 |\n')
     expect(stdout).to.contain('(2 rows)')
 
     verify(mockPgClientType.end()).once()
@@ -496,6 +503,42 @@ describe('noninteractive run command', () => {
     // Only the last query result should have been output
     expect(stdout).not.to.contain(uniqueValue)
     expect(stdout).to.contain('(1 row)')
+
+    verify(mockPgClientType.end()).once()
+  })
+
+  it('executes a database command with JSON output format', async () => {
+    const fakeInputDate = new Date(2026, 9, 22, 12, 56, 32, 107)
+
+    initDefaultRequestMocks()
+
+    await runCommand(
+      ['borealis-pg:run', '-a', fakeHerokuAppName, '-d', fakeDbCommand, '-f', 'json'])
+
+    executeSshClientListener()
+
+    const queryCallback = getQueryCallbackFn()
+
+    const expectedRowCount = 3
+
+    const {stdout} = await captureOutput(async () => queryCallback(null, {
+      command: 'SELECT',
+      fields: [{name: 'id'}, {name: 'value'}],
+      oid: 32_304,
+      rows: [{id: 16, value: 'test1'}, {id: 19, value: 'test2'}, {id: '23', value: fakeInputDate}],
+      rowCount: expectedRowCount,
+    }))
+
+    expect(stdout).to.contain(
+      JSON.stringify(
+        [
+          {id: 16, value: 'test1'},
+          {id: 19, value: 'test2'},
+          {id: '23', value: fakeInputDate.toISOString()},
+        ],
+        undefined,
+        2))
+    expect(stdout).not.to.contain(`(${expectedRowCount} rows)`)
 
     verify(mockPgClientType.end()).once()
   })
@@ -562,10 +605,44 @@ describe('noninteractive run command', () => {
       '| id | foo |')
     expect(stdout).to.containIgnoreSpaces(
       '| 9 | val1 |\n' +
-        '| 104 | val2 |\n' +
-        '| 23 | |\n' +
-        '| 1 | one |\n')
+      '| 104 | val2 |\n' +
+      '| 23 | |\n' +
+      '| 1 | one |\n')
     expect(stdout).to.contain('(4 rows)')
+
+    verify(mockPgClientType.end()).once()
+  })
+
+  it('executes a database command from a file with a different output format', async () => {
+    initDefaultRequestMocks()
+
+    await runCommand([
+      'borealis-pg:run',
+      '-a',
+      fakeHerokuAppName,
+      '-i',
+      exampleFilePath,
+      '-f',
+      'json',
+    ])
+
+    executeSshClientListener()
+
+    const queryCallback = getQueryCallbackFn(exampleFileContents)
+
+    const expectedRowCount = 2
+
+    const {stdout} = await captureOutput(async () => queryCallback(null, {
+      command: 'SELECT',
+      fields: [{name: 'id'}, {name: 'value'}],
+      oid: 32_304,
+      rows: [{id: 1, value: 'one'}, {id: 2, value: 'two'}],
+      rowCount: expectedRowCount,
+    }))
+
+    expect(stdout).to.contain(
+      JSON.stringify([{id: 1, value: 'one'}, {id: 2, value: 'two'}], undefined, 2))
+    expect(stdout).not.to.contain(`(${expectedRowCount} rows)`)
 
     verify(mockPgClientType.end()).once()
   })
@@ -873,7 +950,7 @@ describe('noninteractive run command', () => {
       '--shell-cmd',
       fakeShellCommand,
       '--format',
-      'yaml',
+      'json',
     ])
 
     expect(stdout).to.equal('')
