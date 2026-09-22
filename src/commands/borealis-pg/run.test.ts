@@ -1,9 +1,9 @@
-import color from '@heroku-cli/color'
-import {FancyTypes} from '@oclif/test'
+import {captureOutput, runCommand} from '@oclif/test'
 import assert from 'assert'
 import {ChildProcess} from 'child_process'
 import {readFileSync} from 'fs'
 import {Server, Socket} from 'net'
+import nock from 'nock'
 import path from 'path'
 import {Client as PgClient} from 'pg'
 import {Client as SshClient, ClientChannel} from 'ssh2'
@@ -20,9 +20,8 @@ import {
   verify,
   when,
 } from 'ts-mockito'
-import {consoleColours} from '../../command-components'
 import {tunnelServices} from '../../ssh-tunneling'
-import {borealisPgApiBaseUrl, expect, herokuApiBaseUrl, test} from '../../test-utils'
+import {borealisPgApiBaseUrl, expect, herokuApiBaseUrl} from '../../test-utils'
 
 const localPgHostname = 'pg-tunnel.borealis-data.com'
 const defaultSshPort = 22
@@ -95,60 +94,6 @@ const fakeDbCommand = 'my-cool-sql-command'
 // The actual contents of this file don't matter because we're using mocks
 const exampleFilePath = path.join(__dirname, '..', '..', '..', 'package.json')
 const exampleFileContents = readExampleFile()
-
-const baseTestContext = test.stdout()
-  .stderr()
-  .nock(herokuApiBaseUrl, api => api
-    .post('/oauth/authorizations', {
-      description: 'Borealis PG CLI plugin temporary auth token',
-      expires_in: 180,
-      scope: ['read', 'identity'],
-    })
-    .reply(201, {id: fakeHerokuAuthId, access_token: {token: fakeHerokuAuthToken}})
-    .delete(`/oauth/authorizations/${fakeHerokuAuthId}`)
-    .reply(200))
-
-const testContextWithAppConfigVars = baseTestContext
-  .nock(herokuApiBaseUrl, api => api.get(`/apps/${fakeHerokuAppName}/config-vars`)
-    .reply(200, fakeAppConfigVars))
-
-const testContextWithDefaultUsers = testContextWithAppConfigVars
-  .nock(
-    borealisPgApiBaseUrl,
-    {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}},
-    api => api.post(`/heroku/resources/${fakeAddonName}/personal-ssh-users`)
-      .reply(
-        200,
-        {
-          sshHost: fakeSshHost,
-          sshPort: customSshPort,
-          sshUsername: fakeSshUsername,
-          sshPrivateKey: fakeSshPrivateKey,
-          publicSshHostKey: expectedSshHostKeyEntry,
-        }))
-
-const defaultTestContext = testContextWithDefaultUsers.nock(
-  herokuApiBaseUrl,
-  api => mockAddonAttachmentRequests(api))
-
-const testContextWithWriteAccess = testContextWithAppConfigVars
-  .nock(
-    borealisPgApiBaseUrl,
-    {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}},
-    api => api.post(`/heroku/resources/${fakeAddonName}/personal-ssh-users`)
-      .reply(
-        200,
-        {
-          sshHost: fakeSshHost,
-          sshPort: defaultSshPort,
-          sshUsername: fakeSshUsername,
-          sshPrivateKey: fakeSshPrivateKey,
-          publicSshHostKey: expectedSshHostKeyEntry,
-        }))
-  .nock(herokuApiBaseUrl, api => mockAddonAttachmentRequests(api))
-
-const testContextWithReadonlyPersonalUser = getPersonalUserTestContext(false)
-const testContextWithReadWritePersonalUser = getPersonalUserTestContext(true)
 
 describe('noninteractive run command', () => {
   let originalChildProcessFactory: typeof tunnelServices.childProcessFactory
@@ -240,6 +185,34 @@ describe('noninteractive run command', () => {
     mockSshStreamInstance = instance(mockSshStreamType)
     when(mockSshStreamType.on(anyString(), anyFunction())).thenReturn(mockSshStreamInstance)
     when(mockSshStreamType.pipe(anything())).thenReturn(mockSshStreamInstance)
+
+    nock(herokuApiBaseUrl)
+      .post('/oauth/authorizations', {
+        description: 'Borealis PG CLI plugin temporary auth token',
+        expires_in: 180,
+        scope: ['read', 'identity'],
+      })
+      .reply(201, {id: fakeHerokuAuthId, access_token: {token: fakeHerokuAuthToken}})
+      .delete(`/oauth/authorizations/${fakeHerokuAuthId}`)
+      .reply(200)
+      .get(`/apps/${fakeHerokuAppName}/addons`)
+      .reply(200, [
+        {
+          addon_service: {name: 'other-addon-service'},
+          id: '11020644-6a62-4c5c-93a1-bcb6d9d1803a',
+          name: 'other-addon',
+        },
+        {addon_service: {name: 'borealis-pg'}, id: fakeAddonId, name: fakeAddonName},
+      ])
+      .get(`/addons/${fakeAddonId}/addon-attachments`)
+      .reply(200, [
+        {
+          addon: {id: fakeAddonId, name: fakeAddonName},
+          app: {id: fakeHerokuAppId, name: fakeHerokuAppName},
+          id: fakeAttachmentId,
+          name: fakeAttachmentName,
+        },
+      ])
   })
 
   afterEach(() => {
@@ -248,492 +221,426 @@ describe('noninteractive run command', () => {
     tunnelServices.pgClientFactory = originalPgClientFactory
     tunnelServices.sshClientFactory = originalSshClientFactory
     tunnelServices.tcpServerFactory = originalTcpServerFactory
+
+    nock.cleanAll()
   })
 
-  defaultTestContext
-    .command(['borealis-pg:run', '--app', fakeHerokuAppName, '--shell-cmd', fakeShellCommand])
-    .it('starts the proxy server', () => {
-      verify(mockTcpServerFactoryType.create(anyFunction())).once()
-      verify(mockTcpServerType.on(anyString(), anyFunction())).once()
-      verify(mockTcpServerType.on('error', anyFunction())).once()
-      verify(mockTcpServerType.listen(anyNumber(), anyString())).once()
-      verify(mockTcpServerType.listen(defaultPgPort, localPgHostname)).once()
-    })
+  it('starts the proxy server', async () => {
+    initDefaultRequestMocks()
 
-  defaultTestContext
-    .command(['borealis-pg:run', '-a', fakeHerokuAppName, '-e', fakeShellCommand])
-    .it('connects to the SSH server', () => {
-      verify(mockSshClientFactoryType.create()).once()
-      verify(mockSshClientType.on(anyString(), anyFunction())).once()
-      verify(mockSshClientType.on('ready', anyFunction())).once()
+    await runCommand(
+      ['borealis-pg:run', '--app', fakeHerokuAppName, '--shell-cmd', fakeShellCommand])
 
-      verify(mockSshClientType.connect(anything())).once()
-      const [connectConfig] = capture(mockSshClientType.connect).last()
-      expect(connectConfig.host).to.equal(fakeSshHost)
-      expect(connectConfig.port).to.equal(customSshPort)
-      expect(connectConfig.username).to.equal(fakeSshUsername)
-      expect(connectConfig.privateKey).to.equal(fakeSshPrivateKey)
-      expect(connectConfig.algorithms).to.deep.equal({serverHostKey: [expectedSshHostKeyFormat]})
+    verify(mockTcpServerFactoryType.create(anyFunction())).once()
+    verify(mockTcpServerType.on(anyString(), anyFunction())).once()
+    verify(mockTcpServerType.on('error', anyFunction())).once()
+    verify(mockTcpServerType.listen(anyNumber(), anyString())).once()
+    verify(mockTcpServerType.listen(defaultPgPort, localPgHostname)).once()
+  })
 
-      expect(connectConfig.hostVerifier).to.exist
-      const hostVerifier = connectConfig.hostVerifier as ((keyHash: unknown) => boolean)
-      expect(hostVerifier(expectedSshHostKey)).to.be.true
-      expect(hostVerifier('no good!')).to.be.false
-    })
+  it('connects to the SSH server', async () => {
+    initDefaultRequestMocks()
 
-  defaultTestContext
-    .command(['borealis-pg:run', '--app', fakeHerokuAppName, '--shell-cmd', fakeShellCommand])
-    .it('executes a shell command without a DB port option', ctx => {
-      executeSshClientListener()
+    await runCommand(['borealis-pg:run', '-a', fakeHerokuAppName, '-e', fakeShellCommand])
 
-      verify(mockChildProcessFactoryType.spawn(
-        fakeShellCommand,
-        deepEqual({
-          env: {
-            ...tunnelServices.nodeProcess.env,
-            PGHOST: localPgHostname,
-            PGPORT: defaultPgPort.toString(),
-            PGDATABASE: fakePgDbName,
-            PGUSER: fakePgReadonlyAppUsername,
-            PGPASSWORD: fakePgReadonlyAppPassword,
-            DATABASE_URL:
+    verify(mockSshClientFactoryType.create()).once()
+    verify(mockSshClientType.on(anyString(), anyFunction())).once()
+    verify(mockSshClientType.on('ready', anyFunction())).once()
+
+    verify(mockSshClientType.connect(anything())).once()
+    const [connectConfig] = capture(mockSshClientType.connect).last()
+    expect(connectConfig.host).to.equal(fakeSshHost)
+    expect(connectConfig.port).to.equal(customSshPort)
+    expect(connectConfig.username).to.equal(fakeSshUsername)
+    expect(connectConfig.privateKey).to.equal(fakeSshPrivateKey)
+    expect(connectConfig.algorithms).to.deep.equal({serverHostKey: [expectedSshHostKeyFormat]})
+
+    expect(connectConfig.hostVerifier).to.exist
+    const hostVerifier = connectConfig.hostVerifier as ((keyHash: unknown) => boolean)
+    expect(hostVerifier(expectedSshHostKey)).to.be.true
+    expect(hostVerifier('no good!')).to.be.false
+  })
+
+  it('executes a shell command without a DB port option', async () => {
+    initDefaultRequestMocks()
+
+    await runCommand(
+      ['borealis-pg:run', '--app', fakeHerokuAppName, '--shell-cmd', fakeShellCommand])
+
+    executeSshClientListener()
+
+    verify(mockChildProcessFactoryType.spawn(
+      fakeShellCommand,
+      deepEqual({
+        env: {
+          ...tunnelServices.nodeProcess.env,
+          PGHOST: localPgHostname,
+          PGPORT: defaultPgPort.toString(),
+          PGDATABASE: fakePgDbName,
+          PGUSER: fakePgReadonlyAppUsername,
+          PGPASSWORD: fakePgReadonlyAppPassword,
+          DATABASE_URL:
               `postgres://${fakePgReadonlyAppUsername}:${fakePgReadonlyAppPassword}@` +
               `${localPgHostname}:${defaultPgPort}/${fakePgDbName}`,
-          },
-          shell: true,
-          stdio: ['ignore', null, null],
-        }))).once()
+        },
+        shell: true,
+        stdio: ['ignore', null, null],
+      }))).once()
 
-      // Check that the child process's stdout is written to this process's stdout
-      const fakeStdoutMessage = 'my-stdout-message'
+    // Check that the child process's stdout is written to this process's stdout
+    const fakeStdoutMessage = 'my-stdout-message'
 
-      verify(mockChildProcessType.stdout).atLeast(1)
-      verify(mockChildProcessStdoutType.on(anyString(), anyFunction())).once()
+    verify(mockChildProcessType.stdout).atLeast(1)
+    verify(mockChildProcessStdoutType.on(anyString(), anyFunction())).once()
 
-      const [childStdoutEvent, childStdoutListener] = capture(mockChildProcessStdoutType.on).last()
-      expect(childStdoutEvent).to.equal('data')
+    const [childStdoutEvent, childStdoutListener] = capture(mockChildProcessStdoutType.on).last()
+    expect(childStdoutEvent).to.equal('data')
 
-      childStdoutListener(fakeStdoutMessage)
+    const {stdout} = await captureOutput(async () => childStdoutListener(fakeStdoutMessage))
 
-      expect(ctx.stdout).to.endWith(`${fakeStdoutMessage}\n`)
+    expect(stdout).to.endWith(`${fakeStdoutMessage}\n`)
 
-      // Check that the child process's stderr is written to this process's stderr
-      const fakeStderrMessage = 'my-stderr-message'
+    // Check that the child process's stderr is written to this process's stderr
+    const fakeStderrMessage = 'my-stderr-message'
 
-      verify(mockChildProcessType.stderr).atLeast(1)
-      verify(mockChildProcessStderrType.on(anyString(), anyFunction())).once()
+    verify(mockChildProcessType.stderr).atLeast(1)
+    verify(mockChildProcessStderrType.on(anyString(), anyFunction())).once()
 
-      const [childStderrEvent, childStderrListener] = capture(mockChildProcessStderrType.on).last()
-      expect(childStderrEvent).to.equal('data')
+    const [childStderrEvent, childStderrListener] = capture(mockChildProcessStderrType.on).last()
+    expect(childStderrEvent).to.equal('data')
 
-      childStderrListener(fakeStderrMessage)
+    const {stderr} = await captureOutput(async () => childStderrListener(fakeStderrMessage))
 
-      expect(ctx.stderr).to.endWith(`${fakeStderrMessage}\n`)
+    expect(stderr).to.endWith(`${fakeStderrMessage}\n`)
 
-      // Check what happens when the child process ends with a non-zero exit code
-      const fakeExitCode = 14
+    // Check what happens when the child process ends with a non-zero exit code
+    const fakeExitCode = 14
 
-      verify(mockChildProcessType.on(anyString(), anyFunction())).once()
+    verify(mockChildProcessType.on(anyString(), anyFunction())).once()
 
-      const [childProcEvent, childProcListener] = capture(mockChildProcessType.on).last()
-      expect(childProcEvent).to.equal('exit')
+    const [childProcEvent, childProcListener] = capture(mockChildProcessType.on).last()
+    expect(childProcEvent).to.equal('exit')
 
-      const childProcExitListener: (code: number | null, _: any) => void = childProcListener
+    const childProcExitListener: (code: number | null, _: any) => void = childProcListener
 
-      childProcExitListener(fakeExitCode, null)
+    childProcExitListener(fakeExitCode, null)
 
-      verify(mockSshClientType.end()).once()
-      verify(mockNodeProcessType.exit(fakeExitCode))
-    })
+    verify(mockSshClientType.end()).once()
+    verify(mockNodeProcessType.exit(fakeExitCode))
 
-  defaultTestContext
-    .command(['borealis-pg:run', '-a', fakeHerokuAppName, '-p', '2345', '-e', fakeShellCommand])
-    .it('executes a shell command with a custom DB port option', () => {
-      executeSshClientListener()
+    expect(nock.pendingMocks()).to.be.empty
+  })
 
-      verify(mockChildProcessFactoryType.spawn(
-        fakeShellCommand,
-        deepEqual({
-          env: {
-            ...tunnelServices.nodeProcess.env,
-            PGHOST: localPgHostname,
-            PGPORT: '2345',
-            PGDATABASE: fakePgDbName,
-            PGUSER: fakePgReadonlyAppUsername,
-            PGPASSWORD: fakePgReadonlyAppPassword,
-            DATABASE_URL:
+  it('executes a shell command with a custom DB port option', async () => {
+    initDefaultRequestMocks()
+
+    await runCommand(
+      ['borealis-pg:run', '-a', fakeHerokuAppName, '-p', '2345', '-e', fakeShellCommand])
+
+    executeSshClientListener()
+
+    verify(mockChildProcessFactoryType.spawn(
+      fakeShellCommand,
+      deepEqual({
+        env: {
+          ...tunnelServices.nodeProcess.env,
+          PGHOST: localPgHostname,
+          PGPORT: '2345',
+          PGDATABASE: fakePgDbName,
+          PGUSER: fakePgReadonlyAppUsername,
+          PGPASSWORD: fakePgReadonlyAppPassword,
+          DATABASE_URL:
               `postgres://${fakePgReadonlyAppUsername}:${fakePgReadonlyAppPassword}@` +
               `${localPgHostname}:2345/${fakePgDbName}`,
-          },
-          shell: true,
-          stdio: ['ignore', null, null],
-        }))).once()
-
-      verify(mockChildProcessStdoutType.on('data', anyFunction())).once()
-      verify(mockChildProcessStderrType.on('data', anyFunction())).once()
-
-      // Check what happens when the child process ends without an exit code
-      verify(mockChildProcessType.on(anyString(), anyFunction())).once()
-
-      const [childProcEvent, childProcListener] = capture(mockChildProcessType.on).last()
-      expect(childProcEvent).to.equal('exit')
-
-      const childProcExitListener: (code: number | null, _: any) => void = childProcListener
-
-      childProcExitListener(null, null)
-
-      verify(mockSshClientType.end()).once()
-      verify(mockNodeProcessType.exit())
-    })
-
-  defaultTestContext
-    .command(['borealis-pg:run', '-a', fakeHerokuAppName, '-e', fakeShellCommand])
-    .it('executes a shell command even when the child process has no stdout or stderr', () => {
-      when(mockChildProcessType.stdout).thenReturn(null)
-      when(mockChildProcessType.stderr).thenReturn(null)
-
-      executeSshClientListener()
-
-      verify(mockChildProcessFactoryType.spawn(fakeShellCommand, anything())).once()
-      verify(mockChildProcessStdoutType.on(anyString(), anyFunction())).never()
-      verify(mockChildProcessStderrType.on(anyString(), anyFunction())).never()
-    })
-
-  defaultTestContext
-    .command(['borealis-pg:run', '-a', fakeHerokuAppName, '--db-cmd', fakeDbCommand])
-    .it('executes a database command with the default (table) format', ctx => {
-      expect(ctx.stderr).to.contain(
-        `Configuring read-only user session for add-on ${fakeAddonName}... done`)
-
-      executeSshClientListener()
-
-      verify(mockPgClientFactoryType.create(deepEqual({
-        host: localPgHostname,
-        port: defaultPgPort,
-        database: fakePgDbName,
-        user: fakePgReadonlyAppUsername,
-        password: fakePgReadonlyAppPassword,
-        ssl: {rejectUnauthorized: false},
+        },
+        shell: true,
+        stdio: ['ignore', null, null],
       }))).once()
 
-      // Check the PG client event listeners
-      verify(mockPgClientType.on(anyString(), anyFunction())).times(2)
-      verify(mockPgClientType.on('end', anyFunction())).once()
-      verify(mockPgClientType.on('error', anyFunction())).once()
-      for (let pgClientListenerIndex = 0; pgClientListenerIndex < 2; pgClientListenerIndex++) {
-        const [pgClientEvent, pgClientListener] =
+    verify(mockChildProcessStdoutType.on('data', anyFunction())).once()
+    verify(mockChildProcessStderrType.on('data', anyFunction())).once()
+
+    // Check what happens when the child process ends without an exit code
+    verify(mockChildProcessType.on(anyString(), anyFunction())).once()
+
+    const [childProcEvent, childProcListener] = capture(mockChildProcessType.on).last()
+    expect(childProcEvent).to.equal('exit')
+
+    const childProcExitListener: (code: number | null, _: any) => void = childProcListener
+
+    childProcExitListener(null, null)
+
+    verify(mockSshClientType.end()).once()
+    verify(mockNodeProcessType.exit())
+
+    expect(nock.pendingMocks()).to.be.empty
+  })
+
+  it('executes a shell command even when the child process has no stdout or stderr', async () => {
+    initDefaultRequestMocks()
+
+    await runCommand(['borealis-pg:run', '-a', fakeHerokuAppName, '-e', fakeShellCommand])
+
+    when(mockChildProcessType.stdout).thenReturn(null)
+    when(mockChildProcessType.stderr).thenReturn(null)
+
+    executeSshClientListener()
+
+    verify(mockChildProcessFactoryType.spawn(fakeShellCommand, anything())).once()
+    verify(mockChildProcessStdoutType.on(anyString(), anyFunction())).never()
+    verify(mockChildProcessStderrType.on(anyString(), anyFunction())).never()
+
+    expect(nock.pendingMocks()).to.be.empty
+  })
+
+  it('executes a database command with the default (table) format', async () => {
+    initDefaultRequestMocks()
+
+    const {stderr: cmdStderr} = await runCommand(
+      ['borealis-pg:run', '-a', fakeHerokuAppName, '--db-cmd', fakeDbCommand])
+
+    expect(cmdStderr).to.contain(
+      `Configuring read-only user session for add-on ${fakeAddonName}... done`)
+
+    executeSshClientListener()
+
+    verify(mockPgClientFactoryType.create(deepEqual({
+      host: localPgHostname,
+      port: defaultPgPort,
+      database: fakePgDbName,
+      user: fakePgReadonlyAppUsername,
+      password: fakePgReadonlyAppPassword,
+      ssl: {rejectUnauthorized: false},
+    }))).once()
+
+    // Check the PG client event listeners
+    verify(mockPgClientType.on(anyString(), anyFunction())).times(2)
+    verify(mockPgClientType.on('end', anyFunction())).once()
+    verify(mockPgClientType.on('error', anyFunction())).once()
+    for (let pgClientListenerIndex = 0; pgClientListenerIndex < 2; pgClientListenerIndex++) {
+      const [pgClientEvent, pgClientListener] =
           capture((a: any, b: any) => mockPgClientType.on(a, b)).byCallIndex(pgClientListenerIndex)
 
-        if (pgClientEvent === 'end') {
-          const pgClientEndListener: () => void = pgClientListener
-          pgClientEndListener()
+      if (pgClientEvent === 'end') {
+        const pgClientEndListener: () => void = pgClientListener
+        pgClientEndListener()
 
-          verify(mockSshClientType.end()).once()
-          verify(mockNodeProcessType.exit()).once()
-        } else {
-          const pgClientErrorListener: (err: Error) => void = pgClientListener
-          const pgClientErrorMessage = 'my-pg-client-error'
-          pgClientErrorListener(new Error(pgClientErrorMessage))
+        verify(mockSshClientType.end()).once()
+        verify(mockNodeProcessType.exit()).once()
+      } else {
+        const pgClientErrorListener: (err: Error) => void = pgClientListener
+        const pgClientErrorMessage = 'my-pg-client-error'
 
-          expect(ctx.stderr).to.contain(pgClientErrorMessage)
-          verify(mockNodeProcessType.exit(1)).once()
-        }
+        const {stderr} = await captureOutput(async () =>
+          pgClientErrorListener(new Error(pgClientErrorMessage)))
+
+        expect(stderr).to.contain(pgClientErrorMessage)
+        verify(mockNodeProcessType.exit(1)).once()
       }
+    }
 
-      verify(mockPgClientType.connect()).once()
+    verify(mockPgClientType.connect()).once()
 
-      // Check the query callback function
-      const queryCallback = getQueryCallbackFn()
+    // Check the query callback function
+    const queryCallback = getQueryCallbackFn()
 
-      queryCallback(null, {
-        command: 'SELECT',
-        fields: [{name: 'id'}, {name: 'value1'}, {name: 'value2'}],
-        oid: 32_304,
-        rows: [{id: 21, value1: 'test1', value2: null}, {id: 33, value1: 'test2', value2: 'test3'}],
-        rowCount: 2,
-      })
+    const {stdout} = await captureOutput(async () => queryCallback(null, {
+      command: 'SELECT',
+      fields: [{name: 'id'}, {name: 'value1'}, {name: 'value2'}],
+      oid: 32_304,
+      rows: [{id: 21, value1: 'test1', value2: null}, {id: 33, value1: 'test2', value2: 'test3'}],
+      rowCount: 2,
+    }))
 
-      expect(ctx.stdout).to.containIgnoreSpaces(
-        '| id | value1 | value2 |')
-      expect(ctx.stdout).to.containIgnoreSpaces(
-        '| 21 | test1 | |\n' +
+    expect(stdout).to.containIgnoreSpaces(
+      '| id | value1 | value2 |')
+    expect(stdout).to.containIgnoreSpaces(
+      '| 21 | test1 | |\n' +
         '| 33 | test2 | test3 |\n')
-      expect(ctx.stdout).to.contain('(2 rows)')
+    expect(stdout).to.contain('(2 rows)')
 
-      verify(mockPgClientType.end()).once()
-    })
+    verify(mockPgClientType.end()).once()
+  })
 
-  defaultTestContext
-    .command(['borealis-pg:run', '-a', fakeHerokuAppName, '-d', fakeDbCommand, '-f', 'table'])
-    .it('executes a database command with multiple result entries', ctx => {
-      expect(ctx.stderr).to.contain(
-        `Configuring read-only user session for add-on ${fakeAddonName}... done`)
+  it('executes a database command with multiple result entries', async () => {
+    initDefaultRequestMocks()
 
-      const uniqueValue = 'feb88f0d-b630-4c8a-bff5-7167c06c2624'
+    const {stderr: cmdStderr} = await runCommand(
+      ['borealis-pg:run', '-a', fakeHerokuAppName, '-d', fakeDbCommand, '-f', 'table'])
 
-      executeSshClientListener()
+    expect(cmdStderr).to.contain(
+      `Configuring read-only user session for add-on ${fakeAddonName}... done`)
 
-      const queryCallback = getQueryCallbackFn()
+    const uniqueValue = 'feb88f0d-b630-4c8a-bff5-7167c06c2624'
 
-      queryCallback(null, [
-        {
-          command: 'SELECT',
-          fields: [{name: 'id'}, {name: 'value'}],
-          oid: 32_304,
-          rows: [{id: 21, value: 'test1'}, {id: 33, value: 'test2'}, {id: 0, value: uniqueValue}],
-          rowCount: 3,
-        },
-        {
-          command: 'INSERT',
-          fields: [],
-          rows: [],
-          rowCount: 1,
-        },
-      ])
+    executeSshClientListener()
 
-      // Only the last query result should have been output
-      expect(ctx.stdout).not.to.contain(uniqueValue)
-      expect(ctx.stdout).to.contain('(1 row)')
+    const queryCallback = getQueryCallbackFn()
 
-      verify(mockPgClientType.end()).once()
-    })
-
-  defaultTestContext
-    .command([
-      'borealis-pg:run',
-      '--app',
-      fakeHerokuAppName,
-      '--db-cmd',
-      fakeDbCommand,
-      '--format',
-      'csv',
-    ])
-    .it('executes a database command with CSV output format', ctx => {
-      executeSshClientListener()
-
-      const queryCallback = getQueryCallbackFn()
-
-      const expectedRowCount = 3
-
-      queryCallback(null, {
+    const {stdout} = await captureOutput(async () => queryCallback(null, [
+      {
         command: 'SELECT',
         fields: [{name: 'id'}, {name: 'value'}],
         oid: 32_304,
-        rows: [{id: 21, value: 'test1'}, {id: 33, value: 'test2'}, {id: 0, value: 3}],
-        rowCount: expectedRowCount,
-      })
+        rows: [{id: 21, value: 'test1'}, {id: 33, value: 'test2'}, {id: 0, value: uniqueValue}],
+        rowCount: 3,
+      },
+      {
+        command: 'INSERT',
+        fields: [],
+        rows: [],
+        rowCount: 1,
+      },
+    ]))
 
-      expect(ctx.stdout).to.contain(
-        'id,value\n' +
-        '21,test1\n' +
-        '33,test2\n' +
-        '0,3\n')
-      expect(ctx.stdout).not.to.contain(`(${expectedRowCount} rows)`)
+    // Only the last query result should have been output
+    expect(stdout).not.to.contain(uniqueValue)
+    expect(stdout).to.contain('(1 row)')
 
-      verify(mockPgClientType.end()).once()
-    })
+    verify(mockPgClientType.end()).once()
+  })
 
-  defaultTestContext
-    .command(['borealis-pg:run', '-a', fakeHerokuAppName, '-d', fakeDbCommand, '-f', 'json'])
-    .it('executes a database command with JSON output format', ctx => {
-      executeSshClientListener()
+  it('executes a database command with no result', async () => {
+    initDefaultRequestMocks()
 
-      const queryCallback = getQueryCallbackFn()
+    const {stderr: cmdStderr} = await runCommand(
+      ['borealis-pg:run', '-a', fakeHerokuAppName, '-d', fakeDbCommand])
 
-      const expectedRowCount = 2
+    expect(cmdStderr).to.contain(
+      `Configuring read-only user session for add-on ${fakeAddonName}... done`)
 
-      queryCallback(null, {
-        command: 'SELECT',
-        fields: [{name: 'id'}, {name: 'value'}],
-        oid: 32_304,
-        rows: [{id: 16, value: 'test1'}, {id: 19, value: 'test2'}],
-        rowCount: expectedRowCount,
-      })
+    executeSshClientListener()
 
-      expect(ctx.stdout).to.contain(
-        JSON.stringify([{id: '16', value: 'test1'}, {id: '19', value: 'test2'}], undefined, 2))
-      expect(ctx.stdout).not.to.contain(`(${expectedRowCount} rows)`)
+    const queryCallback = getQueryCallbackFn()
 
-      verify(mockPgClientType.end()).once()
-    })
+    const {stdout} = await captureOutput(async () => queryCallback(null, {}))
 
-  defaultTestContext
-    .command(['borealis-pg:run', '-a', fakeHerokuAppName, '-d', fakeDbCommand, '-f', 'yaml'])
-    .it('executes a database command with YAML output format', ctx => {
-      executeSshClientListener()
+    expect(stdout).to.contain('(0 rows)')
 
-      const queryCallback = getQueryCallbackFn()
+    verify(mockPgClientType.end()).once()
+  })
 
-      const expectedRowCount = 2
+  it('executes a database command from a file', async () => {
+    initDefaultRequestMocks()
 
-      queryCallback(null, {
-        command: 'SELECT',
-        fields: [{name: 'id'}, {name: 'value'}],
-        oid: 32_304,
-        rows: [{id: 2, value: 'test1'}, {id: 3, value: 'test2'}],
-        rowCount: expectedRowCount,
-      })
+    const {stderr: cmdStderr} = await runCommand(
+      ['borealis-pg:run', '-a', fakeHerokuAppName, '--db-cmd-file', exampleFilePath])
 
-      expect(ctx.stdout).to.contain(
-        "- id: '2'\n" +
-        '  value: test1\n' +
-        "- id: '3'\n" +
-        '  value: test2\n')
-      expect(ctx.stdout).not.to.contain(`(${expectedRowCount} rows)`)
+    expect(cmdStderr).to.contain(
+      `Configuring read-only user session for add-on ${fakeAddonName}... done`)
 
-      verify(mockPgClientType.end()).once()
-    })
+    executeSshClientListener()
 
-  defaultTestContext
-    .command(['borealis-pg:run', '-a', fakeHerokuAppName, '-d', fakeDbCommand])
-    .it('executes a database command with no result', ctx => {
-      expect(ctx.stderr).to.contain(
-        `Configuring read-only user session for add-on ${fakeAddonName}... done`)
+    verify(mockPgClientFactoryType.create(deepEqual({
+      host: localPgHostname,
+      port: defaultPgPort,
+      database: fakePgDbName,
+      user: fakePgReadonlyAppUsername,
+      password: fakePgReadonlyAppPassword,
+      ssl: {rejectUnauthorized: false},
+    }))).once()
 
-      executeSshClientListener()
+    verify(mockPgClientType.connect()).once()
 
-      const queryCallback = getQueryCallbackFn()
+    // Check the query callback function
+    const queryCallback = getQueryCallbackFn(exampleFileContents)
 
-      queryCallback(null, {})
+    const {stdout} = await captureOutput(async () => queryCallback(null, {
+      command: 'SELECT',
+      fields: [{name: 'id'}, {name: 'foo'}],
+      oid: 2761,
+      rows: [
+        {id: 9, foo: 'val1'},
+        {id: 104, foo: 'val2'},
+        {id: 23, foo: null},
+        {id: 1, foo: 'one'},
+      ],
+      rowCount: 4,
+    }))
 
-      expect(ctx.stdout).to.contain('(0 rows)')
-
-      verify(mockPgClientType.end()).once()
-    })
-
-  defaultTestContext
-    .command(['borealis-pg:run', '-a', fakeHerokuAppName, '--db-cmd-file', exampleFilePath])
-    .it('executes a database command from a file', ctx => {
-      expect(ctx.stderr).to.contain(
-        `Configuring read-only user session for add-on ${fakeAddonName}... done`)
-
-      executeSshClientListener()
-
-      verify(mockPgClientFactoryType.create(deepEqual({
-        host: localPgHostname,
-        port: defaultPgPort,
-        database: fakePgDbName,
-        user: fakePgReadonlyAppUsername,
-        password: fakePgReadonlyAppPassword,
-        ssl: {rejectUnauthorized: false},
-      }))).once()
-
-      verify(mockPgClientType.connect()).once()
-
-      // Check the query callback function
-      const queryCallback = getQueryCallbackFn(exampleFileContents)
-
-      queryCallback(null, {
-        command: 'SELECT',
-        fields: [{name: 'id'}, {name: 'foo'}],
-        oid: 2761,
-        rows: [
-          {id: 9, foo: 'val1'},
-          {id: 104, foo: 'val2'},
-          {id: 23, foo: null},
-          {id: 1, foo: 'one'},
-        ],
-        rowCount: 4,
-      })
-
-      expect(ctx.stdout).to.containIgnoreSpaces(
-        '| id | foo |')
-      expect(ctx.stdout).to.containIgnoreSpaces(
-        '| 9 | val1 |\n' +
+    expect(stdout).to.containIgnoreSpaces(
+      '| id | foo |')
+    expect(stdout).to.containIgnoreSpaces(
+      '| 9 | val1 |\n' +
         '| 104 | val2 |\n' +
         '| 23 | |\n' +
         '| 1 | one |\n')
-      expect(ctx.stdout).to.contain('(4 rows)')
+    expect(stdout).to.contain('(4 rows)')
 
-      verify(mockPgClientType.end()).once()
-    })
+    verify(mockPgClientType.end()).once()
+  })
 
-  defaultTestContext
-    .command([
-      'borealis-pg:run',
-      '-a',
-      fakeHerokuAppName,
-      '-i',
-      exampleFilePath,
-      '-f',
-      'csv',
-    ])
-    .it('executes a database command from a file with a different output format', ctx => {
-      executeSshClientListener()
-
-      const queryCallback = getQueryCallbackFn(exampleFileContents)
-
-      const expectedRowCount = 2
-
-      queryCallback(null, {
-        command: 'SELECT',
-        fields: [{name: 'id'}, {name: 'value'}],
-        oid: 32_304,
-        rows: [{id: 1, value: 'one'}, {id: 2, value: 'two'}],
-        rowCount: expectedRowCount,
-      })
-
-      expect(ctx.stdout).to.contain(
-        'id,value\n' +
-        '1,one\n' +
-        '2,two\n')
-      expect(ctx.stdout).not.to.contain(`(${expectedRowCount} rows)`)
-
-      verify(mockPgClientType.end()).once()
-    })
-
-  test.stdout()
-    .stderr()
-    .command([
+  it('handles an error when the database command file is not found', async () => {
+    const {error} = await runCommand([
       'borealis-pg:run',
       '-a',
       fakeHerokuAppName,
       '-i',
       '/c2ee1b3e-fbbd-4915-ad77-f3c26a60714c.sql',
     ])
-    .catch(/^File not found/)
-    .it('handles an error when the database command file is not found', () => {
-      verify(mockSshClientFactoryType.create()).never()
-      verify(mockTcpServerFactoryType.create(anyFunction())).never()
-    })
 
-  test.stdout()
-    .stderr()
-    .command([
+    expect(error?.message).to.contain('File not found')
+
+    verify(mockSshClientFactoryType.create()).never()
+    verify(mockTcpServerFactoryType.create(anyFunction())).never()
+  })
+
+  it('handles an error when the database command file is actually a directory', async () => {
+    const {error} = await runCommand([
       'borealis-pg:run',
       '--app',
       fakeHerokuAppName,
       '--db-cmd-file',
       __dirname,
     ])
-    .catch(/.*is a directory.*/)
-    .it('handles an error when the database command file is actually a directory', () => {
-      verify(mockSshClientFactoryType.create()).never()
-      verify(mockTcpServerFactoryType.create(anyFunction())).never()
-    })
 
-  defaultTestContext
-    .command(['borealis-pg:run', '-a', fakeHerokuAppName, '-d', fakeDbCommand])
-    .it('handles a database command error', ctx => {
-      executeSshClientListener()
+    expect(error?.message).to.contain('is a directory')
 
-      verify(mockPgClientType.query(fakeDbCommand, anyFunction())).once()
+    verify(mockSshClientFactoryType.create()).never()
+    verify(mockTcpServerFactoryType.create(anyFunction())).never()
+  })
 
-      const [_, queryArg2] = capture(mockPgClientType.query).last()
-      const queryCallback = (queryArg2 as unknown) as ((err: any, results: any) => void)
+  it('handles a database command error', async () => {
+    initDefaultRequestMocks()
 
-      const fakeErrorMessage = 'Bad query!'
+    await runCommand(['borealis-pg:run', '-a', fakeHerokuAppName, '-d', fakeDbCommand])
 
-      queryCallback(new Error(fakeErrorMessage), null)
+    executeSshClientListener()
 
-      expect(ctx.stdout).to.equal('')
-      expect(ctx.stderr).to.contain(fakeErrorMessage)
+    verify(mockPgClientType.query(fakeDbCommand, anyFunction())).once()
 
-      verify(mockNodeProcessType.exit(1)).once()
-    })
+    const [_, queryArg2] = capture(mockPgClientType.query).last()
+    const queryCallback = (queryArg2 as unknown) as ((err: any, results: any) => void)
 
-  testContextWithWriteAccess
-    .command([
+    const fakeErrorMessage = 'Bad query!'
+
+    const {stdout, stderr} = await captureOutput(async () =>
+      queryCallback(new Error(fakeErrorMessage), null))
+
+    expect(stdout).to.equal('')
+    expect(stderr).to.contain(fakeErrorMessage)
+
+    verify(mockNodeProcessType.exit(1)).once()
+  })
+
+  it('configures the DB user with write access when requested', async () => {
+    nock(herokuApiBaseUrl)
+      .get(`/apps/${fakeHerokuAppName}/config-vars`)
+      .reply(200, fakeAppConfigVars)
+
+    nock(borealisPgApiBaseUrl, {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}})
+      .post(`/heroku/resources/${fakeAddonName}/personal-ssh-users`)
+      .reply(
+        200,
+        {
+          sshHost: fakeSshHost,
+          sshPort: defaultSshPort,
+          sshUsername: fakeSshUsername,
+          sshPrivateKey: fakeSshPrivateKey,
+          publicSshHostKey: expectedSshHostKeyEntry,
+        })
+
+    const {stderr} = await runCommand([
       'borealis-pg:run',
       '--app',
       fakeHerokuAppName,
@@ -741,33 +648,35 @@ describe('noninteractive run command', () => {
       '--shell-cmd',
       fakeShellCommand,
     ])
-    .it('configures the DB user with write access when requested', ctx => {
-      executeSshClientListener()
 
-      expect(ctx.stderr).to.contain(
-        `Configuring read/write user session for add-on ${fakeAddonName}... done`)
+    executeSshClientListener()
 
-      verify(mockChildProcessFactoryType.spawn(
-        fakeShellCommand,
-        deepEqual({
-          env: {
-            ...tunnelServices.nodeProcess.env,
-            PGHOST: localPgHostname,
-            PGPORT: defaultPgPort.toString(),
-            PGDATABASE: fakePgDbName,
-            PGUSER: fakePgReadWriteAppUsername,
-            PGPASSWORD: fakePgReadWriteAppPassword,
-            DATABASE_URL:
+    expect(stderr).to.contain(
+      `Configuring read/write user session for add-on ${fakeAddonName}... done`)
+
+    verify(mockChildProcessFactoryType.spawn(
+      fakeShellCommand,
+      deepEqual({
+        env: {
+          ...tunnelServices.nodeProcess.env,
+          PGHOST: localPgHostname,
+          PGPORT: defaultPgPort.toString(),
+          PGDATABASE: fakePgDbName,
+          PGUSER: fakePgReadWriteAppUsername,
+          PGPASSWORD: fakePgReadWriteAppPassword,
+          DATABASE_URL:
               `postgres://${fakePgReadWriteAppUsername}:${fakePgReadWriteAppPassword}@` +
               `${localPgHostname}:${defaultPgPort}/${fakePgDbName}`,
-          },
-          shell: true,
-          stdio: ['ignore', null, null],
-        }))).once()
-    })
+        },
+        shell: true,
+        stdio: ['ignore', null, null],
+      }))).once()
+  })
 
-  testContextWithReadonlyPersonalUser
-    .command([
+  it('uses a readonly personal DB user when requested', async () => {
+    initPersonalUserRequestMocks(false)
+
+    await runCommand([
       'borealis-pg:run',
       '--personal-user',
       '--app',
@@ -775,30 +684,32 @@ describe('noninteractive run command', () => {
       '--shell-cmd',
       fakeShellCommand,
     ])
-    .it('uses a readonly personal DB user when requested', () => {
-      executeSshClientListener()
 
-      verify(mockChildProcessFactoryType.spawn(
-        fakeShellCommand,
-        deepEqual({
-          env: {
-            ...tunnelServices.nodeProcess.env,
-            PGHOST: localPgHostname,
-            PGPORT: defaultPgPort.toString(),
-            PGDATABASE: fakePgDbName,
-            PGUSER: fakePgPersonalUsername,
-            PGPASSWORD: fakePgPersonalPassword,
-            DATABASE_URL:
+    executeSshClientListener()
+
+    verify(mockChildProcessFactoryType.spawn(
+      fakeShellCommand,
+      deepEqual({
+        env: {
+          ...tunnelServices.nodeProcess.env,
+          PGHOST: localPgHostname,
+          PGPORT: defaultPgPort.toString(),
+          PGDATABASE: fakePgDbName,
+          PGUSER: fakePgPersonalUsername,
+          PGPASSWORD: fakePgPersonalPassword,
+          DATABASE_URL:
               `postgres://${fakePgPersonalUsername}:${fakePgPersonalPassword}@` +
               `${localPgHostname}:${defaultPgPort}/${fakePgDbName}`,
-          },
-          shell: true,
-          stdio: ['ignore', null, null],
-        }))).once()
-    })
+        },
+        shell: true,
+        stdio: ['ignore', null, null],
+      }))).once()
+  })
 
-  testContextWithReadWritePersonalUser
-    .command([
+  it('uses a read/write personal DB user when requested', async () => {
+    initPersonalUserRequestMocks(true)
+
+    await runCommand([
       'borealis-pg:run',
       '-w',
       '-u',
@@ -807,97 +718,97 @@ describe('noninteractive run command', () => {
       '-e',
       fakeShellCommand,
     ])
-    .it('uses a read/write personal DB user when requested', () => {
-      executeSshClientListener()
 
-      verify(mockChildProcessFactoryType.spawn(
-        fakeShellCommand,
-        deepEqual({
-          env: {
-            ...tunnelServices.nodeProcess.env,
-            PGHOST: localPgHostname,
-            PGPORT: defaultPgPort.toString(),
-            PGDATABASE: fakePgDbName,
-            PGUSER: fakePgPersonalUsername,
-            PGPASSWORD: fakePgPersonalPassword,
-            DATABASE_URL:
+    executeSshClientListener()
+
+    verify(mockChildProcessFactoryType.spawn(
+      fakeShellCommand,
+      deepEqual({
+        env: {
+          ...tunnelServices.nodeProcess.env,
+          PGHOST: localPgHostname,
+          PGPORT: defaultPgPort.toString(),
+          PGDATABASE: fakePgDbName,
+          PGUSER: fakePgPersonalUsername,
+          PGPASSWORD: fakePgPersonalPassword,
+          DATABASE_URL:
               `postgres://${fakePgPersonalUsername}:${fakePgPersonalPassword}@` +
               `${localPgHostname}:${defaultPgPort}/${fakePgDbName}`,
-          },
-          shell: true,
-          stdio: ['ignore', null, null],
-        }))).once()
-    })
+        },
+        shell: true,
+        stdio: ['ignore', null, null],
+      }))).once()
+  })
 
-  defaultTestContext
-    .command(['borealis-pg:run', '-a', fakeHerokuAppName, '-e', fakeShellCommand])
-    .it('starts SSH port forwarding', () => {
-      const [tcpConnectionListener] = capture(mockTcpServerFactoryType.create).last()
-      tcpConnectionListener(mockTcpSocketInstance)
+  it('starts SSH port forwarding', async () => {
+    initDefaultRequestMocks()
 
-      verify(mockSshClientType.forwardOut(
-        localPgHostname,
-        defaultPgPort,
-        fakePgReaderHost,
-        customPgPort,
-        anyFunction())).once()
+    await runCommand(['borealis-pg:run', '-a', fakeHerokuAppName, '-e', fakeShellCommand])
 
-      const [_, _1, _2, _3, portForwardListener] = capture(mockSshClientType.forwardOut).last()
-      assert(typeof portForwardListener !== 'undefined')
-      portForwardListener(undefined, mockSshStreamInstance)
+    const [tcpConnectionListener] = capture(mockTcpServerFactoryType.create).last()
+    tcpConnectionListener(mockTcpSocketInstance)
 
-      verify(mockTcpSocketType.pipe(mockSshStreamInstance)).once()
-      verify(mockSshStreamType.pipe(mockTcpSocketInstance)).once()
+    verify(mockSshClientType.forwardOut(
+      localPgHostname,
+      defaultPgPort,
+      fakePgReaderHost,
+      customPgPort,
+      anyFunction())).once()
 
-      verify(mockTcpSocketType.on(anyString(), anyFunction())).twice()
-      verify(mockTcpSocketType.on('end', anyFunction())).once()
-      verify(mockTcpSocketType.on('error', anyFunction())).once()
-    })
+    const [_, _1, _2, _3, portForwardListener] = capture(mockSshClientType.forwardOut).last()
+    assert(typeof portForwardListener !== 'undefined')
+    portForwardListener(undefined, mockSshStreamInstance)
 
-  baseTestContext
-    .nock(herokuApiBaseUrl, api => api.get(`/apps/${fakeHerokuAppName}/config-vars`)
-      .reply(200, fakeObsoleteAppConfigVars))
-    .nock(
-      borealisPgApiBaseUrl,
-      {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}},
-      api => api.post(`/heroku/resources/${fakeAddonName}/personal-ssh-users`)
-        .reply(
-          200,
-          {
-            sshHost: fakeSshHost,
-            sshPort: customSshPort,
-            sshUsername: fakeSshUsername,
-            sshPrivateKey: fakeSshPrivateKey,
-            publicSshHostKey: expectedSshHostKeyEntry,
-          }))
-    .nock(herokuApiBaseUrl, api => mockAddonAttachmentRequests(api))
-    .command(['borealis-pg:run', '-a', fakeHerokuAppName, '-e', fakeShellCommand])
-    .it('executes a command with the obsolete tunnel connection info config var', () => {
-      executeSshClientListener()
+    verify(mockTcpSocketType.pipe(mockSshStreamInstance)).once()
+    verify(mockSshStreamType.pipe(mockTcpSocketInstance)).once()
 
-      verify(mockChildProcessFactoryType.spawn(
-        fakeShellCommand,
-        deepEqual({
-          env: {
-            ...tunnelServices.nodeProcess.env,
-            PGHOST: localPgHostname,
-            PGPORT: defaultPgPort.toString(),
-            PGDATABASE: fakePgDbName,
-            PGUSER: fakePgReadonlyAppUsername,
-            PGPASSWORD: fakePgReadonlyAppPassword,
-            DATABASE_URL:
+    verify(mockTcpSocketType.on(anyString(), anyFunction())).twice()
+    verify(mockTcpSocketType.on('end', anyFunction())).once()
+    verify(mockTcpSocketType.on('error', anyFunction())).once()
+  })
+
+  it('executes a command with the obsolete tunnel connection info config var', async () => {
+    nock(herokuApiBaseUrl)
+      .get(`/apps/${fakeHerokuAppName}/config-vars`)
+      .reply(200, fakeObsoleteAppConfigVars)
+
+    nock(borealisPgApiBaseUrl, {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}})
+      .post(`/heroku/resources/${fakeAddonName}/personal-ssh-users`)
+      .reply(
+        200,
+        {
+          sshHost: fakeSshHost,
+          sshPort: customSshPort,
+          sshUsername: fakeSshUsername,
+          sshPrivateKey: fakeSshPrivateKey,
+          publicSshHostKey: expectedSshHostKeyEntry,
+        })
+
+    await runCommand(['borealis-pg:run', '-a', fakeHerokuAppName, '-e', fakeShellCommand])
+
+    executeSshClientListener()
+
+    verify(mockChildProcessFactoryType.spawn(
+      fakeShellCommand,
+      deepEqual({
+        env: {
+          ...tunnelServices.nodeProcess.env,
+          PGHOST: localPgHostname,
+          PGPORT: defaultPgPort.toString(),
+          PGDATABASE: fakePgDbName,
+          PGUSER: fakePgReadonlyAppUsername,
+          PGPASSWORD: fakePgReadonlyAppPassword,
+          DATABASE_URL:
               `postgres://${fakePgReadonlyAppUsername}:${fakePgReadonlyAppPassword}@` +
               `${localPgHostname}:${defaultPgPort}/${fakePgDbName}`,
-          },
-          shell: true,
-          stdio: ['ignore', null, null],
-        }))).once()
-    })
+        },
+        shell: true,
+        stdio: ['ignore', null, null],
+      }))).once()
+  })
 
-  test
-    .stdout()
-    .stderr()
-    .command([
+  it('rejects a --port value that is not an integer', async () => {
+    const {error} = await runCommand([
       'borealis-pg:run',
       '--app',
       fakeHerokuAppName,
@@ -906,54 +817,56 @@ describe('noninteractive run command', () => {
       '--shell-cmd',
       fakeShellCommand,
     ])
-    .catch(/.*Expected an integer but received: port-must-be-an-integer.*/)
-    .it('rejects a --port value that is not an integer', () => {
-      verify(mockTcpServerFactoryType.create(anyFunction())).never()
-      verify(mockSshClientFactoryType.create()).never()
+
+    expect(error?.message).to.contain('Expected an integer but received: port-must-be-an-integer')
+
+    verify(mockTcpServerFactoryType.create(anyFunction())).never()
+    verify(mockSshClientFactoryType.create()).never()
+  })
+
+  it('rejects a --port value that is less than 1', async () => {
+    const {error} = await runCommand(
+      ['borealis-pg:run', '-a', fakeHerokuAppName, '-p', '-1', '-e', fakeShellCommand])
+
+    expect(error?.message).to.contain(
+      'Expected an integer greater than or equal to 1 but received: -1')
+
+    verify(mockTcpServerFactoryType.create(anyFunction())).never()
+    verify(mockSshClientFactoryType.create()).never()
+  })
+
+  it('rejects a --port value that is greater than 65535', async () => {
+    const {error} = await runCommand(
+      ['borealis-pg:run', '-a', fakeHerokuAppName, '-p', '65536', '-e', fakeShellCommand])
+
+    expect(error?.message).to.contain(
+      'Expected an integer less than or equal to 65535 but received: 65536')
+
+    verify(mockTcpServerFactoryType.create(anyFunction())).never()
+    verify(mockSshClientFactoryType.create()).never()
+  })
+
+  it('exits with an error if there are no DB command CLI options', async () => {
+    const {stdout, error} = await runCommand(['borealis-pg:run', '-a', fakeHerokuAppName])
+
+    expect(stdout).to.equal('')
+    expect(error?.message).to.contain(
+      'Either --db-cmd, --db-cmd-file or --shell-cmd must be specified')
+  })
+
+  it(
+    'exits with an error if both a shell command and a database command are provided',
+    async () => {
+      const {stdout, error} = await runCommand(
+        ['borealis-pg:run', '-a', fakeHerokuAppName, '-e', fakeShellCommand, '-d', fakeDbCommand])
+
+      expect(stdout).to.equal('')
+      expect(error?.message).to.contain(
+        `--shell-cmd=${fakeShellCommand} cannot also be provided when using --db-cmd`)
     })
 
-  test
-    .stdout()
-    .stderr()
-    .command(['borealis-pg:run', '-a', fakeHerokuAppName, '-p', '-1', '-e', fakeShellCommand])
-    .catch(/.*Expected an integer greater than or equal to 1 but received: -1.*/)
-    .it('rejects a --port value that is less than 1', () => {
-      verify(mockTcpServerFactoryType.create(anyFunction())).never()
-      verify(mockSshClientFactoryType.create()).never()
-    })
-
-  test
-    .stdout()
-    .stderr()
-    .command(['borealis-pg:run', '-a', fakeHerokuAppName, '-p', '65536', '-e', fakeShellCommand])
-    .catch(/.*Expected an integer less than or equal to 65535 but received: 65536.*/)
-    .it('rejects a --port value that is greater than 65535', () => {
-      verify(mockTcpServerFactoryType.create(anyFunction())).never()
-      verify(mockSshClientFactoryType.create()).never()
-    })
-
-  test.stdout()
-    .stderr()
-    .command(['borealis-pg:run', '-a', fakeHerokuAppName])
-    .catch(
-      `Either ${consoleColours.cliOption('--db-cmd')}, ${consoleColours.cliOption('--db-cmd-file')} ` +
-      `or ${consoleColours.cliOption('--shell-cmd')} must be specified`)
-    .it('exits with an error if there are no command CLI options', ctx => {
-      expect(ctx.stdout).to.equal('')
-    })
-
-  test.stdout()
-    .stderr()
-    .command(
-      ['borealis-pg:run', '-a', fakeHerokuAppName, '-e', fakeShellCommand, '-d', fakeDbCommand])
-    .catch(/.*--shell-cmd=my-cool-shell-command cannot also be provided when using --db-cmd.*/)
-    .it('exits with an error if both a shell command and a database command are provided', ctx => {
-      expect(ctx.stdout).to.equal('')
-    })
-
-  test.stdout()
-    .stderr()
-    .command([
+  it('exits with an error if the --format option is specified for a shell command', async () => {
+    const {stdout, error} = await runCommand([
       'borealis-pg:run',
       '--app',
       fakeHerokuAppName,
@@ -962,29 +875,38 @@ describe('noninteractive run command', () => {
       '--format',
       'yaml',
     ])
-    .catch(/.*--shell-cmd=my-cool-shell-command cannot also be provided when using --format.*/)
-    .it('exits with an error if the --format option is specified for a shell command', ctx => {
-      expect(ctx.stdout).to.equal('')
-    })
 
-  test.stdout()
-    .stderr()
-    .command(['borealis-pg:run', '-a', fakeHerokuAppName, '-d', fakeDbCommand, '-f', 'unknown'])
-    .catch(/^Expected --format=unknown to be one of/)
-    .it('exits with an error if an invalid output format is requested', ctx => {
-      expect(ctx.stdout).to.equal('')
-    })
+    expect(stdout).to.equal('')
+    expect(error?.message).to.contain(
+      `--shell-cmd=${fakeShellCommand} cannot also be provided when using --format`
+    )
+  })
 
-  defaultTestContext
-    .do(() => when(mockSshClientFactoryType.create()).thenThrow(new Error('An error')))
-    .command(['borealis-pg:run', '-a', fakeHerokuAppName, '-e', fakeShellCommand])
-    .catch('An error')
-    .it('throws an unexpected SSH client error when it occurs', () => {
-      verify(mockTcpServerFactoryType.create(anyFunction())).never()
-    })
+  it('exits with an error if an invalid output format is requested', async () => {
+    const {stdout, error} = await runCommand(
+      ['borealis-pg:run', '-a', fakeHerokuAppName, '-d', fakeDbCommand, '-f', 'unknown'])
 
-  defaultTestContext
-    .command([
+    expect(stdout).to.equal('')
+    expect(error?.message).to.contain('Expected --format=unknown to be one of')
+  })
+
+  it('throws an unexpected SSH client error when it occurs', async () => {
+    when(mockSshClientFactoryType.create()).thenThrow(new Error('An error'))
+
+    initDefaultRequestMocks()
+
+    const {error} = await runCommand(
+      ['borealis-pg:run', '-a', fakeHerokuAppName, '-e', fakeShellCommand])
+
+    expect(error?.message).to.contain('An error')
+
+    verify(mockTcpServerFactoryType.create(anyFunction())).never()
+  })
+
+  it('handles a local port conflict', async () => {
+    initDefaultRequestMocks()
+
+    await runCommand([
       'borealis-pg:run',
       '-a',
       fakeHerokuAppName,
@@ -993,189 +915,214 @@ describe('noninteractive run command', () => {
       '-e',
       fakeShellCommand,
     ])
-    .it('handles a local port conflict', ctx => {
-      const [_, listener] = capture(mockTcpServerType.on).last()
-      const errorListener = listener as ((err: unknown) => void)
 
-      errorListener({code: 'EADDRINUSE'})
+    const [_, listener] = capture(mockTcpServerType.on).last()
+    const errorListener = listener as ((err: unknown) => void)
 
-      expect(ctx.stderr).to.contain(`Local port ${customPgPort} is not available`)
-      verify(mockNodeProcessType.exit(1)).once()
-    })
+    const {stderr} = await captureOutput(async () => errorListener({code: 'EADDRINUSE'}))
 
-  defaultTestContext
-    .command(['borealis-pg:run', '-a', fakeHerokuAppName, '-e', fakeShellCommand])
-    .it('handles a generic proxy server error', () => {
-      const [_, listener] = capture(mockTcpServerType.on).last()
-      const errorListener = listener as ((err: unknown) => void)
+    expect(stderr).to.contain(`Local port ${customPgPort} is not available`)
+    verify(mockNodeProcessType.exit(1)).once()
+  })
 
-      const fakeError = new Error("This isn't a real error")
-      try {
-        errorListener(fakeError)
+  it('handles a generic proxy server error', async () => {
+    initDefaultRequestMocks()
 
-        expect.fail('The error listener call should have thrown an error')
-      } catch (error) {
-        expect(error).to.equal(fakeError)
-      }
-    })
+    await runCommand(['borealis-pg:run', '-a', fakeHerokuAppName, '-e', fakeShellCommand])
 
-  defaultTestContext
-    .command(['borealis-pg:run', '-a', fakeHerokuAppName, '-e', fakeShellCommand])
-    .it('handles an error when starting port forwarding', () => {
-      const [tcpConnectionListener] = capture(mockTcpServerFactoryType.create).last()
-      tcpConnectionListener(mockTcpSocketInstance)
+    const [_, listener] = capture(mockTcpServerType.on).last()
+    const errorListener = listener as ((err: unknown) => void)
 
-      const [_, _1, _2, _3, portForwardListener] = capture(mockSshClientType.forwardOut).last()
-      assert(typeof portForwardListener !== 'undefined')
+    const fakeError = new Error("This isn't a real error")
 
-      const fakeError = new Error('Just testing!')
-      try {
-        portForwardListener(fakeError, mockSshStreamInstance)
+    const {error} = await captureOutput(async () => errorListener(fakeError))
 
-        expect.fail('The port forward listener call should have thrown an error')
-      } catch (error) {
-        expect(error).to.equal(fakeError)
-      }
+    expect(error).to.equal(fakeError)
+  })
 
-      verify(mockTcpSocketType.pipe(mockSshStreamInstance)).never()
-      verify(mockSshStreamType.pipe(mockTcpSocketInstance)).never()
-    })
+  it('handles an error when starting port forwarding', async () => {
+    initDefaultRequestMocks()
 
-  defaultTestContext
-    .command(['borealis-pg:run', '-a', fakeHerokuAppName, '-e', fakeShellCommand])
-    .it('handles an unexpected TCP socket error', () => {
-      const [tcpConnectionListener] = capture(mockTcpServerFactoryType.create).last()
-      tcpConnectionListener(mockTcpSocketInstance)
+    await runCommand(['borealis-pg:run', '-a', fakeHerokuAppName, '-e', fakeShellCommand])
 
-      const expectedCallCount = 2
-      verify(mockTcpSocketType.on(anyString(), anyFunction())).times(expectedCallCount)
-      const socketListener = getTcpSocketListener('error', expectedCallCount)
+    const [tcpConnectionListener] = capture(mockTcpServerFactoryType.create).last()
+    tcpConnectionListener(mockTcpSocketInstance)
 
-      const fakeError = new Error('Foobarbaz')
-      try {
-        socketListener(fakeError)
+    const [_, _1, _2, _3, portForwardListener] = capture(mockSshClientType.forwardOut).last()
+    assert(typeof portForwardListener !== 'undefined')
 
-        expect.fail('The socket error listener should have thrown an error')
-      } catch (error) {
-        expect(error).to.equal(fakeError)
-      }
+    const fakeError = new Error('Just testing!')
 
-      verify(mockTcpSocketType.destroy()).never()
-    })
+    const {error} = await captureOutput(async () =>
+      portForwardListener(fakeError, mockSshStreamInstance))
 
-  testContextWithAppConfigVars
-    .nock(herokuApiBaseUrl, api => mockAddonAttachmentRequests(api))
-    .nock(
-      borealisPgApiBaseUrl,
-      api => api.post(`/heroku/resources/${fakeAddonName}/personal-ssh-users`)
-        .reply(404, {reason: 'Add-on does not exist for a personal SSH user'}))
-    .command(['borealis-pg:run', '-a', fakeHerokuAppName, '-e', fakeShellCommand])
-    .catch('Add-on is not a Borealis Isolated Postgres add-on')
-    .it('exits with an error if the add-on was not found', () => {
-      verify(mockTcpServerFactoryType.create(anyFunction())).never()
-      verify(mockSshClientFactoryType.create()).never()
-    })
+    expect(error).to.equal(fakeError)
 
-  testContextWithAppConfigVars
-    .nock(herokuApiBaseUrl, api => mockAddonAttachmentRequests(api))
-    .nock(
-      borealisPgApiBaseUrl,
-      api => api.post(`/heroku/resources/${fakeAddonName}/personal-ssh-users`)
-        .reply(422, {reason: 'Add-on is not ready for a personal SSH user yet'}))
-    .command(['borealis-pg:run', '-a', fakeHerokuAppName, '-e', fakeShellCommand])
-    .catch('Add-on is not finished provisioning')
-    .it('exits with an error if the add-on is still provisioning', () => {
-      verify(mockTcpServerFactoryType.create(anyFunction())).never()
-      verify(mockSshClientFactoryType.create()).never()
-    })
+    verify(mockTcpSocketType.pipe(mockSshStreamInstance)).never()
+    verify(mockSshStreamType.pipe(mockTcpSocketInstance)).never()
+  })
 
-  baseTestContext
-    .nock(herokuApiBaseUrl, api => mockAddonAttachmentRequests(api))
-    .nock(
-      borealisPgApiBaseUrl,
-      api => api.post(`/heroku/resources/${fakeAddonName}/personal-ssh-users`)
-        .reply(
-          200,
-          {
-            sshHost: fakeSshHost,
-            sshPort: defaultSshPort,
-            sshUsername: fakeSshUsername,
-            sshPrivateKey: fakeSshPrivateKey,
-            publicSshHostKey: expectedSshHostKeyEntry,
-          })
-        .post(`/heroku/resources/${fakeAddonName}/personal-db-users`)
-        .reply(423, {reason: 'Locked'}))
-    .command(['borealis-pg:run', '-a', fakeHerokuAppName, '-u', '-e', fakeShellCommand])
-    .catch(/^Add-on is undergoing a PostgreSQL major version upgrade/)
-    .it('exits with an error if the add-on is undergoing a PostgreSQL version upgrade', () => {
-      verify(mockTcpServerFactoryType.create(anyFunction())).never()
-      verify(mockSshClientFactoryType.create()).never()
-    })
+  it('handles an unexpected TCP socket error', async () => {
+    initDefaultRequestMocks()
 
-  testContextWithAppConfigVars
-    .nock(herokuApiBaseUrl, api => mockAddonAttachmentRequests(api))
-    .nock(
-      borealisPgApiBaseUrl,
-      api => api.post(`/heroku/resources/${fakeAddonName}/personal-ssh-users`)
-        .reply(503, {reason: 'Server error!'}))
-    .command(['borealis-pg:run', '-a', fakeHerokuAppName, '-e', fakeShellCommand])
-    .catch('Add-on service is temporarily unavailable. Try again later.')
-    .it('exits with an error when there is an API error while creating the SSH user', () => {
-      verify(mockTcpServerFactoryType.create(anyFunction())).never()
-      verify(mockSshClientFactoryType.create()).never()
-    })
+    await runCommand(['borealis-pg:run', '-a', fakeHerokuAppName, '-e', fakeShellCommand])
 
-  baseTestContext
-    .nock(herokuApiBaseUrl, api => mockAddonAttachmentRequests(api)
+    const [tcpConnectionListener] = capture(mockTcpServerFactoryType.create).last()
+    tcpConnectionListener(mockTcpSocketInstance)
+
+    const expectedCallCount = 2
+    verify(mockTcpSocketType.on(anyString(), anyFunction())).times(expectedCallCount)
+    const socketListener = getTcpSocketListener('error', expectedCallCount)
+
+    const fakeError = new Error('Foobarbaz')
+
+    const {error} = await captureOutput(async () => socketListener(fakeError))
+
+    expect(error).to.equal(fakeError)
+
+    verify(mockTcpSocketType.destroy()).never()
+  })
+
+  it('exits with an error if the add-on was not found', async () => {
+    nock(herokuApiBaseUrl)
       .get(`/apps/${fakeHerokuAppName}/config-vars`)
-      .reply(500))
-    .nock(
-      borealisPgApiBaseUrl,
-      {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}},
-      api => api.post(`/heroku/resources/${fakeAddonName}/personal-ssh-users`)
-        .reply(
-          200,
-          {
-            sshHost: fakeSshHost,
-            sshUsername: fakeSshUsername,
-            sshPrivateKey: fakeSshPrivateKey,
-            publicSshHostKey: expectedSshHostKeyEntry,
-          }))
-    .command(['borealis-pg:run', '-a', fakeHerokuAppName, '-e', fakeShellCommand])
-    .catch('Add-on service is temporarily unavailable. Try again later.')
-    .it('exits with an error when there is an API error getting the app config vars', () => {
-      verify(mockTcpServerFactoryType.create(anyFunction())).never()
-      verify(mockSshClientFactoryType.create()).never()
-    })
+      .reply(200, fakeAppConfigVars)
 
-  baseTestContext
-    .nock(herokuApiBaseUrl, api => mockAddonAttachmentRequests(api))
-    .nock(
-      borealisPgApiBaseUrl,
-      api => api
-        .post(`/heroku/resources/${fakeAddonName}/personal-db-users`, {enableWriteAccess: false})
-        .reply(403, {reason: 'DB write access revoked'})
-        .post(`/heroku/resources/${fakeAddonName}/personal-ssh-users`)
-        .reply(
-          200,
-          {
-            sshHost: fakeSshHost,
-            sshUsername: fakeSshUsername,
-            sshPrivateKey: fakeSshPrivateKey,
-            publicSshHostKey: expectedSshHostKeyEntry,
-          }))
-    .command(['borealis-pg:run', '-a', fakeHerokuAppName, '-e', fakeShellCommand, '-u'])
-    .catch(/^Access to the add-on database has been temporarily revoked for personal users/)
-    .it('exits with an error when DB write access is revoked', () => {
-      verify(mockTcpServerFactoryType.create(anyFunction())).never()
-      verify(mockSshClientFactoryType.create()).never()
-    })
+    nock(borealisPgApiBaseUrl,)
+      .post(`/heroku/resources/${fakeAddonName}/personal-ssh-users`)
+      .reply(404, {reason: 'Add-on does not exist for a personal SSH user'})
 
-  baseTestContext
-    .nock(herokuApiBaseUrl, api => mockAddonAttachmentRequests(api))
-    .nock(
-      borealisPgApiBaseUrl,
-      api => api
+    const {error} = await runCommand(['borealis-pg:run', '-a', fakeHerokuAppName, '-e', fakeShellCommand])
+
+    expect(error?.message).to.contain('Add-on is not a Borealis Isolated Postgres add-on')
+
+    verify(mockTcpServerFactoryType.create(anyFunction())).never()
+    verify(mockSshClientFactoryType.create()).never()
+  })
+
+  it('exits with an error if the add-on is still provisioning', async () => {
+    nock(herokuApiBaseUrl)
+      .get(`/apps/${fakeHerokuAppName}/config-vars`)
+      .reply(200, fakeAppConfigVars)
+
+    nock(borealisPgApiBaseUrl)
+      .post(`/heroku/resources/${fakeAddonName}/personal-ssh-users`)
+      .reply(422, {reason: 'Add-on is not ready for a personal SSH user yet'})
+
+    const {error} = await runCommand(
+      ['borealis-pg:run', '-a', fakeHerokuAppName, '-e', fakeShellCommand])
+
+    expect(error?.message).to.contain('Add-on is not finished provisioning')
+
+    verify(mockTcpServerFactoryType.create(anyFunction())).never()
+    verify(mockSshClientFactoryType.create()).never()
+  })
+
+  it('exits with an error if the add-on is undergoing a PostgreSQL version upgrade', async () => {
+    nock(herokuApiBaseUrl)
+      .get(`/apps/${fakeHerokuAppName}/config-vars`)
+      .reply(200, fakeAppConfigVars)
+
+    nock(borealisPgApiBaseUrl)
+      .post(`/heroku/resources/${fakeAddonName}/personal-ssh-users`)
+      .reply(
+        200,
+        {
+          sshHost: fakeSshHost,
+          sshPort: defaultSshPort,
+          sshUsername: fakeSshUsername,
+          sshPrivateKey: fakeSshPrivateKey,
+          publicSshHostKey: expectedSshHostKeyEntry,
+        })
+      .post(`/heroku/resources/${fakeAddonName}/personal-db-users`)
+      .reply(423, {reason: 'Locked'})
+
+    const {error} = await runCommand(
+      ['borealis-pg:run', '-a', fakeHerokuAppName, '-u', '-e', fakeShellCommand])
+
+    expect(error?.message).to.contain('Add-on is undergoing a PostgreSQL major version upgrade')
+
+    verify(mockTcpServerFactoryType.create(anyFunction())).never()
+    verify(mockSshClientFactoryType.create()).never()
+  })
+
+  it('exits with an error when there is an API error while creating the SSH user', async () => {
+    nock(herokuApiBaseUrl)
+      .get(`/apps/${fakeHerokuAppName}/config-vars`)
+      .reply(200, fakeAppConfigVars)
+
+    nock(borealisPgApiBaseUrl)
+      .post(`/heroku/resources/${fakeAddonName}/personal-ssh-users`)
+      .reply(503, {reason: 'Server error!'})
+
+    const {error} = await runCommand(
+      ['borealis-pg:run', '-a', fakeHerokuAppName, '-e', fakeShellCommand])
+
+    expect(error?.message).to.contain('Add-on service is temporarily unavailable. Try again later.')
+
+    verify(mockTcpServerFactoryType.create(anyFunction())).never()
+    verify(mockSshClientFactoryType.create()).never()
+  })
+
+  it('exits with an error when there is an API error getting the app config vars', async () => {
+    nock(herokuApiBaseUrl).get(`/apps/${fakeHerokuAppName}/config-vars`).reply(500)
+
+    nock(borealisPgApiBaseUrl, {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}})
+      .post(`/heroku/resources/${fakeAddonName}/personal-ssh-users`)
+      .reply(
+        200,
+        {
+          sshHost: fakeSshHost,
+          sshUsername: fakeSshUsername,
+          sshPrivateKey: fakeSshPrivateKey,
+          publicSshHostKey: expectedSshHostKeyEntry,
+        })
+
+    const {error} = await runCommand(
+      ['borealis-pg:run', '-a', fakeHerokuAppName, '-e', fakeShellCommand])
+
+    expect(error?.message).to.contain('Add-on service is temporarily unavailable. Try again later.')
+
+    verify(mockTcpServerFactoryType.create(anyFunction())).never()
+    verify(mockSshClientFactoryType.create()).never()
+  })
+
+  it('exits with an error when DB write access is revoked', async () => {
+    nock(herokuApiBaseUrl)
+      .get(`/apps/${fakeHerokuAppName}/config-vars`)
+      .reply(200, fakeAppConfigVars)
+
+    nock(borealisPgApiBaseUrl)
+      .post(`/heroku/resources/${fakeAddonName}/personal-db-users`, {enableWriteAccess: false})
+      .reply(403, {reason: 'DB write access revoked'})
+      .post(`/heroku/resources/${fakeAddonName}/personal-ssh-users`)
+      .reply(
+        200,
+        {
+          sshHost: fakeSshHost,
+          sshUsername: fakeSshUsername,
+          sshPrivateKey: fakeSshPrivateKey,
+          publicSshHostKey: expectedSshHostKeyEntry,
+        })
+
+    const {error} = await runCommand(
+      ['borealis-pg:run', '-a', fakeHerokuAppName, '-e', fakeShellCommand, '-u'])
+
+    expect(error?.message).to.contain(
+      'Access to the add-on database has been temporarily revoked for personal users')
+
+    verify(mockTcpServerFactoryType.create(anyFunction())).never()
+    verify(mockSshClientFactoryType.create()).never()
+  })
+
+  it(
+    'exits with an error when there is an API error while creating a personal DB user',
+    async () => {
+      nock(herokuApiBaseUrl)
+        .get(`/apps/${fakeHerokuAppName}/config-vars`)
+        .reply(200, fakeAppConfigVars)
+
+      nock(borealisPgApiBaseUrl)
         .post(`/heroku/resources/${fakeAddonName}/personal-db-users`, {enableWriteAccess: false})
         .reply(503, {reason: 'Server error!'})
         .post(`/heroku/resources/${fakeAddonName}/personal-ssh-users`)
@@ -1186,39 +1133,45 @@ describe('noninteractive run command', () => {
             sshUsername: fakeSshUsername,
             sshPrivateKey: fakeSshPrivateKey,
             publicSshHostKey: expectedSshHostKeyEntry,
-          }))
-    .command(['borealis-pg:run', '-u', '-a', fakeHerokuAppName, '-e', fakeShellCommand])
-    .catch('Add-on service is temporarily unavailable. Try again later.')
-    .it('exits with an error when there is an API error while creating a personal DB user', () => {
+          })
+
+      const {error} = await runCommand(
+        ['borealis-pg:run', '-u', '-a', fakeHerokuAppName, '-e', fakeShellCommand])
+
+      expect(error?.message).to.contain(
+        'Add-on service is temporarily unavailable. Try again later.')
+
       verify(mockTcpServerFactoryType.create(anyFunction())).never()
       verify(mockSshClientFactoryType.create()).never()
     })
 
-  baseTestContext
-    .nock(herokuApiBaseUrl, api => mockAddonAttachmentRequests(api)
+  it('exits with an error when the app connection config var is invalid', async () => {
+    nock(herokuApiBaseUrl)
       .get(`/apps/${fakeHerokuAppName}/config-vars`)
-      .reply(200, {MY_COOL_DB_SSH_TUNNEL_BPG_CONNECTION_INFO: 'INVALID!'}))
-    .nock(
-      borealisPgApiBaseUrl,
-      {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}},
-      api => api.post(`/heroku/resources/${fakeAddonName}/personal-ssh-users`)
-        .reply(
-          200,
-          {
-            sshHost: fakeSshHost,
-            sshUsername: fakeSshUsername,
-            sshPrivateKey: fakeSshPrivateKey,
-            publicSshHostKey: expectedSshHostKeyEntry,
-          }))
-    .command(['borealis-pg:run', '-a', fakeHerokuAppName, '-e', fakeShellCommand])
-    .catch(
-      `The ${color.configVar('MY_COOL_DB_SSH_TUNNEL_BPG_CONNECTION_INFO')} config variable value ` +
-      `for ${color.app(fakeHerokuAppName)} is invalid. ` +
-      'This may indicate that the config variable was manually edited.')
-    .it('exits with an error when the app connection config var is invalid', () => {
-      verify(mockTcpServerFactoryType.create(anyFunction())).never()
-      verify(mockSshClientFactoryType.create()).never()
-    })
+      .reply(200, {MY_COOL_DB_SSH_TUNNEL_BPG_CONNECTION_INFO: 'INVALID!'})
+
+    nock(borealisPgApiBaseUrl, {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}})
+      .post(`/heroku/resources/${fakeAddonName}/personal-ssh-users`)
+      .reply(
+        200,
+        {
+          sshHost: fakeSshHost,
+          sshUsername: fakeSshUsername,
+          sshPrivateKey: fakeSshPrivateKey,
+          publicSshHostKey: expectedSshHostKeyEntry,
+        })
+
+    const {error} = await runCommand(
+      ['borealis-pg:run', '-a', fakeHerokuAppName, '-e', fakeShellCommand])
+
+    expect(error?.message).to.contain(
+      'The MY_COOL_DB_SSH_TUNNEL_BPG_CONNECTION_INFO config variable value for ' +
+      `⬢ ${fakeHerokuAppName} is invalid`
+    )
+
+    verify(mockTcpServerFactoryType.create(anyFunction())).never()
+    verify(mockSshClientFactoryType.create()).never()
+  })
 
   function getTcpSocketListener(
     expectedEventName: string,
@@ -1253,54 +1206,46 @@ describe('noninteractive run command', () => {
   }
 })
 
-function getPersonalUserTestContext(enableWriteAccess: boolean) {
-  return baseTestContext
-    .nock(
-      borealisPgApiBaseUrl,
-      {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}},
-      api => api.post(`/heroku/resources/${fakeAddonName}/personal-ssh-users`)
-        .reply(
-          200,
-          {
-            sshHost: fakeSshHost,
-            sshPort: defaultSshPort,
-            sshUsername: fakeSshUsername,
-            sshPrivateKey: fakeSshPrivateKey,
-            publicSshHostKey: expectedSshHostKeyEntry,
-          })
-        .post(`/heroku/resources/${fakeAddonName}/personal-db-users`, {enableWriteAccess})
-        .reply(
-          200,
-          {
-            dbHost: fakePgReaderHost,
-            dbPort: customPgPort,
-            dbName: fakePgDbName,
-            dbUsername: fakePgPersonalUsername,
-            dbPassword: fakePgPersonalPassword,
-          }))
-    .nock(herokuApiBaseUrl, api => mockAddonAttachmentRequests(api))
+function initDefaultRequestMocks() {
+  nock(herokuApiBaseUrl).get(`/apps/${fakeHerokuAppName}/config-vars`).reply(200, fakeAppConfigVars)
+
+  nock(borealisPgApiBaseUrl, {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}})
+    .post(`/heroku/resources/${fakeAddonName}/personal-ssh-users`)
+    .reply(
+      200,
+      {
+        sshHost: fakeSshHost,
+        sshPort: customSshPort,
+        sshUsername: fakeSshUsername,
+        sshPrivateKey: fakeSshPrivateKey,
+        publicSshHostKey: expectedSshHostKeyEntry,
+      })
 }
 
-function mockAddonAttachmentRequests(nockScope: FancyTypes.NockScope): FancyTypes.NockScope {
-  return nockScope
-    .get(`/apps/${fakeHerokuAppName}/addons`)
-    .reply(200, [
+function initPersonalUserRequestMocks(enableWriteAccess: boolean) {
+  nock(herokuApiBaseUrl).get(`/apps/${fakeHerokuAppName}/config-vars`).reply(200, fakeAppConfigVars)
+
+  nock(borealisPgApiBaseUrl, {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}})
+    .post(`/heroku/resources/${fakeAddonName}/personal-ssh-users`)
+    .reply(
+      200,
       {
-        addon_service: {name: 'other-addon-service'},
-        id: '11020644-6a62-4c5c-93a1-bcb6d9d1803a',
-        name: 'other-addon',
-      },
-      {addon_service: {name: 'borealis-pg'}, id: fakeAddonId, name: fakeAddonName},
-    ])
-    .get(`/addons/${fakeAddonId}/addon-attachments`)
-    .reply(200, [
+        sshHost: fakeSshHost,
+        sshPort: defaultSshPort,
+        sshUsername: fakeSshUsername,
+        sshPrivateKey: fakeSshPrivateKey,
+        publicSshHostKey: expectedSshHostKeyEntry,
+      })
+    .post(`/heroku/resources/${fakeAddonName}/personal-db-users`, {enableWriteAccess})
+    .reply(
+      200,
       {
-        addon: {id: fakeAddonId, name: fakeAddonName},
-        app: {id: fakeHerokuAppId, name: fakeHerokuAppName},
-        id: fakeAttachmentId,
-        name: fakeAttachmentName,
-      },
-    ])
+        dbHost: fakePgReaderHost,
+        dbPort: customPgPort,
+        dbName: fakePgDbName,
+        dbUsername: fakePgPersonalUsername,
+        dbPassword: fakePgPersonalPassword,
+      })
 }
 
 function readExampleFile(): string {
