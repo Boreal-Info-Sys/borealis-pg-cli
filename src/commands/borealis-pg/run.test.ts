@@ -586,6 +586,40 @@ describe('noninteractive run command', () => {
     verify(mockPgClientType.end()).once()
   })
 
+  it('executes a database command with YAML output format', async () => {
+    const fakeInputDate = new Date(2026, 9, 22, 15, 39, 51, 807)
+
+    initDefaultRequestMocks()
+
+    await runCommand(
+      ['borealis-pg:run', '-a', fakeHerokuAppName, '-d', fakeDbCommand, '-f', 'yaml'])
+
+    executeSshClientListener()
+
+    const queryCallback = getQueryCallbackFn()
+
+    const expectedRowCount = 3
+
+    const {stdout} = await captureOutput(async () => queryCallback(null, {
+      command: 'SELECT',
+      fields: [{name: 'id'}, {name: 'value'}],
+      oid: 32_304,
+      rows: [{id: 1, value: fakeInputDate}, {id: 2, value: 'test1'}, {id: 3, value: 'test2'}],
+      rowCount: expectedRowCount,
+    }))
+
+    expect(stdout).to.contain(
+      '- id: 1\n' +
+      `  value: ${fakeInputDate.toISOString()}\n` +
+      '- id: 2\n' +
+      '  value: test1\n' +
+      '- id: 3\n' +
+      '  value: test2\n')
+    expect(stdout).not.to.contain(`(${expectedRowCount} rows)`)
+
+    verify(mockPgClientType.end()).once()
+  })
+
   it('executes a database command with no result', async () => {
     initDefaultRequestMocks()
 

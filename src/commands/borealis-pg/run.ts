@@ -4,6 +4,7 @@ import {Command, flags} from '@heroku-cli/command'
 import {ConfigVars} from '@heroku-cli/schema'
 import {stringify as csvStringify} from 'csv-stringify'
 import {readFileSync} from 'fs'
+import {dump as yamlDump} from 'js-yaml'
 import {text as streamToText} from 'node:stream/consumers'
 import {QueryResult} from 'pg'
 import Table, {Header} from 'tty-table'
@@ -107,7 +108,7 @@ like pgAdmin).`
       default: defaultOutputFormat,
       description: 'output format for database command results',
       exclusive: [shellCommandOptionName],
-      options: [defaultOutputFormat, 'csv', 'json'],
+      options: [defaultOutputFormat, 'csv', 'json', 'yaml'],
     }),
     [personalUserOptionName]: flags.boolean({
       char: 'u',
@@ -305,8 +306,10 @@ like pgAdmin).`
             if (resultInstance.fields && resultInstance.fields.length > 0) {
               if (outputFormat == 'csv') {
                 this.log(await renderResultsCsv(resultInstance))
-              } else if (outputFormat === 'json'){
+              } else if (outputFormat === 'json') {
                 this.log(renderResultsJson(resultInstance))
+              } else if (outputFormat == 'yaml') {
+                this.log(renderResultsYaml(resultInstance))
               } else {
                 this.log(renderResultsTable(resultInstance))
               }
@@ -431,4 +434,8 @@ async function renderResultsCsv(resultInstance: QueryResult<any>) {
 
 function renderResultsJson(resultInstance: QueryResult<any>) {
   return JSON.stringify(resultInstance.rows, undefined, 2)
+}
+
+function renderResultsYaml(resultInstance: QueryResult<any>) {
+  return yamlDump(resultInstance.rows)
 }
