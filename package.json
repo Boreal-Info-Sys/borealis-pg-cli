@@ -9,6 +9,7 @@
     "@heroku-cli/command": "^13.2.0",
     "@heroku/http-call": "^5.6.1",
     "@oclif/core": "^4.14.0",
+    "csv-stringify": "^6.8.3",
     "dotenv": "^17.4.2",
     "inquirer": "^14.2.2",
     "luxon": "^3.7.2",

@@ -2,7 +2,9 @@ import {HTTP, HTTPError} from '@heroku/http-call'
 import color from '@heroku-cli/color'
 import {Command, flags} from '@heroku-cli/command'
 import {ConfigVars} from '@heroku-cli/schema'
+import {stringify as csvStringify} from 'csv-stringify'
 import {readFileSync} from 'fs'
+import {text as streamToText} from 'node:stream/consumers'
 import {QueryResult} from 'pg'
 import Table, {Header} from 'tty-table'
 import {applyActionSpinner} from '../../async-actions'
@@ -105,7 +107,7 @@ like pgAdmin).`
       default: defaultOutputFormat,
       description: 'output format for database command results',
       exclusive: [shellCommandOptionName],
-      options: [defaultOutputFormat, 'json'],
+      options: [defaultOutputFormat, 'csv', 'json'],
     }),
     [personalUserOptionName]: flags.boolean({
       char: 'u',
@@ -290,7 +292,7 @@ like pgAdmin).`
 
         pgClient.query(
           dbCommand,
-          (err: Error | null | undefined, results: QueryResult<any> | QueryResult<any>[]) => {
+          async (err: Error | null | undefined, results: QueryResult<any> | QueryResult<any>[]) => {
             if (err) {
               // Do not let the error function exit or it will generate an ugly stack trace
               this.error(err, {exit: false})
@@ -301,7 +303,9 @@ like pgAdmin).`
             const resultInstance = Array.isArray(results) ? results[results.length - 1] : results
 
             if (resultInstance.fields && resultInstance.fields.length > 0) {
-              if (outputFormat === 'json'){
+              if (outputFormat == 'csv') {
+                this.log(await renderResultsCsv(resultInstance))
+              } else if (outputFormat === 'json'){
                 this.log(renderResultsJson(resultInstance))
               } else {
                 this.log(renderResultsTable(resultInstance))
@@ -309,7 +313,7 @@ like pgAdmin).`
             }
 
             if (outputFormat === defaultOutputFormat) {
-              // Only show the row count for the default format (undefined aka "table")
+              // Only show the row count for the default format
               const rowSuffix = resultInstance.rowCount === 1 ? 'row' : 'rows'
               this.log(`(${resultInstance.rowCount ?? 0} ${rowSuffix})`)
             }
@@ -418,6 +422,11 @@ function renderResultsTable(resultInstance: QueryResult<any>) {
   )
 
   return table.render()
+}
+
+async function renderResultsCsv(resultInstance: QueryResult<any>) {
+  return streamToText(
+    csvStringify(resultInstance.rows, {header: true, cast: {date: value => value.toISOString()}}))
 }
 
 function renderResultsJson(resultInstance: QueryResult<any>) {

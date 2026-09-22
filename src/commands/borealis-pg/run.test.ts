@@ -507,6 +507,49 @@ describe('noninteractive run command', () => {
     verify(mockPgClientType.end()).once()
   })
 
+  it('executes a database command with CSV output format', async () => {
+    const fakeInputDate = new Date(2026, 9, 22, 15, 13, 19, 845)
+
+    initDefaultRequestMocks()
+
+    await runCommand([
+      'borealis-pg:run',
+      '--app',
+      fakeHerokuAppName,
+      '--db-cmd',
+      fakeDbCommand,
+      '--format',
+      'csv',
+    ])
+
+    executeSshClientListener()
+
+    const queryCallback = getQueryCallbackFn()
+
+    const expectedRowCount = 3
+
+    const {stdout} = await captureOutput(async () => queryCallback(null, {
+      command: 'SELECT',
+      fields: [{name: 'id'}, {name: 'value'}],
+      oid: 32_304,
+      rows: [
+        {id: 21, value: 'Ted "Big T" Oz'},
+        {id: 0, value: fakeInputDate},
+        {id: '33', value: 3},
+      ],
+      rowCount: expectedRowCount,
+    }))
+
+    expect(stdout).to.contain(
+      'id,value\n' +
+      '21,"Ted ""Big T"" Oz"\n' +
+      `0,${fakeInputDate.toISOString()}\n` +
+      '33,3\n')
+    expect(stdout).not.to.contain(`(${expectedRowCount} rows)`)
+
+    verify(mockPgClientType.end()).once()
+  })
+
   it('executes a database command with JSON output format', async () => {
     const fakeInputDate = new Date(2026, 9, 22, 12, 56, 32, 107)
 
