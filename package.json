@@ -60,8 +60,9 @@
     "/npm-shrinkwrap.json",
     "/oclif.manifest.json"
   ],
-  "homepage": "https://github.com/Boreal-Info-Sys/borealis-pg-cli",
+  "homepage": "https://www.borealis-data.com/pg-addon-cli",
   "keywords": [
+    "heroku-plugin",
     "oclif-plugin"
   ],
   "license": "MIT",
