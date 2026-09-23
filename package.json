@@ -113,7 +113,6 @@
     "build": "shx rm -rf dist && tsc --project tsconfig.prod.json",
     "clean": "shx rm -rf dist node_modules .nyc_output coverage tsconfig.tsbuildinfo",
     "lint": "eslint --max-warnings 0 --ext .ts --config eslint.config.mjs .",
-    "install": "node -e 'console.warn(\"NOTE: It is safe to ignore errors from gyp (if any) in the preceding output\")'",
     "postpack": "shx rm -f oclif.manifest.json",
     "prepack": "npm run build && oclif manifest && oclif readme --no-aliases",
     "test": "nyc mocha --forbid-only 'src/test-utils.ts' 'src/**/*.test.ts'",
