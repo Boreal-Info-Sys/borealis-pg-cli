@@ -1,6 +1,6 @@
 import chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
-import chaiString from 'chai-string'
+import chaiString from '@achingbrain/chai-string'
 import path from 'path'
 import {globSync} from 'tinyglobby'
 
