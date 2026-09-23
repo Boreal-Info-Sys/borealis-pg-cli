@@ -68,13 +68,12 @@ describe('extension installation command', () => {
         {pgExtensionName: fakeExt1})
       .reply(201, {pgExtensionSchema: fakeExt1Schema, pgExtensionVersion: fakeExt1Version})
 
-    const {stdout, stderr} = await runCommand(
+    const {stdout, error} = await runCommand(
       ['borealis-pg:extensions:install', '--app', fakeHerokuAppName, fakeExt1])
 
-    expect(stderr).to.endWith(
-      `Installing Postgres extension ${fakeExt1} for add-on ${fakeAddonName}... done\n`)
     expect(stdout).to.equal(
       `- ${fakeExt1} (version: ${fakeExt1Version}, schema: ${fakeExt1Schema})\n`)
+    expect(error).to.be.undefined
     expect(nock.pendingMocks()).to.be.empty
   })
 
@@ -87,7 +86,7 @@ describe('extension installation command', () => {
           {pgExtensionName: fakeExt1})
         .reply(409, {reason: 'Already installed!'})
 
-      const {stdout, stderr} = await runCommand([
+      const {stdout, stderr, error} = await runCommand([
         'borealis-pg:extensions:install',
         '--app',
         fakeHerokuAppName,
@@ -95,10 +94,9 @@ describe('extension installation command', () => {
         fakeExt1,
       ])
 
-      expect(stderr).to.contain(
-        `Installing Postgres extension ${fakeExt1} for add-on ${fakeAddonName}... !`)
       expect(stderr).to.contain(`Extension ${fakeExt1} is already installed`)
       expect(stdout).to.equal('')
+      expect(error).to.be.undefined
       expect(nock.pendingMocks()).to.be.empty
     })
 
@@ -125,13 +123,14 @@ describe('extension installation command', () => {
         {pgExtensionName: fakeExt1})
       .reply(201, {pgExtensionSchema: fakeExt1Schema, pgExtensionVersion: fakeExt1Version})
 
-    const {stdout} = await runCommand(
+    const {stdout, error} = await runCommand(
       ['borealis-pg:extensions:install', '-r', '-a', fakeHerokuAppName, fakeExt1])
 
     expect(stdout).to.equal(
       `- ${fakeExt1} (version: ${fakeExt1Version}, schema: ${fakeExt1Schema})\n` +
       `- ${fakeExt2} (version: ${fakeExt2Version}, schema: ${fakeExt2Schema})\n` +
       `- ${fakeExt3} (version: ${fakeExt3Version}, schema: ${fakeExt3Schema})\n`)
+    expect(error).to.be.undefined
     expect(nock.pendingMocks()).to.be.empty
   })
 
@@ -156,7 +155,7 @@ describe('extension installation command', () => {
           {pgExtensionName: fakeExt1})
         .reply(201, {pgExtensionSchema: fakeExt1Schema, pgExtensionVersion: fakeExt1Version})
 
-      const {stdout} = await runCommand([
+      const {stdout, error} = await runCommand([
         'borealis-pg:extensions:install',
         '--recursive',
         '--app',
@@ -167,6 +166,7 @@ describe('extension installation command', () => {
       expect(stdout).to.equal(
         `- ${fakeExt1} (version: ${fakeExt1Version}, schema: ${fakeExt1Schema})\n` +
         `- ${fakeExt3} (version: ${fakeExt3Version}, schema: ${fakeExt3Schema})\n`)
+      expect(error).to.be.undefined
       expect(nock.pendingMocks()).to.be.empty
     })
 
@@ -187,10 +187,11 @@ describe('extension installation command', () => {
           {pgExtensionName: fakeExt2})
         .reply(400, {reason: 'Missing dependencies', dependencies: [fakeExt1]})
 
-      const {stdout} = await runCommand(
+      const {stdout, error} = await runCommand(
         ['borealis-pg:extensions:install', '-r', '-a', fakeHerokuAppName, fakeExt2])
 
       expect(stdout).to.equal('')
+      expect(error?.message).to.contain('Unexpected error during installation')
       expect(nock.pendingMocks()).to.be.empty
     })
 

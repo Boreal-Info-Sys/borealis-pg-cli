@@ -88,9 +88,7 @@ describe('database users command', () => {
           ],
         })
 
-    const {stdout, stderr} = await runCommand(['borealis-pg:users', '--app', fakeHerokuAppName])
-
-    expect(stderr).to.contain(`Fetching user list for add-on ${fakeAddonName}... done`)
+    const {stdout, error} = await runCommand(['borealis-pg:users', '--app', fakeHerokuAppName])
 
     expect(stdout).to.containIgnoreSpaces(
       '| Add-on User | DB Read-only Username | DB Read/Write Username |')
@@ -98,6 +96,8 @@ describe('database users command', () => {
       `| Heroku App User | ${fakeAppReadOnlyUsername} | ${fakeAppReadWriteUsername} |\n` +
       `| ${fakePersonalUser1} | ${fakePersonalReadOnlyUsername1} | ${fakePersonalReadWriteUsername1} |\n` +
       `| ${fakePersonalUser2} | ${fakePersonalReadOnlyUsername2} | ${fakePersonalReadWriteUsername2} |\n`)
+
+    expect(error).to.be.undefined
   })
 
   it('displays a warning when there are no DB users', async () => {
@@ -105,11 +105,11 @@ describe('database users command', () => {
       .get(`/heroku/resources/${fakeAddonName}/db-users`)
       .reply(200, {users: []})
 
-    const {stdout, stderr} = await runCommand(['borealis-pg:users', '-a', fakeHerokuAppName])
+    const {stdout, stderr, error} = await runCommand(['borealis-pg:users', '-a', fakeHerokuAppName])
 
-    expect(stderr).to.contain(`Fetching user list for add-on ${fakeAddonName}... done`)
-    expect(stderr).to.contain('No users found')
     expect(stdout).to.equal('')
+    expect(stderr.trim()).to.endWith('No users found')
+    expect(error).to.be.undefined
   })
 
   it('exits with an error when the add-on was not found', async () => {

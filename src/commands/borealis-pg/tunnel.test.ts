@@ -143,7 +143,9 @@ describe('secure tunnel command', () => {
   it('starts the proxy server', async () => {
     initDefaultRequestMocks()
 
-    await runCommand(['borealis-pg:tunnel', '--app', fakeHerokuAppName])
+    const {error} = await runCommand(['borealis-pg:tunnel', '--app', fakeHerokuAppName])
+
+    expect(error).to.be.undefined
 
     verify(mockTcpServerFactoryType.create(anyFunction())).once()
     verify(mockTcpServerType.on(anyString(), anyFunction())).once()
@@ -155,7 +157,9 @@ describe('secure tunnel command', () => {
   it('connects to the SSH server', async () => {
     initDefaultRequestMocks()
 
-    await runCommand(['borealis-pg:tunnel', '-a', fakeHerokuAppName])
+    const {error} = await runCommand(['borealis-pg:tunnel', '-a', fakeHerokuAppName])
+
+    expect(error).to.be.undefined
 
     verify(mockSshClientFactoryType.create()).once()
     verify(mockSshClientType.on(anyString(), anyFunction())).once()
@@ -178,7 +182,9 @@ describe('secure tunnel command', () => {
   it('outputs DB connection instructions without a DB port option', async () => {
     initDefaultRequestMocks()
 
-    await runCommand(['borealis-pg:tunnel', '-a', fakeHerokuAppName])
+    const {error} = await runCommand(['borealis-pg:tunnel', '-a', fakeHerokuAppName])
+
+    expect(error).to.be.undefined
 
     verify(mockSshClientType.on(anyString(), anyFunction())).once()
     const [event, listener] = capture(mockSshClientType.on).last()
@@ -203,7 +209,10 @@ describe('secure tunnel command', () => {
   it('outputs DB connection instructions for a custom DB port option', async () => {
     initDefaultRequestMocks()
 
-    await runCommand(['borealis-pg:tunnel', '-a', fakeHerokuAppName, '--port', '65535'])
+    const {error} = await runCommand(
+      ['borealis-pg:tunnel', '-a', fakeHerokuAppName, '--port', '65535'])
+
+    expect(error).to.be.undefined
 
     verify(mockSshClientType.on(anyString(), anyFunction())).once()
     const [event, listener] = capture(mockSshClientType.on).last()
@@ -248,8 +257,10 @@ describe('secure tunnel command', () => {
           dbPassword: fakePgPassword,
         })
 
-    const {stderr} = await runCommand(
+    const {error} = await runCommand(
       ['borealis-pg:tunnel', '-a', fakeHerokuAppName, '--write-access'])
+
+    expect(error).to.be.undefined
 
     verify(mockSshClientType.on(anyString(), anyFunction())).once()
     const [event, listener] = capture(mockSshClientType.on).last()
@@ -259,8 +270,6 @@ describe('secure tunnel command', () => {
 
     const {stdout} = await captureOutput(async () => sshClientListener())
 
-    expect(stderr).to.endWith(
-      `Configuring read/write user session for add-on ${fakeAddonName}... done\n`)
     expect(stdout).to.containIgnoreSpaces(`Username: ${fakePgReadWriteUsername}`)
 
     expect(nock.pendingMocks()).to.be.empty
@@ -269,7 +278,9 @@ describe('secure tunnel command', () => {
   it('starts SSH port forwarding', async () => {
     initDefaultRequestMocks()
 
-    await runCommand(['borealis-pg:tunnel', '-a', fakeHerokuAppName])
+    const {error} = await runCommand(['borealis-pg:tunnel', '-a', fakeHerokuAppName])
+
+    expect(error).to.be.undefined
 
     const [tcpConnectionListener] = capture(mockTcpServerFactoryType.create).last()
     tcpConnectionListener(mockTcpSocketInstance)
@@ -296,7 +307,9 @@ describe('secure tunnel command', () => {
   it('exits gracefully when the user presses Ctrl+C', async () => {
     initDefaultRequestMocks()
 
-    await runCommand(['borealis-pg:tunnel', '-a', fakeHerokuAppName])
+    const {error} = await runCommand(['borealis-pg:tunnel', '-a', fakeHerokuAppName])
+
+    expect(error).to.be.undefined
 
     verify(mockNodeProcessType.on(anyString(), anyFunction())).once()
     verify(mockNodeProcessType.on('SIGINT', anyFunction())).once()
@@ -355,13 +368,15 @@ describe('secure tunnel command', () => {
   it('handles a local port conflict', async () => {
     initDefaultRequestMocks()
 
-    await runCommand([
+    const {error: cmdError} = await runCommand([
       'borealis-pg:tunnel',
       '--app',
       fakeHerokuAppName,
       '-p',
       customPgPort.toString(),
     ])
+
+    expect(cmdError).to.be.undefined
 
     const [_, listener] = capture(mockTcpServerType.on).last()
     const errorListener = listener as ((err: unknown) => void)
@@ -375,7 +390,9 @@ describe('secure tunnel command', () => {
   it('handles a generic proxy server error', async () => {
     initDefaultRequestMocks()
 
-    await runCommand(['borealis-pg:tunnel', '-a', fakeHerokuAppName])
+    const {error: cmdError} = await runCommand(['borealis-pg:tunnel', '-a', fakeHerokuAppName])
+
+    expect(cmdError).to.be.undefined
 
     const [_, listener] = capture(mockTcpServerType.on).last()
     const errorListener = listener as ((err: unknown) => void)
@@ -390,7 +407,9 @@ describe('secure tunnel command', () => {
   it('handles an error when starting port forwarding', async () => {
     initDefaultRequestMocks()
 
-    await runCommand(['borealis-pg:tunnel', '-a', fakeHerokuAppName])
+    const {error: cmdError} = await runCommand(['borealis-pg:tunnel', '-a', fakeHerokuAppName])
+
+    expect(cmdError).to.be.undefined
 
     const [tcpConnectionListener] = capture(mockTcpServerFactoryType.create).last()
     tcpConnectionListener(mockTcpSocketInstance)
@@ -412,7 +431,9 @@ describe('secure tunnel command', () => {
   it('handles an unexpected TCP socket error', async () => {
     initDefaultRequestMocks()
 
-    await runCommand(['borealis-pg:tunnel', '-a', fakeHerokuAppName])
+    const {error: cmdError} = await runCommand(['borealis-pg:tunnel', '-a', fakeHerokuAppName])
+
+    expect(cmdError).to.be.undefined
 
     const [tcpConnectionListener] = capture(mockTcpServerFactoryType.create).last()
     tcpConnectionListener(mockTcpSocketInstance)

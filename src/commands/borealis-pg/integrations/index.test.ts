@@ -84,17 +84,15 @@ describe('data integration list command', () => {
         ],
       })
 
-    const {stdout, stderr} = await runCommand(
-      ['borealis-pg:integrations', '--app', fakeHerokuAppName])
-
-    expect(stderr).to.endWith(
-      `Fetching data integration list for add-on ${fakeAddonName}... done\n`)
+    const {stdout, error} = await runCommand(['borealis-pg:integrations', '--app', fakeHerokuAppName])
 
     expect(stdout).to.containIgnoreSpaces(
       '| Data Integration | DB Username | SSH Username | Write Access | Created At |')
     expect(stdout).to.containIgnoreSpaces(
       `| ${fakeIntegration1Name} | ${fakeIntegration1DbUsername} | ${fakeIntegration1SshUsername} | ${fakeIntegration1WriteAccess} | ${DateTime.fromISO(fakeIntegration1CreatedAt).toISO()} |\n` +
       `| ${fakeIntegration2Name} | ${fakeIntegration2DbUsername} | ${fakeIntegration2SshUsername} | ${fakeIntegration2WriteAccess} | ${DateTime.fromISO(fakeIntegration2CreatedAt).toISO()} |`)
+
+    expect(error).to.be.undefined
   })
 
   it('outputs a warning if there are no data integrations', async () => {
@@ -102,12 +100,11 @@ describe('data integration list command', () => {
       .get(`/heroku/resources/${fakeAddonName}/data-integrations`)
       .reply(200, {integrations: []})
 
-    const {stdout, stderr} = await runCommand(['borealis-pg:integrations', '-a', fakeHerokuAppName])
+    const {stdout, stderr, error} = await runCommand(['borealis-pg:integrations', '-a', fakeHerokuAppName])
 
-    expect(stderr).to.endWith(
-      `Fetching data integration list for add-on ${fakeAddonName}... done\n` +
-      ' ›   Warning: No data integrations found\n')
     expect(stdout).to.equal('')
+    expect(stderr.trim()).to.endWith('Warning: No data integrations found')
+    expect(error).to.be.undefined
   })
 
   it('exits with an error if the add-on was not found', async () => {

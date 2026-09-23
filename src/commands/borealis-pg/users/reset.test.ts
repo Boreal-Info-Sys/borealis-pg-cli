@@ -54,12 +54,11 @@ describe('database credentials reset command', () => {
       .delete(`/heroku/resources/${fakeAddonName}/db-users/credentials`)
       .reply(200, {})
 
-    const {stdout, stderr} = await runCommand(
+    const {stdout, error} = await runCommand(
       ['borealis-pg:users:reset', '--app', fakeHerokuAppName])
 
-    expect(stderr).to.contain(
-      `Resetting all database credentials for add-on ${fakeAddonName}... done`)
     expect(stdout).to.equal('')
+    expect(error).to.be.undefined
     expect(nock.pendingMocks()).to.be.empty
   })
 

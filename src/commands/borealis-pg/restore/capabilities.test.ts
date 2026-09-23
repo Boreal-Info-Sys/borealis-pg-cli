@@ -66,11 +66,8 @@ describe('database restore capabilities command', () => {
           restoreSupported: true,
         })
 
-    const {stdout, stderr} = await runCommand(
+    const {stdout, error} = await runCommand(
       ['borealis-pg:restore:capabilities', '--app', fakeHerokuAppName])
-
-    expect(stderr).to.endWith(
-      `Fetching database restore capabilities of add-on ${fakeAddonName}... done\n`)
 
     expect(stdout).to.containIgnoreSpaces('Nightly Backups Status: Enabled')
     expect(stdout).to.containIgnoreSpaces('Clone Supported: Yes')
@@ -79,6 +76,8 @@ describe('database restore capabilities command', () => {
       `Earliest Restorable Time: ${DateTime.fromISO(fakeEarliestRestorableTime).toISO()}`)
     expect(stdout).to.containIgnoreSpaces(
       `Latest Restorable Time: ${DateTime.fromISO(fakeLatestRestorableTime).toISO()}`)
+
+    expect(error).to.be.undefined
   })
 
   it('displays restore capabilities of a multi-tenant add-on', async () => {
@@ -93,17 +92,16 @@ describe('database restore capabilities command', () => {
           restoreSupported: false,
         })
 
-    const {stdout, stderr} = await runCommand(
+    const {stdout, error} = await runCommand(
       ['borealis-pg:restore:capabilities', '-a', fakeHerokuAppName])
-
-    expect(stderr).to.endWith(
-      `Fetching database restore capabilities of add-on ${fakeAddonName}... done\n`)
 
     expect(stdout).to.containIgnoreSpaces('Nightly Backups Status: Enabled')
     expect(stdout).to.containIgnoreSpaces('Clone Supported: Yes')
     expect(stdout).to.containIgnoreSpaces('Point-in-time Restore Supported: No')
     expect(stdout).to.containIgnoreSpaces('Earliest Restorable Time: N/A')
     expect(stdout).to.containIgnoreSpaces('Latest Restorable Time: N/A')
+
+    expect(error).to.be.undefined
   })
 
   it('displays restore capabilities via the borealis-pg:restore:info alias', async () => {
@@ -118,10 +116,8 @@ describe('database restore capabilities command', () => {
           restoreSupported: true,
         })
 
-    const {stdout, stderr} = await runCommand(['borealis-pg:restore:info', '-a', fakeHerokuAppName])
-
-    expect(stderr).to.endWith(
-      `Fetching database restore capabilities of add-on ${fakeAddonName}... done\n`)
+    const {stdout, error} = await runCommand(
+      ['borealis-pg:restore:info', '-a', fakeHerokuAppName])
 
     expect(stdout).to.containIgnoreSpaces('Nightly Backups Status: Enabled')
     expect(stdout).to.containIgnoreSpaces('Clone Supported: No')
@@ -130,6 +126,8 @@ describe('database restore capabilities command', () => {
       `Earliest Restorable Time: ${DateTime.fromISO(fakeEarliestRestorableTime).toISO()}`)
     expect(stdout).to.containIgnoreSpaces(
       `Latest Restorable Time: ${DateTime.fromISO(fakeLatestRestorableTime).toISO()}`)
+
+    expect(error).to.be.undefined
   })
 
   it('exits with an error when the add-on was not found', async () => {

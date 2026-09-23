@@ -64,14 +64,14 @@ describe('PostgreSQL version upgrade info command', () => {
         },
       )
 
-    const {stdout, stderr} = await runCommand(
+    const {stdout, error} = await runCommand(
       ['borealis-pg:upgrade:info', '--app', fakeHerokuAppName])
 
-    expect(stderr).to.contain(
-      `Fetching PostgreSQL version upgrade info for add-on ${fakeAddonName}... done`)
     expect(stdout).to.containIgnoreSpaces('Current PostgreSQL major version: 16')
     expect(stdout).to.containIgnoreSpaces('Next PostgreSQL major version: 17')
     expect(stdout).to.containIgnoreSpaces('Upgrade Status: available')
+
+    expect(error).to.be.undefined
   })
 
   it('shows info when an upgrade is in progress', async () => {
@@ -86,14 +86,14 @@ describe('PostgreSQL version upgrade info command', () => {
         },
       )
 
-    const {stdout, stderr} = await runCommand(
+    const {stdout, error} = await runCommand(
       ['borealis-pg:upgrade:info', '--app', fakeHerokuAppName])
 
-    expect(stderr).to.contain(
-      `Fetching PostgreSQL version upgrade info for add-on ${fakeAddonName}... done`)
     expect(stdout).to.containIgnoreSpaces('Current PostgreSQL major version: 16')
     expect(stdout).to.containIgnoreSpaces('Next PostgreSQL major version: 17')
     expect(stdout).to.containIgnoreSpaces('Upgrade Status: upgrading')
+
+    expect(error).to.be.undefined
   })
 
   it('shows info when at the maximum version', async () => {
@@ -108,13 +108,13 @@ describe('PostgreSQL version upgrade info command', () => {
         },
       )
 
-    const {stdout, stderr} = await runCommand(['borealis-pg:upgrade:info', '-a', fakeHerokuAppName])
+    const {stdout, error} = await runCommand(['borealis-pg:upgrade:info', '-a', fakeHerokuAppName])
 
-    expect(stderr).to.contain(
-      `Fetching PostgreSQL version upgrade info for add-on ${fakeAddonName}... done`)
     expect(stdout).to.containIgnoreSpaces('Current PostgreSQL major version: 17')
     expect(stdout).to.containIgnoreSpaces('Next PostgreSQL major version: N/A')
     expect(stdout).to.containIgnoreSpaces('Upgrade Status: maximum')
+
+    expect(error).to.be.undefined
   })
 
   it('exits with an error when the add-on does not exist', async () => {

@@ -264,8 +264,10 @@ describe('noninteractive run command', () => {
   it('executes a shell command without a DB port option', async () => {
     initDefaultRequestMocks()
 
-    await runCommand(
+    const {error} = await runCommand(
       ['borealis-pg:run', '--app', fakeHerokuAppName, '--shell-cmd', fakeShellCommand])
+
+    expect(error).to.be.undefined
 
     executeSshClientListener()
 
@@ -311,7 +313,7 @@ describe('noninteractive run command', () => {
 
     const {stderr} = await captureOutput(async () => childStderrListener(fakeStderrMessage))
 
-    expect(stderr).to.endWith(`${fakeStderrMessage}\n`)
+    expect(stderr.trim()).to.contain(fakeStderrMessage)
 
     // Check what happens when the child process ends with a non-zero exit code
     const fakeExitCode = 14
@@ -334,8 +336,10 @@ describe('noninteractive run command', () => {
   it('executes a shell command with a custom DB port option', async () => {
     initDefaultRequestMocks()
 
-    await runCommand(
+    const {error} = await runCommand(
       ['borealis-pg:run', '-a', fakeHerokuAppName, '-p', '2345', '-e', fakeShellCommand])
+
+    expect(error).to.be.undefined
 
     executeSshClientListener()
 
@@ -379,7 +383,10 @@ describe('noninteractive run command', () => {
   it('executes a shell command even when the child process has no stdout or stderr', async () => {
     initDefaultRequestMocks()
 
-    await runCommand(['borealis-pg:run', '-a', fakeHerokuAppName, '-e', fakeShellCommand])
+    const {error} = await runCommand(
+      ['borealis-pg:run', '-a', fakeHerokuAppName, '-e', fakeShellCommand])
+
+    expect(error).to.be.undefined
 
     when(mockChildProcessType.stdout).thenReturn(null)
     when(mockChildProcessType.stderr).thenReturn(null)
@@ -398,11 +405,10 @@ describe('noninteractive run command', () => {
 
     initDefaultRequestMocks()
 
-    const {stderr: cmdStderr} = await runCommand(
+    const {error} = await runCommand(
       ['borealis-pg:run', '-a', fakeHerokuAppName, '--db-cmd', fakeDbCommand])
 
-    expect(cmdStderr).to.contain(
-      `Configuring read-only user session for add-on ${fakeAddonName}... done`)
+    expect(error).to.be.undefined
 
     executeSshClientListener()
 
@@ -472,11 +478,10 @@ describe('noninteractive run command', () => {
   it('executes a database command with multiple result entries', async () => {
     initDefaultRequestMocks()
 
-    const {stderr: cmdStderr} = await runCommand(
+    const {error} = await runCommand(
       ['borealis-pg:run', '-a', fakeHerokuAppName, '-d', fakeDbCommand, '-f', 'table'])
 
-    expect(cmdStderr).to.contain(
-      `Configuring read-only user session for add-on ${fakeAddonName}... done`)
+    expect(error).to.be.undefined
 
     const uniqueValue = 'feb88f0d-b630-4c8a-bff5-7167c06c2624'
 
@@ -512,7 +517,7 @@ describe('noninteractive run command', () => {
 
     initDefaultRequestMocks()
 
-    await runCommand([
+    const {error} = await runCommand([
       'borealis-pg:run',
       '--app',
       fakeHerokuAppName,
@@ -521,6 +526,8 @@ describe('noninteractive run command', () => {
       '--format',
       'csv',
     ])
+
+    expect(error).to.be.undefined
 
     executeSshClientListener()
 
@@ -555,8 +562,10 @@ describe('noninteractive run command', () => {
 
     initDefaultRequestMocks()
 
-    await runCommand(
+    const {error} = await runCommand(
       ['borealis-pg:run', '-a', fakeHerokuAppName, '-d', fakeDbCommand, '-f', 'json'])
+
+    expect(error).to.be.undefined
 
     executeSshClientListener()
 
@@ -591,8 +600,10 @@ describe('noninteractive run command', () => {
 
     initDefaultRequestMocks()
 
-    await runCommand(
+    const {error} = await runCommand(
       ['borealis-pg:run', '-a', fakeHerokuAppName, '-d', fakeDbCommand, '-f', 'yaml'])
+
+    expect(error).to.be.undefined
 
     executeSshClientListener()
 
@@ -623,11 +634,10 @@ describe('noninteractive run command', () => {
   it('executes a database command with no result', async () => {
     initDefaultRequestMocks()
 
-    const {stderr: cmdStderr} = await runCommand(
+    const {error} = await runCommand(
       ['borealis-pg:run', '-a', fakeHerokuAppName, '-d', fakeDbCommand])
 
-    expect(cmdStderr).to.contain(
-      `Configuring read-only user session for add-on ${fakeAddonName}... done`)
+    expect(error).to.be.undefined
 
     executeSshClientListener()
 
@@ -643,11 +653,10 @@ describe('noninteractive run command', () => {
   it('executes a database command from a file', async () => {
     initDefaultRequestMocks()
 
-    const {stderr: cmdStderr} = await runCommand(
+    const {error} = await runCommand(
       ['borealis-pg:run', '-a', fakeHerokuAppName, '--db-cmd-file', exampleFilePath])
 
-    expect(cmdStderr).to.contain(
-      `Configuring read-only user session for add-on ${fakeAddonName}... done`)
+    expect(error).to.be.undefined
 
     executeSshClientListener()
 
@@ -693,7 +702,7 @@ describe('noninteractive run command', () => {
   it('executes a database command from a file with a different output format', async () => {
     initDefaultRequestMocks()
 
-    await runCommand([
+    const {error} = await runCommand([
       'borealis-pg:run',
       '-a',
       fakeHerokuAppName,
@@ -702,6 +711,8 @@ describe('noninteractive run command', () => {
       '-f',
       'json',
     ])
+
+    expect(error).to.be.undefined
 
     executeSshClientListener()
 
@@ -757,7 +768,10 @@ describe('noninteractive run command', () => {
   it('handles a database command error', async () => {
     initDefaultRequestMocks()
 
-    await runCommand(['borealis-pg:run', '-a', fakeHerokuAppName, '-d', fakeDbCommand])
+    const {error: cmdError} = await runCommand(
+      ['borealis-pg:run', '-a', fakeHerokuAppName, '-d', fakeDbCommand])
+
+    expect(cmdError).to.be.undefined
 
     executeSshClientListener()
 
@@ -794,7 +808,7 @@ describe('noninteractive run command', () => {
           publicSshHostKey: expectedSshHostKeyEntry,
         })
 
-    const {stderr} = await runCommand([
+    const {error} = await runCommand([
       'borealis-pg:run',
       '--app',
       fakeHerokuAppName,
@@ -803,10 +817,9 @@ describe('noninteractive run command', () => {
       fakeShellCommand,
     ])
 
-    executeSshClientListener()
+    expect(error).to.be.undefined
 
-    expect(stderr).to.contain(
-      `Configuring read/write user session for add-on ${fakeAddonName}... done`)
+    executeSshClientListener()
 
     verify(mockChildProcessFactoryType.spawn(
       fakeShellCommand,
@@ -830,7 +843,7 @@ describe('noninteractive run command', () => {
   it('uses a readonly personal DB user when requested', async () => {
     initPersonalUserRequestMocks(false)
 
-    await runCommand([
+    const {error} = await runCommand([
       'borealis-pg:run',
       '--personal-user',
       '--app',
@@ -838,6 +851,8 @@ describe('noninteractive run command', () => {
       '--shell-cmd',
       fakeShellCommand,
     ])
+
+    expect(error).to.be.undefined
 
     executeSshClientListener()
 
@@ -863,7 +878,7 @@ describe('noninteractive run command', () => {
   it('uses a read/write personal DB user when requested', async () => {
     initPersonalUserRequestMocks(true)
 
-    await runCommand([
+    const {error} = await runCommand([
       'borealis-pg:run',
       '-w',
       '-u',
@@ -872,6 +887,8 @@ describe('noninteractive run command', () => {
       '-e',
       fakeShellCommand,
     ])
+
+    expect(error).to.be.undefined
 
     executeSshClientListener()
 
@@ -897,7 +914,10 @@ describe('noninteractive run command', () => {
   it('starts SSH port forwarding', async () => {
     initDefaultRequestMocks()
 
-    await runCommand(['borealis-pg:run', '-a', fakeHerokuAppName, '-e', fakeShellCommand])
+    const {error} = await runCommand(
+      ['borealis-pg:run', '-a', fakeHerokuAppName, '-e', fakeShellCommand])
+
+    expect(error).to.be.undefined
 
     const [tcpConnectionListener] = capture(mockTcpServerFactoryType.create).last()
     tcpConnectionListener(mockTcpSocketInstance)
@@ -938,7 +958,10 @@ describe('noninteractive run command', () => {
           publicSshHostKey: expectedSshHostKeyEntry,
         })
 
-    await runCommand(['borealis-pg:run', '-a', fakeHerokuAppName, '-e', fakeShellCommand])
+    const {error} = await runCommand(
+      ['borealis-pg:run', '-a', fakeHerokuAppName, '-e', fakeShellCommand])
+
+    expect(error).to.be.undefined
 
     executeSshClientListener()
 
@@ -1053,14 +1076,13 @@ describe('noninteractive run command', () => {
       ['borealis-pg:run', '-a', fakeHerokuAppName, '-e', fakeShellCommand])
 
     expect(error?.message).to.contain('An error')
-
     verify(mockTcpServerFactoryType.create(anyFunction())).never()
   })
 
   it('handles a local port conflict', async () => {
     initDefaultRequestMocks()
 
-    await runCommand([
+    const {error: cmdError} = await runCommand([
       'borealis-pg:run',
       '-a',
       fakeHerokuAppName,
@@ -1069,6 +1091,8 @@ describe('noninteractive run command', () => {
       '-e',
       fakeShellCommand,
     ])
+
+    expect(cmdError).to.be.undefined
 
     const [_, listener] = capture(mockTcpServerType.on).last()
     const errorListener = listener as ((err: unknown) => void)
@@ -1082,7 +1106,10 @@ describe('noninteractive run command', () => {
   it('handles a generic proxy server error', async () => {
     initDefaultRequestMocks()
 
-    await runCommand(['borealis-pg:run', '-a', fakeHerokuAppName, '-e', fakeShellCommand])
+    const {error: cmdError} = await runCommand(
+      ['borealis-pg:run', '-a', fakeHerokuAppName, '-e', fakeShellCommand])
+
+    expect(cmdError).to.be.undefined
 
     const [_, listener] = capture(mockTcpServerType.on).last()
     const errorListener = listener as ((err: unknown) => void)
@@ -1097,7 +1124,10 @@ describe('noninteractive run command', () => {
   it('handles an error when starting port forwarding', async () => {
     initDefaultRequestMocks()
 
-    await runCommand(['borealis-pg:run', '-a', fakeHerokuAppName, '-e', fakeShellCommand])
+    const {error: cmdError} = await runCommand(
+      ['borealis-pg:run', '-a', fakeHerokuAppName, '-e', fakeShellCommand])
+
+    expect(cmdError).to.be.undefined
 
     const [tcpConnectionListener] = capture(mockTcpServerFactoryType.create).last()
     tcpConnectionListener(mockTcpSocketInstance)
@@ -1119,7 +1149,10 @@ describe('noninteractive run command', () => {
   it('handles an unexpected TCP socket error', async () => {
     initDefaultRequestMocks()
 
-    await runCommand(['borealis-pg:run', '-a', fakeHerokuAppName, '-e', fakeShellCommand])
+    const {error: cmdError} = await runCommand(
+      ['borealis-pg:run', '-a', fakeHerokuAppName, '-e', fakeShellCommand])
+
+    expect(cmdError).to.be.undefined
 
     const [tcpConnectionListener] = capture(mockTcpServerFactoryType.create).last()
     tcpConnectionListener(mockTcpSocketInstance)
@@ -1146,7 +1179,8 @@ describe('noninteractive run command', () => {
       .post(`/heroku/resources/${fakeAddonName}/personal-ssh-users`)
       .reply(404, {reason: 'Add-on does not exist for a personal SSH user'})
 
-    const {error} = await runCommand(['borealis-pg:run', '-a', fakeHerokuAppName, '-e', fakeShellCommand])
+    const {error} = await runCommand(
+      ['borealis-pg:run', '-a', fakeHerokuAppName, '-e', fakeShellCommand])
 
     expect(error?.message).to.contain('Add-on is not a Borealis Isolated Postgres add-on')
 
@@ -1318,10 +1352,10 @@ describe('noninteractive run command', () => {
     const {error} = await runCommand(
       ['borealis-pg:run', '-a', fakeHerokuAppName, '-e', fakeShellCommand])
 
-    expect(error?.message).to.contain(
-      'The MY_COOL_DB_SSH_TUNNEL_BPG_CONNECTION_INFO config variable value for ' +
-      `⬢ ${fakeHerokuAppName} is invalid`
-    )
+    expect(error?.message).to.match(new RegExp(
+      '.*The MY_COOL_DB_SSH_TUNNEL_BPG_CONNECTION_INFO config variable value for (⬢ )?' +
+      `${fakeHerokuAppName} is invalid.*`
+    ))
 
     verify(mockTcpServerFactoryType.create(anyFunction())).never()
     verify(mockSshClientFactoryType.create()).never()

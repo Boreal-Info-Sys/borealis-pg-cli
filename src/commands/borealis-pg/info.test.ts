@@ -80,9 +80,7 @@ describe('add-on info command', () => {
           storageComplianceStatus: 'ok',
         })
 
-    const {stdout, stderr} = await runCommand(['borealis-pg:info', '--app', fakeHerokuAppName])
-
-    expect(stderr).to.contain(`Fetching information about add-on ${fakeAddonName}... done`)
+    const {stdout, error} = await runCommand(['borealis-pg:info', '--app', fakeHerokuAppName])
 
     expect(stdout).to.containIgnoreSpaces(`Add-on Name: ${fakeAddonName}`)
     expect(stdout).to.containIgnoreSpaces('Status: Available')
@@ -99,6 +97,8 @@ describe('add-on info command', () => {
     expect(stdout).to.containIgnoreSpaces('Restored/Cloned From Add-on: N/A')
     expect(stdout).to.containIgnoreSpaces('Storage Compliance Status: OK')
     expect(stdout).to.containIgnoreSpaces('Storage Compliance Deadline: N/A')
+
+    expect(error).to.be.undefined
   })
 
   it('displays details of a multi-tenant add-on', async () => {
@@ -123,9 +123,7 @@ describe('add-on info command', () => {
           storageComplianceStatus: 'proximity-warning',
         })
 
-    const {stdout, stderr} = await runCommand(['borealis-pg:info', '-a', fakeHerokuAppName])
-
-    expect(stderr).to.contain(`Fetching information about add-on ${fakeAddonName}... done`)
+    const {stdout, error} = await runCommand(['borealis-pg:info', '-a', fakeHerokuAppName])
 
     expect(stdout).to.containIgnoreSpaces(`Add-on Name: ${fakeAddonName}`)
     expect(stdout).to.containIgnoreSpaces('Status: Requested')
@@ -142,6 +140,8 @@ describe('add-on info command', () => {
     expect(stdout).to.containIgnoreSpaces('Restored/Cloned From Add-on: N/A')
     expect(stdout).to.containIgnoreSpaces('Storage Compliance Status: Proximity Warning')
     expect(stdout).to.containIgnoreSpaces('Storage Compliance Deadline: N/A')
+
+    expect(error).to.be.undefined
   })
 
   it('displays details when called using the borealis-pg (index) alias', async () => {
@@ -166,9 +166,7 @@ describe('add-on info command', () => {
           storageComplianceStatus: 'ok',
         })
 
-    const {stdout, stderr} = await runCommand(['borealis-pg', '-a', fakeHerokuAppName])
-
-    expect(stderr).to.contain(`Fetching information about add-on ${fakeAddonName}... done`)
+    const {stdout, error} = await runCommand(['borealis-pg', '-a', fakeHerokuAppName])
 
     expect(stdout).to.containIgnoreSpaces(`Add-on Name: ${fakeAddonName}`)
     expect(stdout).to.containIgnoreSpaces('Status: Changing add-on plan')
@@ -185,6 +183,8 @@ describe('add-on info command', () => {
     expect(stdout).to.containIgnoreSpaces('Restored/Cloned From Add-on: N/A')
     expect(stdout).to.containIgnoreSpaces('Storage Compliance Status: OK')
     expect(stdout).to.containIgnoreSpaces('Storage Compliance Deadline: N/A')
+
+    expect(error).to.be.undefined
   })
 
   it('displays details when the add-on has been restored/cloned from another add-on', async () => {
@@ -209,9 +209,7 @@ describe('add-on info command', () => {
           storageComplianceStatus: 'ok',
         })
 
-    const {stdout, stderr} = await runCommand(['borealis-pg:info', '-a', fakeHerokuAppName])
-
-    expect(stderr).to.contain(`Fetching information about add-on ${fakeAddonName}... done`)
+    const {stdout, error} = await runCommand(['borealis-pg:info', '-a', fakeHerokuAppName])
 
     expect(stdout).to.containIgnoreSpaces(`Add-on Name: ${fakeAddonName}`)
     expect(stdout).to.containIgnoreSpaces('Status: Provisioning')
@@ -229,6 +227,8 @@ describe('add-on info command', () => {
       `Restored/Cloned From Add-on: ${fakeRestoreSourceAddonName}`)
     expect(stdout).to.containIgnoreSpaces('Storage Compliance Status: OK')
     expect(stdout).to.containIgnoreSpaces('Storage Compliance Deadline: N/A')
+
+    expect(error).to.be.undefined
   })
 
   it('displays raw values for custom values in the response', async () => {
@@ -253,9 +253,7 @@ describe('add-on info command', () => {
           storageComplianceStatus: 'super-duper',
         })
 
-    const {stdout, stderr} = await runCommand(['borealis-pg:info', '-a', fakeHerokuAppName])
-
-    expect(stderr).to.contain(`Fetching information about add-on ${fakeAddonName}... done`)
+    const {stdout, error} = await runCommand(['borealis-pg:info', '-a', fakeHerokuAppName])
 
     expect(stdout).to.containIgnoreSpaces(`Add-on Name: ${fakeAddonName}`)
     expect(stdout).to.containIgnoreSpaces('Status: under-the-weather')
@@ -272,6 +270,8 @@ describe('add-on info command', () => {
     expect(stdout).to.containIgnoreSpaces('Restored/Cloned From Add-on: N/A')
     expect(stdout).to.containIgnoreSpaces('Storage Compliance Status: super-duper')
     expect(stdout).to.containIgnoreSpaces('Storage Compliance Deadline: N/A')
+
+    expect(error).to.be.undefined
   })
 
   it('displays details when the add-on is not finished provisioning', async () => {
@@ -296,9 +296,7 @@ describe('add-on info command', () => {
           storageComplianceStatus: 'ok',
         })
 
-    const {stdout, stderr} = await runCommand(['borealis-pg:info', '-a', fakeHerokuAppName])
-
-    expect(stderr).to.contain(`Fetching information about add-on ${fakeAddonName}... done`)
+    const {stdout, error} = await runCommand(['borealis-pg:info', '-a', fakeHerokuAppName])
 
     expect(stdout).to.containIgnoreSpaces(`Add-on Name: ${fakeAddonName}`)
     expect(stdout).to.containIgnoreSpaces('Status: Provisioning')
@@ -315,6 +313,8 @@ describe('add-on info command', () => {
     expect(stdout).to.containIgnoreSpaces('Restored/Cloned From Add-on: N/A')
     expect(stdout).to.containIgnoreSpaces('Storage Compliance Status: OK')
     expect(stdout).to.containIgnoreSpaces('Storage Compliance Deadline: N/A')
+
+    expect(error).to.be.undefined
   })
 
   it('displays details for an add-on with a storage compliance violation', async () => {
@@ -339,9 +339,7 @@ describe('add-on info command', () => {
           storageComplianceStatus: 'violating',
         })
 
-    const {stdout, stderr} = await runCommand(['borealis-pg:info', '-a', fakeHerokuAppName])
-
-    expect(stderr).to.contain(`Fetching information about add-on ${fakeAddonName}... done`)
+    const {stdout, error} = await runCommand(['borealis-pg:info', '-a', fakeHerokuAppName])
 
     expect(stdout).to.containIgnoreSpaces(`Add-on Name: ${fakeAddonName}`)
     expect(stdout).to.containIgnoreSpaces('Status: Undergoing maintenance')
@@ -359,6 +357,8 @@ describe('add-on info command', () => {
     expect(stdout).to.containIgnoreSpaces('Storage Compliance Status: Violating')
     expect(stdout).to.containIgnoreSpaces(
       `Storage Compliance Deadline: ${DateTime.fromISO(fakeStorageComplianceDeadline).toISO()}`)
+
+    expect(error).to.be.undefined
   })
 
   it('displays details for an add-on with a storage compliance status of restricted', async () => {
@@ -383,9 +383,7 @@ describe('add-on info command', () => {
           storageComplianceStatus: 'restricted',
         })
 
-    const {stdout, stderr} = await runCommand(['borealis-pg:info', '-a', fakeHerokuAppName])
-
-    expect(stderr).to.contain(`Fetching information about add-on ${fakeAddonName}... done`)
+    const {stdout, error} = await runCommand(['borealis-pg:info', '-a', fakeHerokuAppName])
 
     expect(stdout).to.containIgnoreSpaces(`Add-on Name: ${fakeAddonName}`)
     expect(stdout).to.containIgnoreSpaces('Status: Revoking DB write access')
@@ -402,6 +400,8 @@ describe('add-on info command', () => {
     expect(stdout).to.containIgnoreSpaces('Restored/Cloned From Add-on: N/A')
     expect(stdout).to.containIgnoreSpaces('Storage Compliance Status: Restricted')
     expect(stdout).to.containIgnoreSpaces('Storage Compliance Deadline: N/A')
+
+    expect(error).to.be.undefined
   })
 
   it('exits with an error when the add-on was not found', async () => {

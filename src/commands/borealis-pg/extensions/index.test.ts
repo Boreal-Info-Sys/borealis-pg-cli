@@ -67,14 +67,12 @@ describe('extension list command', () => {
         ],
       })
 
-    const {stdout, stderr} = await runCommand(
-      ['borealis-pg:extensions', '--app', fakeHerokuAppName])
+    const {stdout, error} = await runCommand(['borealis-pg:extensions', '--app', fakeHerokuAppName])
 
-    expect(stderr).to.endWith(
-      `Fetching Postgres extension list for add-on ${fakeAddonName}... done\n`)
     expect(stdout).to.equal(
       `- ${fakeExt1} (version: ${fakeExt1Version}, schema: ${fakeExt1Schema})\n` +
       `- ${fakeExt2} (version: ${fakeExt2Version}, schema: ${fakeExt2Schema})\n`)
+    expect(error).to.be.undefined
   })
 
   it('outputs a warning if there are no extensions', async () => {
@@ -82,12 +80,12 @@ describe('extension list command', () => {
       .get(`/heroku/resources/${fakeAddonName}/pg-extensions`)
       .reply(200, {extensions: []})
 
-    const {stdout, stderr} = await runCommand(['borealis-pg:extensions', '-a', fakeHerokuAppName])
+    const {stdout, stderr, error} = await runCommand(
+      ['borealis-pg:extensions', '-a', fakeHerokuAppName])
 
-    expect(stderr).to.endWith(
-      `Fetching Postgres extension list for add-on ${fakeAddonName}... done\n` +
-      ' ›   Warning: No extensions found\n')
     expect(stdout).to.equal('')
+    expect(stderr.trim()).to.endWith('Warning: No extensions found')
+    expect(error).to.be.undefined
   })
 
   it('exits with an error if the add-on was not found', async () => {

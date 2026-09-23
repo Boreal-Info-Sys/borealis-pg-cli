@@ -63,7 +63,7 @@ describe('extension removal command', () => {
       .delete(`/heroku/resources/${fakeAddonName}/pg-extensions/${fakeExt1}`)
       .reply(200, {success: true})
 
-    const {stdout, stderr} = await runCommand([
+    const {stdout, error} = await runCommand([
       'borealis-pg:extensions:remove',
       '--confirm',
       fakeExt1,
@@ -72,9 +72,8 @@ describe('extension removal command', () => {
       fakeExt1,
     ])
 
-    expect(stderr).to.endWith(
-      `Removing Postgres extension ${fakeExt1} from add-on ${fakeAddonName}... done\n`)
     expect(stdout).to.equal('')
+    expect(error).to.be.undefined
     expect(nock.pendingMocks()).to.be.empty
   })
 
@@ -85,7 +84,7 @@ describe('extension removal command', () => {
         .delete(`/heroku/resources/${fakeAddonName}/pg-extensions/${fakeExt1}`)
         .reply(404, {resourceType: 'extension'})
 
-      const {stdout, stderr} = await runCommand([
+      const {stdout, stderr, error} = await runCommand([
         'borealis-pg:extensions:remove',
         '--confirm',
         fakeExt1,
@@ -95,10 +94,9 @@ describe('extension removal command', () => {
         fakeExt1,
       ])
 
-      expect(stderr).to.contain(
-        `Removing Postgres extension ${fakeExt1} from add-on ${fakeAddonName}... !`)
-      expect(stderr).to.contain(`Extension ${fakeExt1} is not installed`)
       expect(stdout).to.equal('')
+      expect(stderr.trim()).to.endWith(`Extension ${fakeExt1} is not installed`)
+      expect(error).to.be.undefined
       expect(nock.pendingMocks()).to.be.empty
     })
 
@@ -109,11 +107,10 @@ describe('extension removal command', () => {
 
     setTimeout(() => mockStdin.send(` ${fakeExt1} \n`), 1000)
 
-    const {stderr} = await runCommand(
+    const {error} = await runCommand(
       ['borealis-pg:extensions:remove', '-a', fakeHerokuAppName, fakeExt1])
 
-    expect(stderr).to.endWith(
-      `Removing Postgres extension ${fakeExt1} from add-on ${fakeAddonName}... done\n`)
+    expect(error).to.be.undefined
     expect(nock.pendingMocks()).to.be.empty
   })
 

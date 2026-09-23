@@ -163,7 +163,9 @@ describe('interactive psql command', () => {
   it('starts the proxy server', async () => {
     initPersonalUserRequestMocks(false)
 
-    await runCommand(['borealis-pg:psql', '--app', fakeHerokuAppName])
+    const {error} = await runCommand(['borealis-pg:psql', '--app', fakeHerokuAppName])
+
+    expect(error).to.be.undefined
 
     verify(mockTcpServerFactoryType.create(anyFunction())).once()
     verify(mockTcpServerType.on(anyString(), anyFunction())).once()
@@ -175,7 +177,9 @@ describe('interactive psql command', () => {
   it('connects to the SSH server', async () => {
     initPersonalUserRequestMocks(false)
 
-    await runCommand(['borealis-pg:psql', '-a', fakeHerokuAppName])
+    const {error} = await runCommand(['borealis-pg:psql', '-a', fakeHerokuAppName])
+
+    expect(error).to.be.undefined
 
     verify(mockSshClientFactoryType.create()).once()
     verify(mockSshClientType.on(anyString(), anyFunction())).once()
@@ -198,7 +202,9 @@ describe('interactive psql command', () => {
   it('starts a psql session and ends with an exit code', async () => {
     initPersonalUserRequestMocks(false)
 
-    await runCommand(['borealis-pg:psql', '-a', fakeHerokuAppName])
+    const {error} = await runCommand(['borealis-pg:psql', '-a', fakeHerokuAppName])
+
+    expect(error).to.be.undefined
 
     executeSshClientListener()
 
@@ -238,7 +244,9 @@ describe('interactive psql command', () => {
   it('starts a psql session and ends without an exit code', async () => {
     initPersonalUserRequestMocks(false)
 
-    await runCommand(['borealis-pg:psql', '-a', fakeHerokuAppName])
+    const {error} = await runCommand(['borealis-pg:psql', '-a', fakeHerokuAppName])
+
+    expect(error).to.be.undefined
 
     executeSshClientListener()
 
@@ -276,7 +284,10 @@ describe('interactive psql command', () => {
   it('starts a psql session with DB write access', async () => {
     initPersonalUserRequestMocks(true)
 
-    await runCommand(['borealis-pg:psql', '--app', fakeHerokuAppName, '--write-access'])
+    const {error} = await runCommand(
+      ['borealis-pg:psql', '--app', fakeHerokuAppName, '--write-access'])
+
+    expect(error).to.be.undefined
 
     executeSshClientListener()
 
@@ -301,8 +312,10 @@ describe('interactive psql command', () => {
   it('starts a psql session with a custom Postgres port', async () => {
     initPersonalUserRequestMocks(false)
 
-    await runCommand(
+    const {error} = await runCommand(
       ['borealis-pg:psql', '--app', fakeHerokuAppName, '--port', customPgPort.toString()])
+
+    expect(error).to.be.undefined
 
     executeSshClientListener()
 
@@ -327,8 +340,10 @@ describe('interactive psql command', () => {
   it('starts a psql session with a custom psql path', async () => {
     initPersonalUserRequestMocks(false)
 
-    await runCommand(
+    const {error} = await runCommand(
       ['borealis-pg:psql', '--app', fakeHerokuAppName, '--binary-path', customPsqlPath])
+
+    expect(error).to.be.undefined
 
     executeSshClientListener()
 
@@ -353,7 +368,9 @@ describe('interactive psql command', () => {
   it('starts SSH port forwarding for a read-only user', async () => {
     initPersonalUserRequestMocks(false)
 
-    await runCommand(['borealis-pg:psql', '-a', fakeHerokuAppName])
+    const {error} = await runCommand(['borealis-pg:psql', '-a', fakeHerokuAppName])
+
+    expect(error).to.be.undefined
 
     const [tcpConnectionListener] = capture(mockTcpServerFactoryType.create).last()
     tcpConnectionListener(mockTcpSocketInstance)
@@ -380,7 +397,9 @@ describe('interactive psql command', () => {
   it('starts SSH port forwarding for a read/write user', async () => {
     initPersonalUserRequestMocks(true)
 
-    await runCommand(['borealis-pg:psql', '-a', fakeHerokuAppName, '-w'])
+    const {error} = await runCommand(['borealis-pg:psql', '-a', fakeHerokuAppName, '-w'])
+
+    expect(error).to.be.undefined
 
     const [tcpConnectionListener] = capture(mockTcpServerFactoryType.create).last()
     tcpConnectionListener(mockTcpSocketInstance)
@@ -407,7 +426,9 @@ describe('interactive psql command', () => {
   it('does not end the process when the user presses Ctrl+C', async () => {
     initPersonalUserRequestMocks(false)
 
-    await runCommand(['borealis-pg:psql', '-a', fakeHerokuAppName])
+    const {error} = await runCommand(['borealis-pg:psql', '-a', fakeHerokuAppName])
+
+    expect(error).to.be.undefined
 
     verify(mockNodeProcessType.on(anyString(), anyFunction())).once()
     verify(mockNodeProcessType.on('SIGINT', anyFunction())).once()
@@ -481,7 +502,10 @@ describe('interactive psql command', () => {
   it('handles a local port conflict', async () => {
     initPersonalUserRequestMocks(false)
 
-    await runCommand(['borealis-pg:psql', '-a', fakeHerokuAppName, '-p', customPgPort.toString()])
+    const {error} = await runCommand(
+      ['borealis-pg:psql', '-a', fakeHerokuAppName, '-p', customPgPort.toString()])
+
+    expect(error).to.be.undefined
 
     const [_, listener] = capture(mockTcpServerType.on).last()
     const errorListener = listener as ((err: unknown) => void)
@@ -496,7 +520,9 @@ describe('interactive psql command', () => {
   it('handles a generic proxy server error', async () => {
     initPersonalUserRequestMocks(false)
 
-    await runCommand(['borealis-pg:psql', '-a', fakeHerokuAppName])
+    const {error: cmdError} = await runCommand(['borealis-pg:psql', '-a', fakeHerokuAppName])
+
+    expect(cmdError).to.be.undefined
 
     const [_, listener] = capture(mockTcpServerType.on).last()
     const errorListener = listener as ((err: unknown) => void)
@@ -510,7 +536,9 @@ describe('interactive psql command', () => {
   it('handles an error when starting port forwarding', async () => {
     initPersonalUserRequestMocks(false)
 
-    await runCommand(['borealis-pg:psql', '-a', fakeHerokuAppName])
+    const {error: cmdError} = await runCommand(['borealis-pg:psql', '-a', fakeHerokuAppName])
+
+    expect(cmdError).to.be.undefined
 
     const [tcpConnectionListener] = capture(mockTcpServerFactoryType.create).last()
     tcpConnectionListener(mockTcpSocketInstance)
@@ -531,7 +559,9 @@ describe('interactive psql command', () => {
   it('handles an unexpected TCP socket error', async () => {
     initPersonalUserRequestMocks(false)
 
-    await runCommand(['borealis-pg:psql', '-a', fakeHerokuAppName])
+    const {error: cmdError} = await runCommand(['borealis-pg:psql', '-a', fakeHerokuAppName])
+
+    expect(cmdError).to.be.undefined
 
     const [tcpConnectionListener] = capture(mockTcpServerFactoryType.create).last()
     tcpConnectionListener(mockTcpSocketInstance)
@@ -660,27 +690,30 @@ describe('interactive psql command', () => {
       'Access to the add-on database has been temporarily revoked for personal users')
   })
 
-  it('exits with an error when there is an API error while creating a personal DB user', async () => {
-    nock(borealisPgApiBaseUrl)
-      .post(`/heroku/resources/${fakeAddonName}/personal-db-users`, {enableWriteAccess: false})
-      .reply(503, {reason: 'Server error!'})
-      .post(`/heroku/resources/${fakeAddonName}/personal-ssh-users`)
-      .reply(
-        200,
-        {
-          sshHost: fakeSshHost,
-          sshUsername: fakeSshUsername,
-          sshPrivateKey: fakeSshPrivateKey,
-          publicSshHostKey: expectedSshHostKeyEntry,
-        })
+  it(
+    'exits with an error when there is an API error while creating a personal DB user',
+    async () => {
+      nock(borealisPgApiBaseUrl)
+        .post(`/heroku/resources/${fakeAddonName}/personal-db-users`, {enableWriteAccess: false})
+        .reply(503, {reason: 'Server error!'})
+        .post(`/heroku/resources/${fakeAddonName}/personal-ssh-users`)
+        .reply(
+          200,
+          {
+            sshHost: fakeSshHost,
+            sshUsername: fakeSshUsername,
+            sshPrivateKey: fakeSshPrivateKey,
+            publicSshHostKey: expectedSshHostKeyEntry,
+          })
 
-    const {error} = await runCommand(['borealis-pg:psql', '-a', fakeHerokuAppName])
+      const {error} = await runCommand(['borealis-pg:psql', '-a', fakeHerokuAppName])
 
-    verify(mockTcpServerFactoryType.create(anyFunction())).never()
-    verify(mockSshClientFactoryType.create()).never()
+      verify(mockTcpServerFactoryType.create(anyFunction())).never()
+      verify(mockSshClientFactoryType.create()).never()
 
-    expect(error?.message).to.contain('Add-on service is temporarily unavailable. Try again later.')
-  })
+      expect(error?.message).to.contain(
+        'Add-on service is temporarily unavailable. Try again later.')
+    })
 
   function getTcpSocketListener(
     expectedEventName: string,

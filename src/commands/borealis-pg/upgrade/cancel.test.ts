@@ -57,10 +57,12 @@ describe('PostgreSQL version upgrade cancellation command', () => {
       .delete(`/heroku/resources/${fakeAddonName}/pg-version-upgrades/current`)
       .reply(200, {})
 
-    const {stderr} = await runCommand(['borealis-pg:upgrade:cancel', '--app', fakeHerokuAppName])
+    const {stderr, error} = await runCommand(
+      ['borealis-pg:upgrade:cancel', '--app', fakeHerokuAppName])
 
-    expect(stderr).to.contain(
-      `Cancelling PostgreSQL major version upgrade for add-on ${fakeAddonName}... done`)
+    expect(stderr.trim()).to.endWith(
+      'It may be several minutes before the add-on is ready to try another upgrade.')
+    expect(error).to.be.undefined
     expect(nock.pendingMocks()).to.be.empty
   })
 

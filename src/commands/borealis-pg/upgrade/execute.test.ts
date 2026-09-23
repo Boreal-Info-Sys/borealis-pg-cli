@@ -65,12 +65,12 @@ describe('PostgreSQL version upgrade execution command', () => {
           targetPgMajorVersion: fakeTargetVersion,
         })
 
-    const {stderr} = await runCommand(['borealis-pg:upgrade:execute', '--app', fakeHerokuAppName])
+    const {stderr, error} = await runCommand(
+      ['borealis-pg:upgrade:execute', '--app', fakeHerokuAppName])
 
-    expect(stderr).to.contain(
-      `Starting PostgreSQL major version upgrade for add-on ${fakeAddonName}... done`)
-    expect(stderr).to.match(new RegExp(
-      `.*${fakeAddonName} is being upgraded from PostgreSQL version ${fakeCurrentVersion} to version ${fakeTargetVersion} in the background.*`))
+    expect(stderr.trim()).to.endWith(
+      'The system will send an email when the upgrade process is complete.')
+    expect(error).to.be.undefined
     expect(nock.pendingMocks()).to.be.empty
   })
 

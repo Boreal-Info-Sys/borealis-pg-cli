@@ -90,7 +90,7 @@ describe('data integration registration command', () => {
         })
       .reply(201, expectedResponseContent)
 
-    const {stdout, stderr} = await runCommand([
+    const {stdout, error} = await runCommand([
       'borealis-pg:integrations:register',
       '--app',
       fakeHerokuAppName,
@@ -98,9 +98,6 @@ describe('data integration registration command', () => {
       fakeIntegrationName,
       fakeSshPublicKey,
     ])
-
-    expect(stderr).to.endWith(
-      `Registering data integration with add-on ${fakeAddonName}... done\n`)
 
     expect(stdout).to.containIgnoreSpaces(`Database Host: ${fakeDbHost}`)
     expect(stdout).to.containIgnoreSpaces(`Database Port: ${fakeDbPort}`)
@@ -112,6 +109,8 @@ describe('data integration registration command', () => {
     expect(stdout).to.containIgnoreSpaces(`SSH Username: ${fakeSshUsername}`)
     expect(stdout).to.containIgnoreSpaces(
       `SSH Server Public Host Key: ${fakePublicSshHostKey}`)
+
+    expect(error).to.be.undefined
 
     expect(nock.pendingMocks()).to.be.empty
   })
@@ -127,7 +126,7 @@ describe('data integration registration command', () => {
         })
       .reply(201, expectedResponseContent)
 
-    const {stdout, stderr} = await runCommand([
+    const {stdout, error} = await runCommand([
       'borealis-pg:integrations:register',
       '-a',
       fakeHerokuAppName,
@@ -136,9 +135,6 @@ describe('data integration registration command', () => {
       '-w',
       fakeSshPublicKey,
     ])
-
-    expect(stderr).to.endWith(
-      `Registering data integration with add-on ${fakeAddonName}... done\n`)
 
     expect(stdout).to.containIgnoreSpaces(`Database Host: ${fakeDbHost}`)
     expect(stdout).to.containIgnoreSpaces(`Database Port: ${fakeDbPort}`)
@@ -150,6 +146,8 @@ describe('data integration registration command', () => {
     expect(stdout).to.containIgnoreSpaces(`SSH Username: ${fakeSshUsername}`)
     expect(stdout).to.containIgnoreSpaces(
       `SSH Server Public Host Key: ${fakePublicSshHostKey}`)
+
+    expect(error).to.be.undefined
 
     expect(nock.pendingMocks()).to.be.empty
   })
@@ -165,7 +163,7 @@ describe('data integration registration command', () => {
         })
       .reply(201, expectedResponseContent)
 
-    const {stdout, stderr} = await runCommand([
+    const {stdout, error} = await runCommand([
       'borealis-pg:integrations:register',
       '--app',
       fakeHerokuAppName,
@@ -173,9 +171,6 @@ describe('data integration registration command', () => {
       fakeIntegrationName,
       ...fakeSshPublicKeyPieces,  // Note that the SSH public key is split across two separate args
     ])
-
-    expect(stderr).to.endWith(
-      `Registering data integration with add-on ${fakeAddonName}... done\n`)
 
     expect(stdout).to.containIgnoreSpaces(`Database Host: ${fakeDbHost}`)
     expect(stdout).to.containIgnoreSpaces(`Database Port: ${fakeDbPort}`)
@@ -187,6 +182,8 @@ describe('data integration registration command', () => {
     expect(stdout).to.containIgnoreSpaces(`SSH Username: ${fakeSshUsername}`)
     expect(stdout).to.containIgnoreSpaces(
       `SSH Server Public Host Key: ${fakePublicSshHostKey}`)
+
+    expect(error).to.be.undefined
 
     expect(nock.pendingMocks()).to.be.empty
   })

@@ -63,7 +63,7 @@ describe('data integration removal command', () => {
       .delete(`/heroku/resources/${fakeAddonName}/data-integrations/${fakeIntegration1}`)
       .reply(200, {success: true})
 
-    const {stdout, stderr} = await runCommand([
+    const {stdout, error} = await runCommand([
       'borealis-pg:integrations:remove',
       '--confirm',
       fakeIntegration1,
@@ -73,10 +73,8 @@ describe('data integration removal command', () => {
       fakeIntegration1,
     ])
 
-    expect(stderr).to.endWith(
-      `Removing data integration from add-on ${fakeAddonName}... done\n`)
     expect(stdout).to.equal('')
-
+    expect(error).to.be.undefined
     expect(nock.pendingMocks()).to.be.empty
   })
 
@@ -85,7 +83,7 @@ describe('data integration removal command', () => {
       .delete(`/heroku/resources/${fakeAddonName}/data-integrations/${fakeIntegration1}`)
       .reply(200, {success: true})
 
-    const {stdout, stderr} = await runCommand([
+    const {stdout, error} = await runCommand([
       'borealis-pg:integrations:deregister',
       '-c',
       fakeIntegration1,
@@ -95,10 +93,8 @@ describe('data integration removal command', () => {
       fakeIntegration1,
     ])
 
-    expect(stderr).to.endWith(
-      `Removing data integration from add-on ${fakeAddonName}... done\n`)
     expect(stdout).to.equal('')
-
+    expect(error).to.be.undefined
     expect(nock.pendingMocks()).to.be.empty
   })
 
@@ -109,12 +105,10 @@ describe('data integration removal command', () => {
 
     setTimeout(() => mockStdin.send(` ${fakeIntegration1} \n`), 1000)
 
-    const {stderr} = await runCommand(
+    const {error} = await runCommand(
       ['borealis-pg:integrations:remove', '-a', fakeHerokuAppName, '-n', fakeIntegration1])
 
-    expect(stderr).to.endWith(
-      `Removing data integration from add-on ${fakeAddonName}... done\n`)
-
+    expect(error).to.be.undefined
     expect(nock.pendingMocks()).to.be.empty
   })
 

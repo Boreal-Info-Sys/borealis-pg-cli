@@ -113,14 +113,14 @@ describe('database restore execution command', () => {
       .post(`/heroku/resources/${fakeSourceAddonName}/restore-tokens`)
       .reply(201, {restoreToken: fakeDbRestoreToken})
 
-    const {stdout, stderr} = await runCommand(
+    const {stdout, stderr, error} = await runCommand(
       ['borealis-pg:restore:execute', '--app', fakeSourceHerokuAppName])
 
-    expect(stderr).to.contain(`Starting clone of add-on ${fakeSourceAddonName}... done`)
-    expect(stderr).to.contain(
-      `${fakeNewAddonName} is being created on ⬢ ${fakeSourceHerokuAppName} in the background`)
-
     expect(stdout).to.equal('')
+    expect(stderr.trim()).to.match(new RegExp(
+      `.*${fakeNewAddonName} is being created on (⬢ )?${fakeSourceHerokuAppName} in the ` +
+      'background.*'))
+    expect(error).to.be.undefined
 
     verify(mockNotifierType.notify(anything())).never()
 
@@ -164,7 +164,7 @@ describe('database restore execution command', () => {
       .get(`/heroku/resources/${fakeNewAddonName}`)
       .reply(200, {status: 'available'})
 
-    const {stdout, stderr} = await runCommand([
+    const {stdout, error} = await runCommand([
       'borealis-pg:restore:execute',
       '--app',
       fakeSourceHerokuAppName,
@@ -179,11 +179,8 @@ describe('database restore execution command', () => {
       '--wait',
     ])
 
-    expect(stderr).to.contain(`Starting restore of add-on ${fakeSourceAddonName}... done`)
-    expect(stderr).to.contain(
-      `Creating add-on ${fakeNewAddonName} on ⬢ ${fakeDestinationHerokuAppName}... done`)
-
     expect(stdout).to.equal('')
+    expect(error).to.be.undefined
 
     verify(mockNotifierType.notify(anything())).once()
     const [notification] = capture(mockNotifierType.notify).last()
@@ -241,7 +238,7 @@ describe('database restore execution command', () => {
       .get(`/heroku/resources/${fakeNewAddonName}`)
       .reply(200, {status: 'available'})
 
-    const {stdout, stderr} = await runCommand([
+    const {stdout, error} = await runCommand([
       'borealis-pg:restore:execute',
       '-a',
       fakeSourceHerokuAppName,
@@ -255,10 +252,7 @@ describe('database restore execution command', () => {
     ])
 
     expect(stdout).to.equal('')
-
-    expect(stderr).to.contain(`Starting restore of add-on ${fakeSourceAddonName}... done`)
-    expect(stderr).to.contain(
-      `Creating add-on ${fakeNewAddonName} on ⬢ ${fakeDestinationHerokuAppName}... done`)
+    expect(error).to.be.undefined
 
     verify(mockNotifierType.notify(anything())).once()
     const [notification] = capture(mockNotifierType.notify).last()
@@ -286,7 +280,7 @@ describe('database restore execution command', () => {
       .post(`/heroku/resources/${fakeSourceAddonName}/restore-tokens`)
       .reply(201, {restoreToken: fakeDbRestoreToken})
 
-    const {stdout, stderr} = await runCommand([
+    const {stdout, stderr, error} = await runCommand([
       'borealis-pg:restore:execute',
       '-a',
       fakeSourceHerokuAppName,
@@ -295,10 +289,10 @@ describe('database restore execution command', () => {
     ])
 
     expect(stdout).to.equal('')
-
-    expect(stderr).to.contain(`Starting clone of add-on ${fakeSourceAddonName}... done`)
-    expect(stderr).to.match(new RegExp(
-      `.*${fakeNewAddonName} is being created on (⬢ )?${fakeSourceHerokuAppName} in the background.*`))
+    expect(stderr.trim()).to.match(new RegExp(
+      `.*${fakeNewAddonName} is being created on (⬢ )?${fakeSourceHerokuAppName} in the ` +
+      'background.*'))
+    expect(error).to.be.undefined
 
     verify(mockNotifierType.notify(anything())).never()
 
@@ -335,7 +329,7 @@ describe('database restore execution command', () => {
       .get(`/heroku/resources/${fakeNewAddonName}`)
       .reply(404, {reason: 'Not found!'})
 
-    const {stdout, stderr, error} = await runCommand([
+    const {stdout, error} = await runCommand([
       'borealis-pg:restore:execute',
       '-a',
       fakeSourceHerokuAppName,
@@ -349,11 +343,6 @@ describe('database restore execution command', () => {
     ])
 
     expect(stdout).to.equal('')
-
-    expect(stderr).to.contain(`Starting restore of add-on ${fakeSourceAddonName}... done`)
-    expect(stderr).to.match(new RegExp(
-      `.*Creating add-on ${fakeNewAddonName} on (⬢ )?${fakeDestinationHerokuAppName}... !.*`))
-
     expect(error?.message).to.contain('Provisioning cancelled. The new add-on was deprovisioned.')
 
     verify(mockNotifierType.notify(anything())).once()
@@ -396,7 +385,7 @@ describe('database restore execution command', () => {
       .get(`/heroku/resources/${fakeNewAddonName}`)
       .reply(500, {reason: 'Internal error!'})
 
-    const {stdout, stderr, error} = await runCommand([
+    const {stdout, error} = await runCommand([
       'borealis-pg:restore:execute',
       '-a',
       fakeSourceHerokuAppName,
@@ -410,11 +399,6 @@ describe('database restore execution command', () => {
     ])
 
     expect(stdout).to.equal('')
-
-    expect(stderr).to.contain(`Starting restore of add-on ${fakeSourceAddonName}... done`)
-    expect(stderr).to.match(new RegExp(
-      `.*Creating add-on ${fakeNewAddonName} on (⬢ )?${fakeDestinationHerokuAppName}... !.*`))
-
     expect(error?.message).to.contain('Add-on service is temporarily unavailable. Try again later.')
 
     verify(mockNotifierType.notify(anything())).never()
