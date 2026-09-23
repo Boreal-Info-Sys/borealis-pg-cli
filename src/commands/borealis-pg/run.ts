@@ -2,9 +2,12 @@ import {HTTP, HTTPError} from '@heroku/http-call'
 import color from '@heroku-cli/color'
 import {Command, flags} from '@heroku-cli/command'
 import {ConfigVars} from '@heroku-cli/schema'
-import {ux} from '@oclif/core'
+import {stringify as csvStringify} from 'csv-stringify'
 import {readFileSync} from 'fs'
+import {dump as yamlDump} from 'js-yaml'
+import {text as streamToText} from 'node:stream/consumers'
 import {QueryResult} from 'pg'
+import Table, {Header} from 'tty-table'
 import {applyActionSpinner} from '../../async-actions'
 import {getBorealisPgApiUrl, getBorealisPgAuthHeader} from '../../borealis-api'
 import {
@@ -82,7 +85,7 @@ used in combination with any PostgreSQL client (e.g. a graphical user interface
 like pgAdmin).`
 
   static examples = [
-    `$ heroku borealis-pg:run --${appOptionName} sushi --${dbCommandOptionName} 'SELECT * FROM hello_greeting' --${outputFormatOptionName} csv`,
+    `$ heroku borealis-pg:run --${appOptionName} sushi --${dbCommandOptionName} 'SELECT * FROM hello_greeting' --${outputFormatOptionName} json`,
     `$ heroku borealis-pg:run --${appOptionName} sushi --${addonOptionName} BOREALIS_PG_MAROON --${dbCommandFileOptionName} ~/scripts/example.sql --${personalUserOptionName}`,
     `$ heroku borealis-pg:run --${addonOptionName} borealis-pg-hex-12345 --${shellCommandOptionName} './manage.py migrate' --${writeAccessOptionName}`,
   ]
@@ -137,8 +140,8 @@ like pgAdmin).`
 
     const dbCommand = this.getDbCommand(flags[dbCommandOptionName], flags[dbCommandFileOptionName])
 
-    const normalizedOutputFormat =
-      (flags.format === defaultOutputFormat) ? undefined : flags.format
+    /* istanbul ignore next */
+    const normalizedOutputFormat: string = flags.format || defaultOutputFormat
 
     const attachmentInfo =
       await fetchAddonAttachmentInfo(this.heroku, flags.addon, flags.app, this.error)
@@ -148,7 +151,7 @@ like pgAdmin).`
       addonInfo,
       flags[personalUserOptionName],
       flags[writeAccessOptionName],
-      typeof normalizedOutputFormat === 'undefined')
+      normalizedOutputFormat === defaultOutputFormat)
 
     const localPgHost = await getLocalPgHost()
     const fullConnInfo = {ssh: sshConnInfo, db: dbConnInfo, localPgHost, localPgPort: flags.port}
@@ -265,7 +268,7 @@ like pgAdmin).`
   private executeDbCommand(
     connInfo: FullConnectionInfo,
     dbCommand: string,
-    outputFormat?: string): void {
+    outputFormat: string): void {
     openSshTunnel(
       connInfo,
       {debug: this.debug, info: this.log, warn: this.warn, error: this.error},
@@ -290,39 +293,35 @@ like pgAdmin).`
 
         pgClient.query(
           dbCommand,
-          (err: Error | null | undefined, results: QueryResult<any> | QueryResult<any>[]) => {
+          async (err: Error | null | undefined, results: QueryResult<any> | QueryResult<any>[]) => {
             if (err) {
               // Do not let the error function exit or it will generate an ugly stack trace
               this.error(err, {exit: false})
               tunnelServices.nodeProcess.exit(1)
-            } else {
-              // When multiple statements are executed, the query result will be an array
-              const resultInstance = Array.isArray(results) ? results[results.length - 1] : results
-
-              if (resultInstance.fields && resultInstance.fields.length > 0) {
-                const columns = resultInstance.fields.reduce(
-                  (accumulator: {[name: string]: any}, field) => {
-                    accumulator[field.name] = {header: field.name}
-
-                    return accumulator
-                  },
-                  {})
-
-                ux.table(
-                  resultInstance.rows,
-                  columns,
-                  {'no-truncate': true, output: outputFormat})
-              }
-
-              if (!outputFormat) {
-                // Only show the row count for the default format (undefined aka "table")
-                const rowSuffix = resultInstance.rowCount === 1 ? 'row' : 'rows'
-                this.log()
-                this.log(`(${resultInstance.rowCount ?? 0} ${rowSuffix})`)
-              }
-
-              pgClient.end()
             }
+
+            // When multiple statements are executed, the query result will be an array
+            const resultInstance = Array.isArray(results) ? results[results.length - 1] : results
+
+            if (resultInstance.fields && resultInstance.fields.length > 0) {
+              if (outputFormat == 'csv') {
+                this.log(await renderResultsCsv(resultInstance))
+              } else if (outputFormat === 'json') {
+                this.log(renderResultsJson(resultInstance))
+              } else if (outputFormat == 'yaml') {
+                this.log(renderResultsYaml(resultInstance))
+              } else {
+                this.log(renderResultsTable(resultInstance))
+              }
+            }
+
+            if (outputFormat === defaultOutputFormat) {
+              // Only show the row count for the default format
+              const rowSuffix = resultInstance.rowCount === 1 ? 'row' : 'rows'
+              this.log(`(${resultInstance.rowCount ?? 0} ${rowSuffix})`)
+            }
+
+            pgClient.end()
           })
       })
   }
@@ -384,7 +383,7 @@ like pgAdmin).`
     }
   }
 
-  async catch(err: any) {
+  async catch(err: Error) {
     /* istanbul ignore else */
     if (err instanceof HTTPError) {
       if (err.statusCode === 403) {
@@ -407,4 +406,36 @@ like pgAdmin).`
       throw err
     }
   }
+}
+
+function renderResultsTable(resultInstance: QueryResult<any>) {
+  const headers: Header[] = resultInstance.fields.map(field => (
+    {
+      value: field.name,
+      headerAlign: 'left',
+      align: 'left',
+      headerColor: 'white',
+      formatter: cellValue => (cellValue instanceof Date) ? cellValue.toISOString() : cellValue,
+    }))
+
+  const table = Table(
+    headers,
+    resultInstance.rows,
+    {truncate: false, borderStyle: 'dashed', compact: true}
+  )
+
+  return table.render()
+}
+
+async function renderResultsCsv(resultInstance: QueryResult<any>) {
+  return streamToText(
+    csvStringify(resultInstance.rows, {header: true, cast: {date: value => value.toISOString()}}))
+}
+
+function renderResultsJson(resultInstance: QueryResult<any>) {
+  return JSON.stringify(resultInstance.rows, undefined, 2)
+}
+
+function renderResultsYaml(resultInstance: QueryResult<any>) {
+  return yamlDump(resultInstance.rows)
 }

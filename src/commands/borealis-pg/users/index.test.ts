@@ -1,4 +1,6 @@
-import {borealisPgApiBaseUrl, expect, herokuApiBaseUrl, test} from '../../../test-utils'
+import {runCommand} from '@oclif/test'
+import nock from 'nock'
+import {borealisPgApiBaseUrl, expect, herokuApiBaseUrl} from '../../../test-utils'
 
 const fakeAddonId = 'c47cc174-9509-463e-aa75-f0794c5ee595'
 const fakeAddonName = 'my-super-neat-fake-addon'
@@ -23,123 +25,123 @@ const fakePersonalReadWriteUsername2 = 'p_rw_ghijkl'
 const fakeHerokuAuthToken = 'my-fake-heroku-auth-token'
 const fakeHerokuAuthId = 'my-fake-heroku-auth'
 
-const defaultTestContext = test.stdout()
-  .stderr()
-  .nock(herokuApiBaseUrl, api => api
-    .post('/oauth/authorizations', {
-      description: 'Borealis PG CLI plugin temporary auth token',
-      expires_in: 180,
-      scope: ['read', 'identity'],
-    })
-    .reply(201, {id: fakeHerokuAuthId, access_token: {token: fakeHerokuAuthToken}})
-    .delete(`/oauth/authorizations/${fakeHerokuAuthId}`)
-    .reply(200)
-    .get(`/apps/${fakeHerokuAppName}/addons`)
-    .reply(200, [
-      {
-        addon_service: {name: 'other-addon-service'},
-        id: '44b5b636-963e-4149-8478-0d8277aa7a41',
-        name: 'other-addon',
-      },
-      {addon_service: {name: 'borealis-pg'}, id: fakeAddonId, name: fakeAddonName},
-    ])
-    .get(`/addons/${fakeAddonId}/addon-attachments`)
-    .reply(200, [
-      {
-        addon: {id: fakeAddonId, name: fakeAddonName},
-        app: {id: fakeHerokuAppId, name: fakeHerokuAppName},
-        id: fakeAttachmentId,
-        name: fakeAttachmentName,
-      },
-    ]))
-
 describe('database users command', () => {
-  defaultTestContext
-    .nock(
-      borealisPgApiBaseUrl,
-      {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}},
-      api => api.get(`/heroku/resources/${fakeAddonName}/db-users`)
-        .reply(
-          200,
-          {
-            users: [
-              {
-                displayName: null,
-                readOnlyUsername: fakeAppReadOnlyUsername,
-                readWriteUsername: fakeAppReadWriteUsername,
-                userType: 'app',
-              },
-              {
-                displayName: fakePersonalUser1,
-                readOnlyUsername: fakePersonalReadOnlyUsername1,
-                readWriteUsername: fakePersonalReadWriteUsername1,
-                userType: 'personal',
-              },
-              {
-                displayName: fakePersonalUser2,
-                readOnlyUsername: fakePersonalReadOnlyUsername2,
-                readWriteUsername: fakePersonalReadWriteUsername2,
-                userType: 'personal',
-              },
-            ],
-          }))
-    .command(['borealis-pg:users', '--app', fakeHerokuAppName])
-    .it('displays DB users for an add-on', ctx => {
-      expect(ctx.stderr).to.contain(`Fetching user list for add-on ${fakeAddonName}... done`)
+  beforeEach(() => {
+    nock(herokuApiBaseUrl)
+      .post('/oauth/authorizations', {
+        description: 'Borealis PG CLI plugin temporary auth token',
+        expires_in: 180,
+        scope: ['read', 'identity'],
+      })
+      .reply(201, {id: fakeHerokuAuthId, access_token: {token: fakeHerokuAuthToken}})
+      .delete(`/oauth/authorizations/${fakeHerokuAuthId}`)
+      .reply(200)
+      .get(`/apps/${fakeHerokuAppName}/addons`)
+      .reply(200, [
+        {
+          addon_service: {name: 'other-addon-service'},
+          id: '44b5b636-963e-4149-8478-0d8277aa7a41',
+          name: 'other-addon',
+        },
+        {addon_service: {name: 'borealis-pg'}, id: fakeAddonId, name: fakeAddonName},
+      ])
+      .get(`/addons/${fakeAddonId}/addon-attachments`)
+      .reply(200, [
+        {
+          addon: {id: fakeAddonId, name: fakeAddonName},
+          app: {id: fakeHerokuAppId, name: fakeHerokuAppName},
+          id: fakeAttachmentId,
+          name: fakeAttachmentName,
+        },
+      ])
+  })
 
-      expect(ctx.stdout).to.containIgnoreSpaces(
-        ' Add-on User             DB Read-only Username DB Read/Write Username \n' +
-        ' ─────────────────────── ───────────────────── ────────────────────── \n' +
-        ` Heroku App User ${fakeAppReadOnlyUsername} ${fakeAppReadWriteUsername} \n` +
-        ` ${fakePersonalUser1} ${fakePersonalReadOnlyUsername1} ${fakePersonalReadWriteUsername1} \n` +
-        ` ${fakePersonalUser2} ${fakePersonalReadOnlyUsername2} ${fakePersonalReadWriteUsername2} \n`)
-    })
+  afterEach(() => {
+    nock.cleanAll()
+  })
 
-  defaultTestContext
-    .nock(
-      borealisPgApiBaseUrl,
-      {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}},
-      api => api.get(`/heroku/resources/${fakeAddonName}/db-users`)
-        .reply(200, {users: []}))
-    .command(['borealis-pg:users', '-a', fakeHerokuAppName])
-    .it('displays a warning when there are no DB users', ctx => {
-      expect(ctx.stderr).to.contain(`Fetching user list for add-on ${fakeAddonName}... done`)
-      expect(ctx.stderr).to.contain('No users found')
-    })
+  it('displays DB users for an add-on', async () => {
+    nock(borealisPgApiBaseUrl, {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}})
+      .get(`/heroku/resources/${fakeAddonName}/db-users`)
+      .reply(
+        200,
+        {
+          users: [
+            {
+              displayName: null,
+              readOnlyUsername: fakeAppReadOnlyUsername,
+              readWriteUsername: fakeAppReadWriteUsername,
+              userType: 'app',
+            },
+            {
+              displayName: fakePersonalUser1,
+              readOnlyUsername: fakePersonalReadOnlyUsername1,
+              readWriteUsername: fakePersonalReadWriteUsername1,
+              userType: 'personal',
+            },
+            {
+              displayName: fakePersonalUser2,
+              readOnlyUsername: fakePersonalReadOnlyUsername2,
+              readWriteUsername: fakePersonalReadWriteUsername2,
+              userType: 'personal',
+            },
+          ],
+        })
 
-  defaultTestContext
-    .nock(
-      borealisPgApiBaseUrl,
-      {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}},
-      api => api.get(`/heroku/resources/${fakeAddonName}/db-users`)
-        .reply(404, {reason: 'Not found'}))
-    .command(['borealis-pg:users', '-a', fakeHerokuAppName])
-    .catch('Add-on is not a Borealis Isolated Postgres add-on')
-    .it('exits with an error when the add-on was not found', ctx => {
-      expect(ctx.stdout).to.equal('')
-    })
+    const {stdout, error} = await runCommand(['borealis-pg:users', '--app', fakeHerokuAppName])
 
-  defaultTestContext
-    .nock(
-      borealisPgApiBaseUrl,
-      {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}},
-      api => api.get(`/heroku/resources/${fakeAddonName}/db-users`)
-        .reply(422, {reason: 'Not done yet'}))
-    .command(['borealis-pg:users', '-a', fakeHerokuAppName])
-    .catch('Add-on is not finished provisioning')
-    .it('exits with an error when the add-on is not finished provisioning', ctx => {
-      expect(ctx.stdout).to.equal('')
-    })
+    expect(stdout).to.containIgnoreSpaces(
+      '| Add-on User | DB Read-only Username | DB Read/Write Username |')
+    expect(stdout).to.containIgnoreSpaces(
+      `| Heroku App User | ${fakeAppReadOnlyUsername} | ${fakeAppReadWriteUsername} |\n` +
+      `| ${fakePersonalUser1} | ${fakePersonalReadOnlyUsername1} | ${fakePersonalReadWriteUsername1} |\n` +
+      `| ${fakePersonalUser2} | ${fakePersonalReadOnlyUsername2} | ${fakePersonalReadWriteUsername2} |\n`)
 
-  defaultTestContext
-    .nock(
-      borealisPgApiBaseUrl,
-      {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}},
-      api => api.get(`/heroku/resources/${fakeAddonName}/db-users`)
-        .reply(500, {reason: 'Server error'}))
-    .command(['borealis-pg:users', '-a', fakeHerokuAppName])
-    .catch('Add-on service is temporarily unavailable. Try again later.')
-    .it('exits with an error when there is an API server error', ctx => {
-      expect(ctx.stdout).to.equal('')
-    })
+    expect(error).to.be.undefined
+  })
+
+  it('displays a warning when there are no DB users', async () => {
+    nock(borealisPgApiBaseUrl, {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}})
+      .get(`/heroku/resources/${fakeAddonName}/db-users`)
+      .reply(200, {users: []})
+
+    const {stdout, stderr, error} = await runCommand(['borealis-pg:users', '-a', fakeHerokuAppName])
+
+    expect(stdout).to.equal('')
+    expect(stderr.trim()).to.endWith('No users found')
+    expect(error).to.be.undefined
+  })
+
+  it('exits with an error when the add-on was not found', async () => {
+    nock(borealisPgApiBaseUrl, {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}})
+      .get(`/heroku/resources/${fakeAddonName}/db-users`)
+      .reply(404, {reason: 'Not found'})
+
+    const {stdout, error} = await runCommand(['borealis-pg:users', '-a', fakeHerokuAppName])
+
+    expect(stdout).to.equal('')
+    expect(error?.message).to.contain('Add-on is not a Borealis Isolated Postgres add-on')
+  })
+
+  it('exits with an error when the add-on is not finished provisioning', async () => {
+    nock(borealisPgApiBaseUrl, {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}})
+      .get(`/heroku/resources/${fakeAddonName}/db-users`)
+      .reply(422, {reason: 'Not done yet'})
+
+    const {stdout, error} = await runCommand(['borealis-pg:users', '-a', fakeHerokuAppName])
+
+    expect(stdout).to.equal('')
+    expect(error?.message).to.contain('Add-on is not finished provisioning')
+  })
+
+  it('exits with an error when there is an API server error', async () => {
+    nock(borealisPgApiBaseUrl, {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}})
+      .get(`/heroku/resources/${fakeAddonName}/db-users`)
+      .reply(500, {reason: 'Server error'})
+
+    const {stdout, error} = await runCommand(['borealis-pg:users', '-a', fakeHerokuAppName])
+
+    expect(stdout).to.equal('')
+    expect(error?.message).to.contain('Add-on service is temporarily unavailable. Try again later.')
+  })
 })

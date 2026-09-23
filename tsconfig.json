@@ -1,20 +1,23 @@
 {
   "compilerOptions": {
     "declaration": true,
-    "esModuleInterop": true,
-    "importHelpers": true,
-    "lib": ["es2020"],
-    "module": "commonjs",
-    "outDir": "lib",
+    "ignoreDeprecations": "6.0",
+    "module": "node20",
+    "moduleResolution": "node16",
+    "outDir": "dist",
     "rootDir": "src",
     "strict": true,
-    "target": "es2019"
+    "target": "es2022",
+    "types": [
+      "mocha",
+      "node"
+    ]
   },
-  "exclude": [
-    "src/**/*.test.ts"
-  ],
   "include": [
     "src/**/*",
     "types/**/*"
-  ]
+  ],
+  "ts-node": {
+    "esm": true
+  }
 }

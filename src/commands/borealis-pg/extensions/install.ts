@@ -159,7 +159,7 @@ https://www.borealis-data.com/pg-extensions-support.html`
     }
   }
 
-  async catch(err: any) {
+  async catch(err: Error) {
     const {args} = await this.parse(InstallPgExtensionsCommand)
     const pgExtension = args[pgExtensionArgName]
 

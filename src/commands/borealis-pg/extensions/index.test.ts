@@ -1,4 +1,6 @@
-import {borealisPgApiBaseUrl, expect, herokuApiBaseUrl, test} from '../../../test-utils'
+import {runCommand} from '@oclif/test'
+import nock from 'nock'
+import {borealisPgApiBaseUrl, expect, herokuApiBaseUrl} from '../../../test-utils'
 
 const fakeAddonId = '0818035e-0103-4f85-880d-c3b4a712cf8d'
 const fakeAddonName = 'borealis-pg-my-fake-addon'
@@ -20,100 +22,102 @@ const fakeExt2 = 'my-second-fake-pg-extension'
 const fakeExt2Schema = 'my-second-fake-db-schema'
 const fakeExt2Version = '0.7.15'
 
-const defaultTestContext = test.stdout()
-  .stderr()
-  .nock(herokuApiBaseUrl, api => api
-    .post('/oauth/authorizations', {
-      description: 'Borealis PG CLI plugin temporary auth token',
-      expires_in: 180,
-      scope: ['read', 'identity'],
-    })
-    .reply(201, {id: fakeHerokuAuthId, access_token: {token: fakeHerokuAuthToken}})
-    .delete(`/oauth/authorizations/${fakeHerokuAuthId}`)
-    .reply(200)
-    .get(`/apps/${fakeHerokuAppName}/addons`)
-    .reply(200, [
-      {
-        addon_service: {name: 'other-addon-service'},
-        id: '362885fa-b06b-434d-b3eb-a0ac53e3f840',
-        name: 'other-addon',
-      },
-      {addon_service: {name: 'borealis-pg'}, id: fakeAddonId, name: fakeAddonName},
-    ])
-    .get(`/addons/${fakeAddonId}/addon-attachments`)
-    .reply(200, [
-      {
-        addon: {id: fakeAddonId, name: fakeAddonName},
-        app: {id: fakeHerokuAppId, name: fakeHerokuAppName},
-        id: fakeAttachmentId,
-        name: fakeAttachmentName,
-      },
-    ]))
-
 describe('extension list command', () => {
-  defaultTestContext
-    .nock(
-      borealisPgApiBaseUrl,
-      {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}},
-      api => api.get(`/heroku/resources/${fakeAddonName}/pg-extensions`)
-        .reply(200, {
-          extensions: [
-            {name: fakeExt1, schema: fakeExt1Schema, version: fakeExt1Version},
-            {name: fakeExt2, schema: fakeExt2Schema, version: fakeExt2Version},
-          ],
-        }))
-    .command(['borealis-pg:extensions', '--app', fakeHerokuAppName])
-    .it('outputs the list of installed extensions', ctx => {
-      expect(ctx.stderr).to.endWith(
-        `Fetching Postgres extension list for add-on ${fakeAddonName}... done\n`)
-      expect(ctx.stdout).to.equal(
-        `- ${fakeExt1} (version: ${fakeExt1Version}, schema: ${fakeExt1Schema})\n` +
-        `- ${fakeExt2} (version: ${fakeExt2Version}, schema: ${fakeExt2Schema})\n`)
-    })
+  beforeEach(() => {
+    nock(herokuApiBaseUrl)
+      .post('/oauth/authorizations', {
+        description: 'Borealis PG CLI plugin temporary auth token',
+        expires_in: 180,
+        scope: ['read', 'identity'],
+      })
+      .reply(201, {id: fakeHerokuAuthId, access_token: {token: fakeHerokuAuthToken}})
+      .delete(`/oauth/authorizations/${fakeHerokuAuthId}`)
+      .reply(200)
+      .get(`/apps/${fakeHerokuAppName}/addons`)
+      .reply(200, [
+        {
+          addon_service: {name: 'other-addon-service'},
+          id: '362885fa-b06b-434d-b3eb-a0ac53e3f840',
+          name: 'other-addon',
+        },
+        {addon_service: {name: 'borealis-pg'}, id: fakeAddonId, name: fakeAddonName},
+      ])
+      .get(`/addons/${fakeAddonId}/addon-attachments`)
+      .reply(200, [
+        {
+          addon: {id: fakeAddonId, name: fakeAddonName},
+          app: {id: fakeHerokuAppId, name: fakeHerokuAppName},
+          id: fakeAttachmentId,
+          name: fakeAttachmentName,
+        },
+      ])
+  })
 
-  defaultTestContext
-    .nock(
-      borealisPgApiBaseUrl,
-      api => api.get(`/heroku/resources/${fakeAddonName}/pg-extensions`)
-        .reply(200, {extensions: []}))
-    .command(['borealis-pg:extensions', '-a', fakeHerokuAppName])
-    .it('outputs a warning if there are no extensions', ctx => {
-      expect(ctx.stderr).to.endWith(
-        `Fetching Postgres extension list for add-on ${fakeAddonName}... done\n` +
-        ' ›   Warning: No extensions found\n')
-      expect(ctx.stdout).to.equal('')
-    })
+  afterEach(() => {
+    nock.cleanAll()
+  })
 
-  defaultTestContext
-    .nock(
-      borealisPgApiBaseUrl,
-      api => api.get(`/heroku/resources/${fakeAddonName}/pg-extensions`)
-        .reply(404, {reason: 'Does not exist'}))
-    .command(['borealis-pg:extensions', '-a', fakeHerokuAppName])
-    .catch('Add-on is not a Borealis Isolated Postgres add-on')
-    .it('exits with an error if the add-on was not found', ctx => {
-      expect(ctx.stdout).to.equal('')
-    })
+  it('outputs the list of installed extensions', async () => {
+    nock(borealisPgApiBaseUrl, {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}})
+      .get(`/heroku/resources/${fakeAddonName}/pg-extensions`)
+      .reply(200, {
+        extensions: [
+          {name: fakeExt1, schema: fakeExt1Schema, version: fakeExt1Version},
+          {name: fakeExt2, schema: fakeExt2Schema, version: fakeExt2Version},
+        ],
+      })
 
-  defaultTestContext
-    .nock(
-      borealisPgApiBaseUrl,
-      api => api.get(`/heroku/resources/${fakeAddonName}/pg-extensions`)
-        .reply(422, {reason: 'Not ready yet'}))
-    .command(['borealis-pg:extensions', '-a', fakeHerokuAppName])
-    .catch('Add-on is not finished provisioning')
-    .it('exits with an error if the add-on is not done provisioning', ctx => {
-      expect(ctx.stdout).to.equal('')
-    })
+    const {stdout, error} = await runCommand(['borealis-pg:extensions', '--app', fakeHerokuAppName])
 
-  defaultTestContext
-    .nock(
-      borealisPgApiBaseUrl,
-      api => api.get(`/heroku/resources/${fakeAddonName}/pg-extensions`)
-        .reply(500, {reason: 'Something went wrong'}))
-    .command(['borealis-pg:extensions', '-a', fakeHerokuAppName])
-    .catch('Add-on service is temporarily unavailable. Try again later.')
-    .it('exits with an error if the Borealis PG API indicates a server error', ctx => {
-      expect(ctx.stdout).to.equal('')
-    })
+    expect(stdout).to.equal(
+      `- ${fakeExt1} (version: ${fakeExt1Version}, schema: ${fakeExt1Schema})\n` +
+      `- ${fakeExt2} (version: ${fakeExt2Version}, schema: ${fakeExt2Schema})\n`)
+    expect(error).to.be.undefined
+  })
+
+  it('outputs a warning if there are no extensions', async () => {
+    nock(borealisPgApiBaseUrl)
+      .get(`/heroku/resources/${fakeAddonName}/pg-extensions`)
+      .reply(200, {extensions: []})
+
+    const {stdout, stderr, error} = await runCommand(
+      ['borealis-pg:extensions', '-a', fakeHerokuAppName])
+
+    expect(stdout).to.equal('')
+    expect(stderr.trim()).to.endWith('Warning: No extensions found')
+    expect(error).to.be.undefined
+  })
+
+  it('exits with an error if the add-on was not found', async () => {
+    nock(borealisPgApiBaseUrl)
+      .get(`/heroku/resources/${fakeAddonName}/pg-extensions`)
+      .reply(404, {reason: 'Does not exist'})
+
+    const {stdout, error} = await runCommand(['borealis-pg:extensions', '-a', fakeHerokuAppName])
+
+    expect(stdout).to.equal('')
+    expect(error?.message).to.contain('Add-on is not a Borealis Isolated Postgres add-on')
+  })
+
+  it('exits with an error if the add-on is not done provisioning', async () => {
+    nock(borealisPgApiBaseUrl)
+      .get(`/heroku/resources/${fakeAddonName}/pg-extensions`)
+      .reply(422, {reason: 'Not ready yet'})
+
+    const {stdout, error} = await runCommand(['borealis-pg:extensions', '-a', fakeHerokuAppName])
+
+    expect(stdout).to.equal('')
+    expect(error?.message).to.contain('Add-on is not finished provisioning')
+  })
+
+  it('exits with an error if the Borealis PG API indicates a server error', async () => {
+    nock(borealisPgApiBaseUrl)
+      .get(`/heroku/resources/${fakeAddonName}/pg-extensions`)
+      .reply(500, {reason: 'Something went wrong'})
+
+    const {stdout, error} = await runCommand(['borealis-pg:extensions', '-a', fakeHerokuAppName])
+
+    expect(stdout).to.equal('')
+    expect(error?.message).to.contain('Add-on service is temporarily unavailable. Try again later.')
+  })
 })

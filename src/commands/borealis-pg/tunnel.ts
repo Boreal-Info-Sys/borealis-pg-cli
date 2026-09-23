@@ -154,7 +154,7 @@ steps are required to use a graphical user interface (e.g. pgAdmin).`)
     )
   }
 
-  async catch(err: any) {
+  async catch(err: Error) {
     /* istanbul ignore else */
     if (err instanceof HTTPError) {
       if (err.statusCode === 403) {

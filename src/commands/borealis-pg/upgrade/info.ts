@@ -72,7 +72,7 @@ the ${consoleColours.cliCmdName('borealis-pg:restore:execute')} command to begin
     return response.body
   }
 
-  async catch(err: any) {
+  async catch(err: Error) {
     /* istanbul ignore else */
     if (err instanceof HTTPError) {
       if (err.statusCode === 404) {

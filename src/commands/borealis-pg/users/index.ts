@@ -1,7 +1,7 @@
 import {HTTP, HTTPError} from '@heroku/http-call'
 import color from '@heroku-cli/color'
 import {Command} from '@heroku-cli/command'
-import {ux} from '@oclif/core'
+import Table, {Header} from 'tty-table'
 import {applyActionSpinner} from '../../../async-actions'
 import {getBorealisPgApiUrl, getBorealisPgAuthHeader} from '../../../borealis-api'
 import {
@@ -49,12 +49,29 @@ ${cliCmdColour('borealis-pg:users:reset')} command).`
       )
 
       if (response.body.users.length > 0) {
-        const columns: {[name: string]: any} = {
-          displayName: {header: 'Add-on User'},
-          readOnlyUsername: {header: 'DB Read-only Username'},
-          readWriteUsername: {header: 'DB Read/Write Username'},
-        }
-        const normalizedUsers = response.body.users.map(value => {
+        const headers: Header[] = [
+          {
+            alias: 'Add-on User',
+            value: 'displayName',
+            headerAlign: 'left',
+            align: 'left',
+            headerColor: 'white',
+          },
+          {
+            alias: 'DB Read-only Username',
+            value: 'readOnlyUsername',
+            headerAlign: 'left',
+            align: 'left',
+          },
+          {
+            alias: 'DB Read/Write Username',
+            value: 'readWriteUsername',
+            headerAlign: 'left',
+            align: 'left',
+            headerColor: 'white',
+          },
+        ]
+        const normalizedRows = response.body.users.map(value => {
           return {
             displayName: (value.displayName ?? 'Heroku App User'),
             readOnlyUsername: value.readOnlyUsername,
@@ -63,8 +80,13 @@ ${cliCmdColour('borealis-pg:users:reset')} command).`
           }
         })
 
-        this.log()
-        ux.table(normalizedUsers, columns, {'no-truncate': true})
+        const table = Table(
+          headers,
+          normalizedRows,
+          {truncate: false, borderStyle: 'dashed', compact: true},
+        )
+
+        this.log(table.render())
       } else {
         this.warn('No users found')
       }
@@ -73,7 +95,7 @@ ${cliCmdColour('borealis-pg:users:reset')} command).`
     }
   }
 
-  async catch(err: any) {
+  async catch(err: Error) {
     /* istanbul ignore else */
     if (err instanceof HTTPError) {
       if (err.statusCode === 404) {

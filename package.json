@@ -5,53 +5,56 @@
   "author": "Boreal Information Systems Inc.",
   "bugs": "https://github.com/Boreal-Info-Sys/borealis-pg-cli/issues",
   "dependencies": {
-    "@heroku-cli/command": "^11.8.0",
+    "@heroku-cli/color": "^2.0.8",
+    "@heroku-cli/command": "^13.2.0",
     "@heroku/http-call": "^5.6.1",
-    "@oclif/core": "^2.16.0",
+    "@oclif/core": "^4.14.0",
+    "csv-stringify": "^6.8.3",
     "dotenv": "^17.4.2",
+    "inquirer": "^14.2.2",
+    "js-yaml": "^5.4.2",
     "luxon": "^3.7.2",
     "node-notifier": "^10.0.1",
     "pg": "^8.23.0",
     "ssh2": "^1.17.0",
-    "tslib": "^2.8.1"
+    "tty-table": "^6.0.0"
   },
   "devDependencies": {
-    "@heroku-cli/schema": "^1.0.25",
-    "@oclif/test": "^2.5.6",
+    "@heroku-cli/schema": "^2.0.1",
+    "@oclif/test": "^4.2.0",
     "@types/chai": "^5.2.3",
     "@types/chai-as-promised": "^8.0.2",
     "@types/chai-string": "^1.4.5",
     "@types/luxon": "^3.7.5",
     "@types/mocha": "^10.0.10",
-    "@types/node": "^20.14.8",
+    "@types/node": "^22.20.1",
     "@types/node-notifier": "^8.0.5",
     "@types/pg": "^8.23.1",
     "@types/ssh2": "^1.15.5",
     "chai": "^6.2.2",
     "chai-as-promised": "^8.0.2",
     "chai-string": "^1.6.0",
-    "eslint": "^7.32.0",
-    "eslint-config-oclif": "^4.0.0",
-    "eslint-config-oclif-typescript": "^1.0.3",
-    "globby": "^11.1.0",
-    "mocha": "^12.0.0",
+    "eslint": "^10.10.0",
+    "mocha": "^12.0.1",
+    "mock-stdin": "^1.0.0",
     "nock": "^14.0.17",
     "nyc": "^18.0.0",
-    "oclif": "^5.0.1",
+    "oclif": "^4.24.0",
     "shx": "^0.4.0",
+    "tinyglobby": "^0.2.17",
     "ts-mockito": "^2.6.1",
     "ts-node": "^10.9.2",
-    "typescript": "~4.9.5"
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.70.0"
   },
   "resolutions": {
-    "@heroku-cli/command/**/uuid": "^11.1.1",
     "node-notifier/**/uuid": "^11.1.1"
   },
   "engines": {
-    "node": ">=16.20.2"
+    "node": ">=20.0.0"
   },
   "files": [
-    "/lib",
+    "/dist",
     "/npm-shrinkwrap.json",
     "/oclif.manifest.json",
     "/yarn.lock"
@@ -61,7 +64,7 @@
     "oclif-plugin"
   ],
   "license": "MIT",
-  "main": "lib/index.js",
+  "main": "dist/index.js",
   "nyc": {
     "all": true,
     "include": [
@@ -78,7 +81,7 @@
     "statements": 100
   },
   "oclif": {
-    "commands": "./lib/commands",
+    "commands": "./dist/commands",
     "bin": "heroku",
     "devPlugins": [
       "@oclif/plugin-help"
@@ -106,13 +109,13 @@
   },
   "repository": "Boreal-Info-Sys/borealis-pg-cli",
   "scripts": {
-    "build": "shx rm -rf lib && tsc -b",
-    "clean": "shx rm -rf lib node_modules",
-    "lint": "eslint --max-warnings 0 --ext .ts --config .eslintrc .",
+    "build": "shx rm -rf dist && tsc --project tsconfig.prod.json",
+    "clean": "shx rm -rf dist node_modules .nyc_output coverage tsconfig.tsbuildinfo",
+    "lint": "eslint --max-warnings 0 --ext .ts --config eslint.config.mjs .",
     "install": "node -e 'console.warn(\"NOTE: It is safe to ignore errors from gyp (if any) in the preceding output\")'",
     "postpack": "shx rm -f oclif.manifest.json",
     "prepack": "yarn build && oclif manifest && oclif readme --no-aliases",
-    "test": "nyc mocha --forbid-only 'src/**/*.test.ts'",
+    "test": "nyc mocha --forbid-only 'src/test-utils.ts' 'src/**/*.test.ts'",
     "version": "yarn build && oclif readme --no-aliases && git add README.md"
   }
 }

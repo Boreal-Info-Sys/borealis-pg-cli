@@ -49,12 +49,12 @@ describe('fetchAddonAttachmentInfo', () => {
 
   const fakeAddonId = '8e35dbfe-cb03-4a5d-b883-c286d228e7ab'
   const fakeAddonName = 'my-good-addon'
-  const fakeAddonInfo: AddOn = {
+  const fakeAddonInfo = {
     addon_service: {name: 'borealis-pg'},
     app: {id: fakeAppId, name: fakeAppName},
     id: fakeAddonId,
     name: fakeAddonName,
-  }
+  } as AddOn
 
   const fakeAddonAttachmentId = '09bb17cd-958d-443c-bb39-fcb51f693eba'
   const fakeAddonAttachmentName = 'MY_GREAT_DB'
@@ -185,12 +185,12 @@ describe('fetchAddonAttachmentInfo', () => {
         addon_service: {name: 'different-addon-type'},
         id: '80749abd-722d-4b08-ad96-5aec268397f6',
         name: 'different-addon',
-      },
+      } as AddOn,
       {
         app: {id: '88fc7097-0a97-4088-87c3-43d73bbd78f9', name: 'incorrect-app'},
         id: '16a60c67-afae-448c-9cb7-54b9bdcaf9c5',
         name: 'incorrect-addon',
-      },
+      } as AddOn,
       fakeAddonInfo,
     ]
     fakeAttachmentsListSuccessResponse.body = [
@@ -267,7 +267,7 @@ describe('fetchAddonAttachmentInfo', () => {
       app: {id: fakeAppId, name: fakeAppName},
       id: fakeAddonId,
       name: fakeAddonName,
-    }
+    } as AddOn
 
     await expect(
       fetchAddonAttachmentInfo(
@@ -298,12 +298,12 @@ describe('fetchAddonAttachmentInfo', () => {
         addon_service: {name: 'other-addon-type'},
         id: '16d7c3b4-1815-4fa9-80a9-cc9f193fec5b',
         name: 'other-addon',
-      },
+      } as AddOn,
       {
         addon_service: {name: 'incompatible-addon-type'},
         id: '74b79cd5-3a6d-451c-ad6d-ccd4762832d6',
         name: 'incompatible-addon',
-      },
+      } as AddOn,
     ]
 
     await expect(
@@ -374,12 +374,12 @@ describe('fetchAddonAttachmentInfo', () => {
         addon_service: {name: 'something-else-addon-type'},
         id: 'b85e5a0b-00e4-42cd-9d26-137a165beca0',
         name: 'something-else-addon',
-      },
+      } as AddOn,
       {
         addon_service: {name: 'borealis-pg'},
         id: 'a41d2243-2212-4d2c-b692-3bf0c7dbfa6f',
         name: 'other-borealis-addon',
-      },
+      } as AddOn,
     ]
 
     await expect(
@@ -525,7 +525,8 @@ describe('fetchAddonAttachmentInfo', () => {
       name: fakeAddonAttachmentName,
     }
     fakeAttachmentsResolveSuccessResponse.body = [invalidAttachmentInfo]
-    fakeAddonInfoSuccessResponse.body = {app: {id: fakeAppId, name: fakeAppName}, id: fakeAddonId}
+    fakeAddonInfoSuccessResponse.body =
+      {app: {id: fakeAppId, name: fakeAppName}, id: fakeAddonId} as AddOn
 
     when(mockHerokuApiClientType.get<AddOn>(`/addons/${invalidAttachmentInfo.addon?.id}`))
       .thenResolve(fakeAddonInfoSuccessResponse)

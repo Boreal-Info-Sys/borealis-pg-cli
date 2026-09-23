@@ -1,7 +1,7 @@
 import {HTTP, HTTPError} from '@heroku/http-call'
 import color from '@heroku-cli/color'
 import {Command, flags} from '@heroku-cli/command'
-import {ux} from '@oclif/core'
+import inquirer from 'inquirer'
 import {applyActionSpinner} from '../../../async-actions'
 import {getBorealisPgApiUrl, getBorealisPgAuthHeader} from '../../../borealis-api'
 import {
@@ -55,9 +55,7 @@ export default class RemovePgExtensionCommand extends Command {
     const pgExtension = args[pgExtensionArgName]
     const suppressMissing = flags[suppressMissingOptionName]
 
-    const confirmation = flags.confirm ?
-      flags.confirm :
-      (await ux.prompt('Enter the name of the extension to confirm its removal'))
+    const confirmation: string = flags.confirm ? flags.confirm : await promptForConfirmation()
 
     if (confirmation.trim() !== pgExtension) {
       this.error(`Invalid confirmation provided. Expected ${pgExtensionColour(pgExtension)}.`)
@@ -90,7 +88,7 @@ export default class RemovePgExtensionCommand extends Command {
     }
   }
 
-  async catch(err: any) {
+  async catch(err: Error) {
     const {args} = await this.parse(RemovePgExtensionCommand)
     const pgExtension = args[pgExtensionArgName]
 
@@ -117,6 +115,16 @@ export default class RemovePgExtensionCommand extends Command {
       throw err
     }
   }
+}
+
+async function promptForConfirmation(): Promise<string> {
+  const result = await inquirer.prompt({
+    type: 'input',
+    name: 'confirmation',
+    message: 'Enter the name of the extension to confirm its removal'
+  })
+
+  return result.confirmation
 }
 
 function getNotInstalledMessage(pgExtension: string): string {
