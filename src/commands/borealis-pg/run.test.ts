@@ -533,8 +533,6 @@ describe('noninteractive run command', () => {
 
     const queryCallback = getQueryCallbackFn()
 
-    const expectedRowCount = 3
-
     const {stdout} = await captureOutput(async () => queryCallback(null, {
       command: 'SELECT',
       fields: [{name: 'id'}, {name: 'value'}],
@@ -544,7 +542,7 @@ describe('noninteractive run command', () => {
         {id: 0, value: fakeInputDate},
         {id: '33', value: 3},
       ],
-      rowCount: expectedRowCount,
+      rowCount: 3,
     }))
 
     expect(stdout).to.contain(
@@ -552,7 +550,7 @@ describe('noninteractive run command', () => {
       '21,"Ted ""Big T"" Oz"\n' +
       `0,${fakeInputDate.toISOString()}\n` +
       '33,3\n')
-    expect(stdout).not.to.contain(`(${expectedRowCount} rows)`)
+    expect(stdout).not.to.match(/.*\(\d+ rows\).*/)
 
     verify(mockPgClientType.end()).once()
   })
@@ -571,26 +569,19 @@ describe('noninteractive run command', () => {
 
     const queryCallback = getQueryCallbackFn()
 
-    const expectedRowCount = 3
-
     const {stdout} = await captureOutput(async () => queryCallback(null, {
       command: 'SELECT',
       fields: [{name: 'id'}, {name: 'value'}],
       oid: 32_304,
       rows: [{id: 16, value: 'test1'}, {id: 19, value: 'test2'}, {id: '23', value: fakeInputDate}],
-      rowCount: expectedRowCount,
+      rowCount: 3,
     }))
 
-    expect(stdout).to.contain(
-      JSON.stringify(
-        [
-          {id: 16, value: 'test1'},
-          {id: 19, value: 'test2'},
-          {id: '23', value: fakeInputDate.toISOString()},
-        ],
-        undefined,
-        2))
-    expect(stdout).not.to.contain(`(${expectedRowCount} rows)`)
+    expect(stdout).to.equalIgnoreSpaces(JSON.stringify([
+      {id: 16, value: 'test1'},
+      {id: 19, value: 'test2'},
+      {id: '23', value: fakeInputDate.toISOString()},
+    ]))
 
     verify(mockPgClientType.end()).once()
   })
@@ -609,14 +600,12 @@ describe('noninteractive run command', () => {
 
     const queryCallback = getQueryCallbackFn()
 
-    const expectedRowCount = 3
-
     const {stdout} = await captureOutput(async () => queryCallback(null, {
       command: 'SELECT',
       fields: [{name: 'id'}, {name: 'value'}],
       oid: 32_304,
       rows: [{id: 1, value: fakeInputDate}, {id: 2, value: 'test1'}, {id: 3, value: 'test2'}],
-      rowCount: expectedRowCount,
+      rowCount: 3,
     }))
 
     expect(stdout).to.contain(
@@ -626,7 +615,7 @@ describe('noninteractive run command', () => {
       '  value: test1\n' +
       '- id: 3\n' +
       '  value: test2\n')
-    expect(stdout).not.to.contain(`(${expectedRowCount} rows)`)
+    expect(stdout).not.to.match(/.*\(\d+ rows\).*/)
 
     verify(mockPgClientType.end()).once()
   })
@@ -650,7 +639,7 @@ describe('noninteractive run command', () => {
     verify(mockPgClientType.end()).once()
   })
 
-  it('executes a database command from a file', async () => {
+  it('executes a database command from a file with the default output format', async () => {
     initDefaultRequestMocks()
 
     const {error} = await runCommand(
@@ -699,7 +688,7 @@ describe('noninteractive run command', () => {
     verify(mockPgClientType.end()).once()
   })
 
-  it('executes a database command from a file with a different output format', async () => {
+  it('executes a database command from a file with a custom output format', async () => {
     initDefaultRequestMocks()
 
     const {error} = await runCommand([
@@ -718,19 +707,16 @@ describe('noninteractive run command', () => {
 
     const queryCallback = getQueryCallbackFn(exampleFileContents)
 
-    const expectedRowCount = 2
-
     const {stdout} = await captureOutput(async () => queryCallback(null, {
       command: 'SELECT',
       fields: [{name: 'id'}, {name: 'value'}],
       oid: 32_304,
       rows: [{id: 1, value: 'one'}, {id: 2, value: 'two'}],
-      rowCount: expectedRowCount,
+      rowCount: 2,
     }))
 
-    expect(stdout).to.contain(
-      JSON.stringify([{id: 1, value: 'one'}, {id: 2, value: 'two'}], undefined, 2))
-    expect(stdout).not.to.contain(`(${expectedRowCount} rows)`)
+    expect(stdout).to.equalIgnoreSpaces(
+      JSON.stringify([{id: 1, value: 'one'}, {id: 2, value: 'two'}]))
 
     verify(mockPgClientType.end()).once()
   })
