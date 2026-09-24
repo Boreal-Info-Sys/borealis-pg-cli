@@ -55,7 +55,8 @@ export default class RemovePgExtensionCommand extends Command {
     const pgExtension = args[pgExtensionArgName]
     const suppressMissing = flags[suppressMissingOptionName]
 
-    const confirmation: string = flags.confirm ? flags.confirm : await promptForConfirmation()
+    const confirmation: string =
+      flags.confirm ? flags.confirm : await promptForConfirmation(pgExtension)
 
     if (confirmation.trim() !== pgExtension) {
       this.error(`Invalid confirmation provided. Expected ${pgExtensionColour(pgExtension)}.`)
@@ -117,12 +118,11 @@ export default class RemovePgExtensionCommand extends Command {
   }
 }
 
-async function promptForConfirmation(): Promise<string> {
-  const result = await inquirer.prompt({
-    type: 'input',
-    name: 'confirmation',
-    message: 'Enter the name of the extension to confirm its removal'
-  })
+async function promptForConfirmation(pgExtensionName: string): Promise<string> {
+  const message = `Enter the PostgreSQL extension's name (${pgExtensionColour(pgExtensionName)}) ` +
+    'to confirm its removal:'
+
+  const result = await inquirer.prompt({type: 'input', name: 'confirmation', message})
 
   return result.confirmation
 }

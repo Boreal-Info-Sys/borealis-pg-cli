@@ -45,7 +45,8 @@ export default class RemoveDataIntegrationCommand extends Command {
   async run() {
     const {flags} = await this.parse(RemoveDataIntegrationCommand)
     const integrationName = flags[dataIntegrationOptionName]
-    const confirmation: string = flags.confirm ? flags.confirm : await promptForConfirmation()
+    const confirmation: string =
+      flags.confirm ? flags.confirm : await promptForConfirmation(integrationName)
 
     if (confirmation.trim() !== integrationName) {
       this.error(
@@ -89,12 +90,11 @@ export default class RemoveDataIntegrationCommand extends Command {
   }
 }
 
-async function promptForConfirmation(): Promise<string> {
-  const result = await inquirer.prompt({
-    type: 'input',
-    name: 'confirmation',
-    message: 'Enter the name of the extension to confirm its removal'
-  })
+async function promptForConfirmation(integrationName: string): Promise<string> {
+  const message = "Enter the data integration's name " +
+  `(${dataIntegrationNameColour(integrationName)}) to confirm its removal:`
+
+  const result = await inquirer.prompt({type: 'input', name: 'confirmation', message})
 
   return result.confirmation
 }
