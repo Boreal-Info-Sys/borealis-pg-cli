@@ -14,6 +14,12 @@ import {
 } from '../../../command-components'
 import {createHerokuAuth, fetchAddonAttachmentInfo, removeHerokuAuth} from '../../../heroku-api'
 
+const defaultTableHeader = {
+  align: 'left',
+  headerAlign: 'left',
+  headerColor: 'bold',
+}
+
 const cliCmdColour = consoleColours.cliCmdName
 
 export default class ListUsersCommand extends Command {
@@ -51,24 +57,19 @@ ${cliCmdColour('borealis-pg:users:reset')} command).`
       if (response.body.users.length > 0) {
         const headers: Header[] = [
           {
+            ...defaultTableHeader,
             alias: 'Add-on User',
             value: 'displayName',
-            headerAlign: 'left',
-            align: 'left',
-            headerColor: 'white',
           },
           {
+            ...defaultTableHeader,
             alias: 'DB Read-only Username',
             value: 'readOnlyUsername',
-            headerAlign: 'left',
-            align: 'left',
           },
           {
+            ...defaultTableHeader,
             alias: 'DB Read/Write Username',
             value: 'readWriteUsername',
-            headerAlign: 'left',
-            align: 'left',
-            headerColor: 'white',
           },
         ]
         const normalizedRows = response.body.users.map(value => {

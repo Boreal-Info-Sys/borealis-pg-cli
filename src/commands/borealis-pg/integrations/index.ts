@@ -13,6 +13,12 @@ import {
 } from '../../../command-components'
 import {createHerokuAuth, fetchAddonAttachmentInfo, removeHerokuAuth} from '../../../heroku-api'
 
+const defaultTableHeader = {
+  align: 'left',
+  headerAlign: 'left',
+  headerColor: 'bold',
+}
+
 export default class ListDataIntegrationsCommand extends Command {
   static description = `List registered data integrations for a Borealis Isolated Postgres add-on
 
@@ -42,38 +48,29 @@ via a secure tunnel using semi-permanent SSH server and database credentials.`
       if (responseBody.integrations.length > 0) {
         const headers: Header[] = [
           {
+            ...defaultTableHeader,
             alias: 'Data Integration',
             value: 'name',
-            headerAlign: 'left',
-            align: 'left',
-            headerColor: 'white',
           },
           {
+            ...defaultTableHeader,
             alias: 'DB Username',
             value: 'dbUsername',
-            headerAlign: 'left',
-            align: 'left',
           },
           {
+            ...defaultTableHeader,
             alias: 'SSH Username',
             value: 'sshUsername',
-            headerAlign: 'left',
-            align: 'left',
-            headerColor: 'white',
           },
           {
+            ...defaultTableHeader,
             alias: 'Write Access',
             value: 'writeAccess',
-            headerAlign: 'left',
-            align: 'left',
-            headerColor: 'white',
           },
           {
+            ...defaultTableHeader,
             alias: 'Created At',
             value: 'createdAt',
-            headerAlign: 'left',
-            align: 'left',
-            headerColor: 'white',
           },
         ]
 

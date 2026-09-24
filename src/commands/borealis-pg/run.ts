@@ -412,9 +412,9 @@ function renderResultsTable(resultInstance: QueryResult<any>) {
   const headers: Header[] = resultInstance.fields.map(field => (
     {
       value: field.name,
-      headerAlign: 'left',
       align: 'left',
-      headerColor: 'white',
+      headerAlign: 'left',
+      headerColor: 'bold',
       formatter: cellValue => (cellValue instanceof Date) ? cellValue.toISOString() : cellValue,
     }))
 
