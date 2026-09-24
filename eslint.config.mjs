@@ -1,15 +1,16 @@
-import { defineConfig, globalIgnores } from 'eslint/config';
+import {defineConfig, includeIgnoreFile} from 'eslint/config';
+import {fileURLToPath} from 'node:url'
 import tseslint from 'typescript-eslint'
 
+const gitignorePath = fileURLToPath(new URL(".gitignore", import.meta.url))
+
 export default defineConfig([
-  globalIgnores(['dist']),
+  includeIgnoreFile(gitignorePath, {gitignoreResolution: true}),
   {
     extends: tseslint.configs.recommended,
-
     linterOptions: {
       reportUnusedDisableDirectives: true,
     },
-
     rules: {
       '@typescript-eslint/explicit-module-boundary-types': 'off',
       '@typescript-eslint/no-explicit-any': 'off',
@@ -23,11 +24,9 @@ export default defineConfig([
       '@typescript-eslint/no-use-before-define': ['error', {
         functions: false,
       }],
-
       camelcase: ['warn', {
         properties: 'never',
       }],
-
       indent: ['error', 2, {
         SwitchCase: 1,
         MemberExpression: 1,
