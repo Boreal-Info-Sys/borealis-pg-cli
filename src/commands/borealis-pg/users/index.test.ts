@@ -63,39 +63,39 @@ describe('database users command', () => {
   it('displays DB users for an add-on', async () => {
     nock(borealisPgApiBaseUrl, {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}})
       .get(`/heroku/resources/${fakeAddonName}/db-users`)
-      .reply(
-        200,
-        {
-          users: [
-            {
-              displayName: null,
-              readOnlyUsername: fakeAppReadOnlyUsername,
-              readWriteUsername: fakeAppReadWriteUsername,
-              userType: 'app',
-            },
-            {
-              displayName: fakePersonalUser1,
-              readOnlyUsername: fakePersonalReadOnlyUsername1,
-              readWriteUsername: fakePersonalReadWriteUsername1,
-              userType: 'personal',
-            },
-            {
-              displayName: fakePersonalUser2,
-              readOnlyUsername: fakePersonalReadOnlyUsername2,
-              readWriteUsername: fakePersonalReadWriteUsername2,
-              userType: 'personal',
-            },
-          ],
-        })
+      .reply(200, {
+        users: [
+          {
+            displayName: null,
+            readOnlyUsername: fakeAppReadOnlyUsername,
+            readWriteUsername: fakeAppReadWriteUsername,
+            userType: 'app',
+          },
+          {
+            displayName: fakePersonalUser1,
+            readOnlyUsername: fakePersonalReadOnlyUsername1,
+            readWriteUsername: fakePersonalReadWriteUsername1,
+            userType: 'personal',
+          },
+          {
+            displayName: fakePersonalUser2,
+            readOnlyUsername: fakePersonalReadOnlyUsername2,
+            readWriteUsername: fakePersonalReadWriteUsername2,
+            userType: 'personal',
+          },
+        ],
+      })
 
     const {stdout, error} = await runCommand(['borealis-pg:users', '--app', fakeHerokuAppName])
 
     expect(stdout).to.containIgnoreSpaces(
-      '| Add-on User | DB Read-only Username | DB Read/Write Username |')
+      '| Add-on User | DB Read-only Username | DB Read/Write Username |',
+    )
     expect(stdout).to.containIgnoreSpaces(
       `| Heroku App User | ${fakeAppReadOnlyUsername} | ${fakeAppReadWriteUsername} |\n` +
-      `| ${fakePersonalUser1} | ${fakePersonalReadOnlyUsername1} | ${fakePersonalReadWriteUsername1} |\n` +
-      `| ${fakePersonalUser2} | ${fakePersonalReadOnlyUsername2} | ${fakePersonalReadWriteUsername2} |\n`)
+        `| ${fakePersonalUser1} | ${fakePersonalReadOnlyUsername1} | ${fakePersonalReadWriteUsername1} |\n` +
+        `| ${fakePersonalUser2} | ${fakePersonalReadOnlyUsername2} | ${fakePersonalReadWriteUsername2} |\n`,
+    )
 
     expect(error).to.be.undefined
   })

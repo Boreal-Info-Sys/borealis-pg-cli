@@ -54,8 +54,11 @@ describe('database credentials reset command', () => {
       .delete(`/heroku/resources/${fakeAddonName}/db-users/credentials`)
       .reply(200, {})
 
-    const {stdout, error} = await runCommand(
-      ['borealis-pg:users:reset', '--app', fakeHerokuAppName])
+    const {stdout, error} = await runCommand([
+      'borealis-pg:users:reset',
+      '--app',
+      fakeHerokuAppName,
+    ])
 
     expect(stdout).to.equal('')
     expect(error).to.be.undefined
@@ -82,7 +85,8 @@ describe('database credentials reset command', () => {
 
     expect(stdout).to.equal('')
     expect(error?.message).to.contain(
-      'Write access to the add-on database has been temporarily revoked')
+      'Write access to the add-on database has been temporarily revoked',
+    )
   })
 
   it('exits with an error when the add-on was not found', async () => {

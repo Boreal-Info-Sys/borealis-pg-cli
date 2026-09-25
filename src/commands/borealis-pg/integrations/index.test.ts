@@ -84,13 +84,19 @@ describe('data integration list command', () => {
         ],
       })
 
-    const {stdout, error} = await runCommand(['borealis-pg:integrations', '--app', fakeHerokuAppName])
+    const {stdout, error} = await runCommand([
+      'borealis-pg:integrations',
+      '--app',
+      fakeHerokuAppName,
+    ])
 
     expect(stdout).to.containIgnoreSpaces(
-      '| Data Integration | DB Username | SSH Username | Write Access | Created At |')
+      '| Data Integration | DB Username | SSH Username | Write Access | Created At |',
+    )
     expect(stdout).to.containIgnoreSpaces(
       `| ${fakeIntegration1Name} | ${fakeIntegration1DbUsername} | ${fakeIntegration1SshUsername} | ${fakeIntegration1WriteAccess} | ${DateTime.fromISO(fakeIntegration1CreatedAt).toISO()} |\n` +
-      `| ${fakeIntegration2Name} | ${fakeIntegration2DbUsername} | ${fakeIntegration2SshUsername} | ${fakeIntegration2WriteAccess} | ${DateTime.fromISO(fakeIntegration2CreatedAt).toISO()} |`)
+        `| ${fakeIntegration2Name} | ${fakeIntegration2DbUsername} | ${fakeIntegration2SshUsername} | ${fakeIntegration2WriteAccess} | ${DateTime.fromISO(fakeIntegration2CreatedAt).toISO()} |`,
+    )
 
     expect(error).to.be.undefined
   })
@@ -100,7 +106,11 @@ describe('data integration list command', () => {
       .get(`/heroku/resources/${fakeAddonName}/data-integrations`)
       .reply(200, {integrations: []})
 
-    const {stdout, stderr, error} = await runCommand(['borealis-pg:integrations', '-a', fakeHerokuAppName])
+    const {stdout, stderr, error} = await runCommand([
+      'borealis-pg:integrations',
+      '-a',
+      fakeHerokuAppName,
+    ])
 
     expect(stdout).to.equal('')
     expect(stderr.trim()).to.endWith('Warning: No data integrations found')

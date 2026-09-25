@@ -13,6 +13,12 @@ import {
 } from '../../../command-components'
 import {createHerokuAuth, fetchAddonAttachmentInfo, removeHerokuAuth} from '../../../heroku-api'
 
+const defaultTableHeader = {
+  align: 'left',
+  headerAlign: 'left',
+  headerColor: 'bold',
+}
+
 export default class ListDataIntegrationsCommand extends Command {
   static description = `List registered data integrations for a Borealis Isolated Postgres add-on
 
@@ -27,53 +33,48 @@ via a secure tunnel using semi-permanent SSH server and database credentials.`
   async run() {
     const {flags} = await this.parse(ListDataIntegrationsCommand)
     const authorization = await createHerokuAuth(this.heroku)
-    const attachmentInfo =
-      await fetchAddonAttachmentInfo(this.heroku, flags.addon, flags.app, this.error)
+    const attachmentInfo = await fetchAddonAttachmentInfo(
+      this.heroku,
+      flags.addon,
+      flags.app,
+      this.error,
+    )
     const {addonName} = processAddonAttachmentInfo(attachmentInfo, this.error)
     try {
       const response = await applyActionSpinner(
         `Fetching data integration list for add-on ${color.addon(addonName)}`,
-        HTTP.get(
-          getBorealisPgApiUrl(`/heroku/resources/${addonName}/data-integrations`),
-          {headers: {Authorization: getBorealisPgAuthHeader(authorization)}}),
+        HTTP.get(getBorealisPgApiUrl(`/heroku/resources/${addonName}/data-integrations`), {
+          headers: {Authorization: getBorealisPgAuthHeader(authorization)},
+        }),
       )
 
       const responseBody = response.body as {integrations: Array<DataIntegrationInfo>}
       if (responseBody.integrations.length > 0) {
         const headers: Header[] = [
           {
+            ...defaultTableHeader,
             alias: 'Data Integration',
             value: 'name',
-            headerAlign: 'left',
-            align: 'left',
-            headerColor: 'white',
           },
           {
+            ...defaultTableHeader,
             alias: 'DB Username',
             value: 'dbUsername',
-            headerAlign: 'left',
-            align: 'left',
           },
           {
+            ...defaultTableHeader,
             alias: 'SSH Username',
             value: 'sshUsername',
-            headerAlign: 'left',
-            align: 'left',
-            headerColor: 'white',
           },
           {
+            ...defaultTableHeader,
             alias: 'Write Access',
             value: 'writeAccess',
-            headerAlign: 'left',
-            align: 'left',
-            headerColor: 'white',
           },
           {
+            ...defaultTableHeader,
             alias: 'Created At',
             value: 'createdAt',
-            headerAlign: 'left',
-            align: 'left',
-            headerColor: 'white',
           },
         ]
 
@@ -87,11 +88,11 @@ via a secure tunnel using semi-permanent SSH server and database credentials.`
           }
         })
 
-        const table = Table(
-          headers,
-          normalizedRows,
-          {truncate: false, borderStyle: 'dashed', compact: true},
-        )
+        const table = Table(headers, normalizedRows, {
+          truncate: false,
+          borderStyle: 'dashed',
+          compact: true,
+        })
 
         this.log(table.render())
       } else {
@@ -119,9 +120,9 @@ via a secure tunnel using semi-permanent SSH server and database credentials.`
 }
 
 interface DataIntegrationInfo {
-  name: string;
-  dbUsername: string;
-  sshUsername: string;
-  writeAccess: boolean;
-  createdAt: string;
+  name: string
+  dbUsername: string
+  sshUsername: string
+  writeAccess: boolean
+  createdAt: string
 }

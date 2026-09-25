@@ -1,6 +1,5 @@
 version: 2
 updates:
-
   # oclif CLI
   - package-ecosystem: npm
     directory: /

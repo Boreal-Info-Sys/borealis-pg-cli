@@ -14,8 +14,7 @@ import {
 import {createHerokuAuth, fetchAddonAttachmentInfo, removeHerokuAuth} from '../../../heroku-api'
 
 export default class PgVersionUpgradeCommand extends Command {
-  static description =
-    `Upgrade the PostgreSQL version of a Borealis Isolated Postgres add-on
+  static description = `Upgrade the PostgreSQL version of a Borealis Isolated Postgres add-on
 
 Initiates an upgrade to the next major version of PostgreSQL. Upgrades are
 performed asynchronously and may take well over an hour to complete. The
@@ -32,9 +31,7 @@ upgrade process, with some limitations. Check the documentation at
 https://devcenter.heroku.com/articles/borealis-pg#postgresql-version-upgrades
 for details.`
 
-  static examples = [
-    `$ heroku borealis-pg:upgrade:execute --${appOptionName} sushi`,
-  ]
+  static examples = [`$ heroku borealis-pg:upgrade:execute --${appOptionName} sushi`]
 
   static flags = {
     [addonOptionName]: cliOptions.addon,
@@ -45,8 +42,12 @@ for details.`
     const {flags} = await this.parse(PgVersionUpgradeCommand)
 
     const authorization = await createHerokuAuth(this.heroku)
-    const attachmentInfo =
-      await fetchAddonAttachmentInfo(this.heroku, flags.addon, flags.app, this.error)
+    const attachmentInfo = await fetchAddonAttachmentInfo(
+      this.heroku,
+      flags.addon,
+      flags.app,
+      this.error,
+    )
     const {addonName} = processAddonAttachmentInfo(attachmentInfo, this.error)
 
     try {
@@ -58,8 +59,9 @@ for details.`
       console.warn()
       console.warn(
         `${color.addon(addonName)} is being upgraded from PostgreSQL version ` +
-        `${pgVersionUpgradeInfo.currentPgMajorVersion} to version ` +
-        `${pgVersionUpgradeInfo.targetPgMajorVersion} in the background.`)
+          `${pgVersionUpgradeInfo.currentPgMajorVersion} to version ` +
+          `${pgVersionUpgradeInfo.targetPgMajorVersion} in the background.`,
+      )
       console.warn('The system will send an email when the upgrade process is complete.')
     } finally {
       await removeHerokuAuth(this.heroku, authorization.id as string)
@@ -68,10 +70,12 @@ for details.`
 
   private async triggerPgVersionUpgrade(
     addonName: string,
-    authorization: OAuthAuthorization): Promise<PgVersionUpgradeInfo> {
+    authorization: OAuthAuthorization,
+  ): Promise<PgVersionUpgradeInfo> {
     const response: HTTP<PgVersionUpgradeInfo> = await HTTP.post(
       getBorealisPgApiUrl(`/heroku/resources/${addonName}/pg-version-upgrades`),
-      {headers: {Authorization: getBorealisPgAuthHeader(authorization)}})
+      {headers: {Authorization: getBorealisPgAuthHeader(authorization)}},
+    )
 
     return response.body
   }
@@ -80,7 +84,9 @@ for details.`
     /* istanbul ignore else */
     if (err instanceof HTTPError) {
       if (err.statusCode === 400) {
-        this.error(`The add-on is in a state that prevents upgrades:\n${err.body.reason.toString()}`)
+        this.error(
+          `The add-on is in a state that prevents upgrades:\n${err.body.reason.toString()}`,
+        )
       } else if (err.statusCode === 403) {
         this.error('Add-on database write access has been revoked')
       } else if (err.statusCode === 404) {
@@ -99,6 +105,6 @@ for details.`
 }
 
 interface PgVersionUpgradeInfo {
-  targetPgMajorVersion: string;
-  currentPgMajorVersion: string;
+  targetPgMajorVersion: string
+  currentPgMajorVersion: string
 }

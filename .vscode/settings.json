@@ -1,15 +1,9 @@
 {
-  "[typescript]": {
-    "editor.formatOnSave": true,
-    "editor.formatOnSaveMode": "file"
-  },
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "explicit"
   },
-  "files.trimFinalNewlines": true,
-  "typescript.format.enable": true,
-  "typescript.format.insertSpaceAfterOpeningAndBeforeClosingEmptyBraces": false,
-  "typescript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyBraces": false,
-  "typescript.format.semicolons": "ignore",
-  "typescript.preferences.quoteStyle": "single"
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": true,
+  "editor.formatOnSaveMode": "file",
+  "files.trimFinalNewlines": true
 }

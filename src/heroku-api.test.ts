@@ -21,8 +21,9 @@ describe('createHerokuAuth', () => {
     fakeResponse.body = fakeAuthorization
 
     mockHerokuApiClientType = mock()
-    when(mockHerokuApiClientType.post<OAuthAuthorization>(anyString(), anything()))
-      .thenResolve(fakeResponse)
+    when(mockHerokuApiClientType.post<OAuthAuthorization>(anyString(), anything())).thenResolve(
+      fakeResponse,
+    )
     mockHerokuApiClientInstance = instance(mockHerokuApiClientType)
   })
 
@@ -31,15 +32,18 @@ describe('createHerokuAuth', () => {
 
     expect(result).to.equal(fakeAuthorization)
 
-    verify(mockHerokuApiClientType.post<OAuthAuthorization>(
-      '/oauth/authorizations',
-      deepEqual({
-        body: {
-          description: 'Borealis PG CLI plugin temporary auth token',
-          expires_in: 180,
-          scope: ['read', 'identity'],
-        },
-      }))).once()
+    verify(
+      mockHerokuApiClientType.post<OAuthAuthorization>(
+        '/oauth/authorizations',
+        deepEqual({
+          body: {
+            description: 'Borealis PG CLI plugin temporary auth token',
+            expires_in: 180,
+            scope: ['read', 'identity'],
+          },
+        }),
+      ),
+    ).once()
   })
 })
 
@@ -65,7 +69,7 @@ describe('fetchAddonAttachmentInfo', () => {
     name: fakeAddonAttachmentName,
   }
 
-  let errorHandlerMockType: {func: ((message: string) => never)}
+  let errorHandlerMockType: {func: (message: string) => never}
   let errorHandlerMockInstance: typeof errorHandlerMockType
 
   let fakeAttachmentsResolveSuccessResponse: HTTP<AddOnAttachment[]>
@@ -81,10 +85,12 @@ describe('fetchAddonAttachmentInfo', () => {
     when(errorHandlerMockType.func(anything())).thenThrow(new Error('Invalid'))
     errorHandlerMockInstance = instance(errorHandlerMockType)
 
-    fakeAttachmentsResolveSuccessResponse =
-      new HTTP<AddOnAttachment[]>('https://borealis-data.example.com/attachments-resolve')
-    fakeAttachmentsListSuccessResponse =
-      new HTTP<AddOnAttachment[]>('https://borealis-data.example.com/attachments-list')
+    fakeAttachmentsResolveSuccessResponse = new HTTP<AddOnAttachment[]>(
+      'https://borealis-data.example.com/attachments-resolve',
+    )
+    fakeAttachmentsListSuccessResponse = new HTTP<AddOnAttachment[]>(
+      'https://borealis-data.example.com/attachments-list',
+    )
     fakeAddonInfoSuccessResponse = new HTTP<AddOn>('https://borealis-data.example.com/addon')
     fakeAddonListSuccessResponse = new HTTP<AddOn[]>('https://borealis-data.example.com/addons')
 
@@ -92,14 +98,18 @@ describe('fetchAddonAttachmentInfo', () => {
     when(
       mockHerokuApiClientType.post<AddOnAttachment[]>(
         '/actions/addon-attachments/resolve',
-        anything()))
-      .thenResolve(fakeAttachmentsResolveSuccessResponse)
-    when(mockHerokuApiClientType.get<AddOnAttachment[]>(`/addons/${fakeAddonId}/addon-attachments`))
-      .thenResolve(fakeAttachmentsListSuccessResponse)
-    when(mockHerokuApiClientType.get<AddOn>(`/addons/${fakeAddonId}`))
-      .thenResolve(fakeAddonInfoSuccessResponse)
-    when(mockHerokuApiClientType.get<AddOn[]>(`/apps/${fakeAppName}/addons`))
-      .thenResolve(fakeAddonListSuccessResponse)
+        anything(),
+      ),
+    ).thenResolve(fakeAttachmentsResolveSuccessResponse)
+    when(
+      mockHerokuApiClientType.get<AddOnAttachment[]>(`/addons/${fakeAddonId}/addon-attachments`),
+    ).thenResolve(fakeAttachmentsListSuccessResponse)
+    when(mockHerokuApiClientType.get<AddOn>(`/addons/${fakeAddonId}`)).thenResolve(
+      fakeAddonInfoSuccessResponse,
+    )
+    when(mockHerokuApiClientType.get<AddOn[]>(`/apps/${fakeAppName}/addons`)).thenResolve(
+      fakeAddonListSuccessResponse,
+    )
 
     mockHerokuApiClientInstance = instance(mockHerokuApiClientType)
   })
@@ -120,7 +130,8 @@ describe('fetchAddonAttachmentInfo', () => {
       mockHerokuApiClientInstance,
       fakeAddonAttachmentName,
       fakeAppName,
-      errorHandlerMockInstance.func)
+      errorHandlerMockInstance.func,
+    )
 
     expect(results).to.deep.equal(fakeAddonAttachment)
 
@@ -129,13 +140,13 @@ describe('fetchAddonAttachmentInfo', () => {
     verify(
       mockHerokuApiClientType.post<AddOnAttachment>(
         '/actions/addon-attachments/resolve',
-        deepEqual({body: {addon_attachment: fakeAddonAttachmentName, app: fakeAppName}})))
-      .once()
+        deepEqual({body: {addon_attachment: fakeAddonAttachmentName, app: fakeAppName}}),
+      ),
+    ).once()
     verify(mockHerokuApiClientType.get<AddOn>(`/addons/${fakeAddonId}`)).once()
     verify(
-      mockHerokuApiClientType.get<AddOnAttachment[]>(
-        `/addons/${fakeAddonId}/addon-attachments`))
-      .never()
+      mockHerokuApiClientType.get<AddOnAttachment[]>(`/addons/${fakeAddonId}/addon-attachments`),
+    ).never()
     verify(mockHerokuApiClientType.get<AddOn[]>(`/addons/${fakeAppId}/addons`)).never()
   })
 
@@ -160,7 +171,8 @@ describe('fetchAddonAttachmentInfo', () => {
       mockHerokuApiClientInstance,
       fakeAddonName,
       null,
-      errorHandlerMockInstance.func)
+      errorHandlerMockInstance.func,
+    )
 
     expect(results).to.deep.equal(fakeAddonAttachment)
 
@@ -169,13 +181,13 @@ describe('fetchAddonAttachmentInfo', () => {
     verify(
       mockHerokuApiClientType.post<AddOnAttachment>(
         '/actions/addon-attachments/resolve',
-        deepEqual({body: {addon_attachment: fakeAddonName}})))
-      .once()
+        deepEqual({body: {addon_attachment: fakeAddonName}}),
+      ),
+    ).once()
     verify(mockHerokuApiClientType.get<AddOn>(`/addons/${fakeAddonId}`)).once()
     verify(
-      mockHerokuApiClientType.get<AddOnAttachment[]>(
-        `/addons/${fakeAddonId}/addon-attachments`))
-      .never()
+      mockHerokuApiClientType.get<AddOnAttachment[]>(`/addons/${fakeAddonId}/addon-attachments`),
+    ).never()
     verify(mockHerokuApiClientType.get<AddOn[]>(`/addons/${fakeAppId}/addons`)).never()
   })
 
@@ -212,7 +224,8 @@ describe('fetchAddonAttachmentInfo', () => {
       mockHerokuApiClientInstance,
       null,
       fakeAppName,
-      errorHandlerMockInstance.func)
+      errorHandlerMockInstance.func,
+    )
 
     expect(results).to.deep.equal(fakeAddonAttachment)
 
@@ -220,14 +233,14 @@ describe('fetchAddonAttachmentInfo', () => {
 
     verify(mockHerokuApiClientType.get<AddOn[]>(`/apps/${fakeAppName}/addons`)).once()
     verify(
-      mockHerokuApiClientType.get<AddOnAttachment[]>(
-        `/addons/${fakeAddonId}/addon-attachments`))
-      .once()
+      mockHerokuApiClientType.get<AddOnAttachment[]>(`/addons/${fakeAddonId}/addon-attachments`),
+    ).once()
     verify(
       mockHerokuApiClientType.post<AddOnAttachment>(
         '/actions/addon-attachments/resolve',
-        deepEqual({body: {addon_attachment: fakeAddonName}})))
-      .never()
+        deepEqual({body: {addon_attachment: fakeAddonName}}),
+      ),
+    ).never()
     verify(mockHerokuApiClientType.get<AddOn>(`/addons/${fakeAddonId}`)).never()
   })
 
@@ -237,26 +250,28 @@ describe('fetchAddonAttachmentInfo', () => {
         mockHerokuApiClientInstance,
         null,
         null,
-        errorHandlerMockInstance.func)).to.be.rejected
+        errorHandlerMockInstance.func,
+      ),
+    ).to.be.rejected
 
     verify(
       errorHandlerMockType.func(
         'Borealis Isolated Postgres add-on could not be found. ' +
-            `Try again with the ${cliOptionColour('--app')} and/or ` +
-            `${cliOptionColour('--addon')} options.`,
-      ))
-      .once()
+          `Try again with the ${cliOptionColour('--app')} and/or ` +
+          `${cliOptionColour('--addon')} options.`,
+      ),
+    ).once()
 
     verify(mockHerokuApiClientType.get<AddOn[]>(`/apps/${fakeAppName}/addons`)).never()
     verify(
-      mockHerokuApiClientType.get<AddOnAttachment[]>(
-        `/addons/${fakeAddonId}/addon-attachments`))
-      .never()
+      mockHerokuApiClientType.get<AddOnAttachment[]>(`/addons/${fakeAddonId}/addon-attachments`),
+    ).never()
     verify(
       mockHerokuApiClientType.post<AddOnAttachment>(
         '/actions/addon-attachments/resolve',
-        deepEqual({body: {addon_attachment: fakeAddonName}})))
-      .never()
+        deepEqual({body: {addon_attachment: fakeAddonName}}),
+      ),
+    ).never()
     verify(mockHerokuApiClientType.get<AddOn>(`/addons/${fakeAddonId}`)).never()
   })
 
@@ -274,21 +289,26 @@ describe('fetchAddonAttachmentInfo', () => {
         mockHerokuApiClientInstance,
         fakeAddonAttachmentName,
         fakeAppName,
-        errorHandlerMockInstance.func)).to.be.rejected
+        errorHandlerMockInstance.func,
+      ),
+    ).to.be.rejected
 
-    verify(errorHandlerMockType.func(
-      `Add-on ${color.addon(fakeAddonName)} is not a Borealis Isolated Postgres add-on`)).once()
+    verify(
+      errorHandlerMockType.func(
+        `Add-on ${color.addon(fakeAddonName)} is not a Borealis Isolated Postgres add-on`,
+      ),
+    ).once()
 
     verify(
       mockHerokuApiClientType.post<AddOnAttachment>(
         '/actions/addon-attachments/resolve',
-        deepEqual({body: {addon_attachment: fakeAddonAttachmentName, app: fakeAppName}})))
-      .once()
+        deepEqual({body: {addon_attachment: fakeAddonAttachmentName, app: fakeAppName}}),
+      ),
+    ).once()
     verify(mockHerokuApiClientType.get<AddOn>(`/addons/${fakeAddonId}`)).once()
     verify(
-      mockHerokuApiClientType.get<AddOnAttachment[]>(
-        `/addons/${fakeAddonId}/addon-attachments`))
-      .never()
+      mockHerokuApiClientType.get<AddOnAttachment[]>(`/addons/${fakeAddonId}/addon-attachments`),
+    ).never()
     verify(mockHerokuApiClientType.get<AddOn[]>(`/addons/${fakeAppId}/addons`)).never()
   })
 
@@ -311,23 +331,26 @@ describe('fetchAddonAttachmentInfo', () => {
         mockHerokuApiClientInstance,
         null,
         fakeAppName,
-        errorHandlerMockInstance.func)).to.be.rejected
+        errorHandlerMockInstance.func,
+      ),
+    ).to.be.rejected
 
     verify(
       errorHandlerMockType.func(
-        `App ${color.app(fakeAppName)} has no Borealis Isolated Postgres add-on attachments`))
-      .once()
+        `App ${color.app(fakeAppName)} has no Borealis Isolated Postgres add-on attachments`,
+      ),
+    ).once()
 
     verify(mockHerokuApiClientType.get<AddOn[]>(`/apps/${fakeAppName}/addons`)).once()
     verify(
-      mockHerokuApiClientType.get<AddOnAttachment[]>(
-        `/addons/${fakeAddonId}/addon-attachments`))
-      .never()
+      mockHerokuApiClientType.get<AddOnAttachment[]>(`/addons/${fakeAddonId}/addon-attachments`),
+    ).never()
     verify(
       mockHerokuApiClientType.post<AddOnAttachment>(
         '/actions/addon-attachments/resolve',
-        deepEqual({body: {addon_attachment: fakeAddonName}})))
-      .never()
+        deepEqual({body: {addon_attachment: fakeAddonName}}),
+      ),
+    ).never()
     verify(mockHerokuApiClientType.get<AddOn>(`/addons/${fakeAddonId}`)).never()
   })
 
@@ -347,23 +370,26 @@ describe('fetchAddonAttachmentInfo', () => {
         mockHerokuApiClientInstance,
         null,
         fakeAppName,
-        errorHandlerMockInstance.func)).to.be.rejected
+        errorHandlerMockInstance.func,
+      ),
+    ).to.be.rejected
 
     verify(
       errorHandlerMockType.func(
-        `App ${color.app(fakeAppName)} has no Borealis Isolated Postgres add-on attachments`))
-      .once()
+        `App ${color.app(fakeAppName)} has no Borealis Isolated Postgres add-on attachments`,
+      ),
+    ).once()
 
     verify(mockHerokuApiClientType.get<AddOn[]>(`/apps/${fakeAppName}/addons`)).once()
     verify(
-      mockHerokuApiClientType.get<AddOnAttachment[]>(
-        `/addons/${fakeAddonId}/addon-attachments`))
-      .once()
+      mockHerokuApiClientType.get<AddOnAttachment[]>(`/addons/${fakeAddonId}/addon-attachments`),
+    ).once()
     verify(
       mockHerokuApiClientType.post<AddOnAttachment>(
         '/actions/addon-attachments/resolve',
-        deepEqual({body: {addon_attachment: fakeAddonName}})))
-      .never()
+        deepEqual({body: {addon_attachment: fakeAddonName}}),
+      ),
+    ).never()
     verify(mockHerokuApiClientType.get<AddOn>(`/addons/${fakeAddonId}`)).never()
   })
 
@@ -387,24 +413,27 @@ describe('fetchAddonAttachmentInfo', () => {
         mockHerokuApiClientInstance,
         null,
         fakeAppName,
-        errorHandlerMockInstance.func)).to.be.rejected
+        errorHandlerMockInstance.func,
+      ),
+    ).to.be.rejected
 
     verify(
       errorHandlerMockType.func(
         `App ${color.app(fakeAppName)} has multiple Borealis Isolated Postgres add-on ` +
-          `attachments. Try again with the ${cliOptionColour('--addon')} option to specify one.`))
-      .once()
+          `attachments. Try again with the ${cliOptionColour('--addon')} option to specify one.`,
+      ),
+    ).once()
 
     verify(mockHerokuApiClientType.get<AddOn[]>(`/apps/${fakeAppName}/addons`)).once()
     verify(
-      mockHerokuApiClientType.get<AddOnAttachment[]>(
-        `/addons/${fakeAddonId}/addon-attachments`))
-      .never()
+      mockHerokuApiClientType.get<AddOnAttachment[]>(`/addons/${fakeAddonId}/addon-attachments`),
+    ).never()
     verify(
       mockHerokuApiClientType.post<AddOnAttachment>(
         '/actions/addon-attachments/resolve',
-        deepEqual({body: {addon_attachment: fakeAddonName}})))
-      .never()
+        deepEqual({body: {addon_attachment: fakeAddonName}}),
+      ),
+    ).never()
     verify(mockHerokuApiClientType.get<AddOn>(`/addons/${fakeAddonId}`)).never()
   })
 
@@ -413,51 +442,57 @@ describe('fetchAddonAttachmentInfo', () => {
     when(
       mockHerokuApiClientType.post<AddOnAttachment>(
         '/actions/addon-attachments/resolve',
-        anything()))
-      .thenReject(new HerokuAPIError(new HTTPError(fakeHttp404Response)))
+        anything(),
+      ),
+    ).thenReject(new HerokuAPIError(new HTTPError(fakeHttp404Response)))
 
     await expect(
       fetchAddonAttachmentInfo(
         mockHerokuApiClientInstance,
         fakeAddonAttachmentName,
         fakeAppName,
-        errorHandlerMockInstance.func)).to.be.rejected
+        errorHandlerMockInstance.func,
+      ),
+    ).to.be.rejected
 
     verify(
       mockHerokuApiClientType.post<AddOnAttachment>(
         '/actions/addon-attachments/resolve',
-        deepEqual({body: {addon_attachment: fakeAddonAttachmentName, app: fakeAppName}})))
-      .once()
+        deepEqual({body: {addon_attachment: fakeAddonAttachmentName, app: fakeAppName}}),
+      ),
+    ).once()
     verify(mockHerokuApiClientType.get<AddOn>(`/addons/${fakeAddonId}`)).never()
     verify(
-      mockHerokuApiClientType.get<AddOnAttachment[]>(
-        `/addons/${fakeAddonId}/addon-attachments`))
-      .never()
+      mockHerokuApiClientType.get<AddOnAttachment[]>(`/addons/${fakeAddonId}/addon-attachments`),
+    ).never()
     verify(mockHerokuApiClientType.get<AddOn[]>(`/addons/${fakeAppId}/addons`)).never()
   })
 
   it('throws an error when the add-on is deleted mid-execution', async () => {
     const fakeHttp404Response: any = {body: {message: 'Not found'}, statusCode: 404}
-    when(mockHerokuApiClientType.get<AddOn>(`/addons/${fakeAddonId}`))
-      .thenResolve(fakeHttp404Response)
+    when(mockHerokuApiClientType.get<AddOn>(`/addons/${fakeAddonId}`)).thenResolve(
+      fakeHttp404Response,
+    )
 
     await expect(
       fetchAddonAttachmentInfo(
         mockHerokuApiClientInstance,
         fakeAddonAttachmentName,
         fakeAppName,
-        errorHandlerMockInstance.func)).to.be.rejected
+        errorHandlerMockInstance.func,
+      ),
+    ).to.be.rejected
 
     verify(
       mockHerokuApiClientType.post<AddOnAttachment>(
         '/actions/addon-attachments/resolve',
-        deepEqual({body: {addon_attachment: fakeAddonAttachmentName, app: fakeAppName}})))
-      .once()
+        deepEqual({body: {addon_attachment: fakeAddonAttachmentName, app: fakeAppName}}),
+      ),
+    ).once()
     verify(mockHerokuApiClientType.get<AddOn>(`/addons/${fakeAddonId}`)).never()
     verify(
-      mockHerokuApiClientType.get<AddOnAttachment[]>(
-        `/addons/${fakeAddonId}/addon-attachments`))
-      .never()
+      mockHerokuApiClientType.get<AddOnAttachment[]>(`/addons/${fakeAddonId}/addon-attachments`),
+    ).never()
     verify(mockHerokuApiClientType.get<AddOn[]>(`/addons/${fakeAppId}/addons`)).never()
   })
 
@@ -466,56 +501,64 @@ describe('fetchAddonAttachmentInfo', () => {
     when(
       mockHerokuApiClientType.post<AddOnAttachment>(
         '/actions/addon-attachments/resolve',
-        anything()))
-      .thenReject(new HerokuAPIError(new HTTPError(fakeHttp404Response)))
+        anything(),
+      ),
+    ).thenReject(new HerokuAPIError(new HTTPError(fakeHttp404Response)))
 
     await expect(
       fetchAddonAttachmentInfo(
         mockHerokuApiClientInstance,
         fakeAddonName,
         null,
-        errorHandlerMockInstance.func)).to.be.rejected
+        errorHandlerMockInstance.func,
+      ),
+    ).to.be.rejected
 
-    verify(errorHandlerMockType.func(
-      `Add-on ${color.addon(fakeAddonName)} was not found. Consider trying again ` +
-      `with the ${cliOptionColour('--app')} option.`)).once()
+    verify(
+      errorHandlerMockType.func(
+        `Add-on ${color.addon(fakeAddonName)} was not found. Consider trying again ` +
+          `with the ${cliOptionColour('--app')} option.`,
+      ),
+    ).once()
 
     verify(
       mockHerokuApiClientType.post<AddOnAttachment>(
         '/actions/addon-attachments/resolve',
-        deepEqual({body: {addon_attachment: fakeAddonName}})))
-      .once()
+        deepEqual({body: {addon_attachment: fakeAddonName}}),
+      ),
+    ).once()
     verify(mockHerokuApiClientType.get<AddOn>(`/addons/${fakeAddonId}`)).never()
     verify(
-      mockHerokuApiClientType.get<AddOnAttachment[]>(
-        `/addons/${fakeAddonId}/addon-attachments`))
-      .never()
+      mockHerokuApiClientType.get<AddOnAttachment[]>(`/addons/${fakeAddonId}/addon-attachments`),
+    ).never()
     verify(mockHerokuApiClientType.get<AddOn[]>(`/addons/${fakeAppId}/addons`)).never()
   })
 
   it('throws an error when the app does not exist', async () => {
     const fakeHttp404Response: any = {body: {message: 'Not found'}, statusCode: 404}
-    when(
-      mockHerokuApiClientType.get<AddOn[]>(`/apps/${fakeAppName}/addons`))
-      .thenReject(new HerokuAPIError(new HTTPError(fakeHttp404Response)))
+    when(mockHerokuApiClientType.get<AddOn[]>(`/apps/${fakeAppName}/addons`)).thenReject(
+      new HerokuAPIError(new HTTPError(fakeHttp404Response)),
+    )
 
     await expect(
       fetchAddonAttachmentInfo(
         mockHerokuApiClientInstance,
         null,
         fakeAppName,
-        errorHandlerMockInstance.func)).to.be.rejected
+        errorHandlerMockInstance.func,
+      ),
+    ).to.be.rejected
 
     verify(mockHerokuApiClientType.get<AddOn[]>(`/apps/${fakeAppName}/addons`)).once()
     verify(
-      mockHerokuApiClientType.get<AddOnAttachment[]>(
-        `/addons/${fakeAddonId}/addon-attachments`))
-      .never()
+      mockHerokuApiClientType.get<AddOnAttachment[]>(`/addons/${fakeAddonId}/addon-attachments`),
+    ).never()
     verify(
       mockHerokuApiClientType.post<AddOnAttachment>(
         '/actions/addon-attachments/resolve',
-        deepEqual({body: {addon_attachment: fakeAddonName}})))
-      .never()
+        deepEqual({body: {addon_attachment: fakeAddonName}}),
+      ),
+    ).never()
     verify(mockHerokuApiClientType.get<AddOn>(`/addons/${fakeAddonId}`)).never()
   })
 
@@ -525,35 +568,41 @@ describe('fetchAddonAttachmentInfo', () => {
       name: fakeAddonAttachmentName,
     }
     fakeAttachmentsResolveSuccessResponse.body = [invalidAttachmentInfo]
-    fakeAddonInfoSuccessResponse.body =
-      {app: {id: fakeAppId, name: fakeAppName}, id: fakeAddonId} as AddOn
+    fakeAddonInfoSuccessResponse.body = {
+      app: {id: fakeAppId, name: fakeAppName},
+      id: fakeAddonId,
+    } as AddOn
 
-    when(mockHerokuApiClientType.get<AddOn>(`/addons/${invalidAttachmentInfo.addon?.id}`))
-      .thenResolve(fakeAddonInfoSuccessResponse)
+    when(
+      mockHerokuApiClientType.get<AddOn>(`/addons/${invalidAttachmentInfo.addon?.id}`),
+    ).thenResolve(fakeAddonInfoSuccessResponse)
 
-    await expect(fetchAddonAttachmentInfo(
-      mockHerokuApiClientInstance,
-      fakeAddonAttachmentName,
-      fakeAppName,
-      errorHandlerMockInstance.func)).to.be.rejected
+    await expect(
+      fetchAddonAttachmentInfo(
+        mockHerokuApiClientInstance,
+        fakeAddonAttachmentName,
+        fakeAppName,
+        errorHandlerMockInstance.func,
+      ),
+    ).to.be.rejected
 
     verify(
       errorHandlerMockType.func(
         `Add-on ${color.addon(fakeAddonAttachmentName)} is not a Borealis Isolated Postgres ` +
-            'add-on'))
-      .once()
+          'add-on',
+      ),
+    ).once()
 
     verify(
       mockHerokuApiClientType.post<AddOnAttachment>(
         '/actions/addon-attachments/resolve',
-        deepEqual({body: {addon_attachment: fakeAddonAttachmentName, app: fakeAppName}})))
-      .once()
-    verify(mockHerokuApiClientType.get<AddOn>(`/addons/${invalidAttachmentInfo.addon?.id}`))
-      .once()
+        deepEqual({body: {addon_attachment: fakeAddonAttachmentName, app: fakeAppName}}),
+      ),
+    ).once()
+    verify(mockHerokuApiClientType.get<AddOn>(`/addons/${invalidAttachmentInfo.addon?.id}`)).once()
     verify(
-      mockHerokuApiClientType.get<AddOnAttachment[]>(
-        `/addons/${fakeAddonId}/addon-attachments`))
-      .never()
+      mockHerokuApiClientType.get<AddOnAttachment[]>(`/addons/${fakeAddonId}/addon-attachments`),
+    ).never()
     verify(mockHerokuApiClientType.get<AddOn[]>(`/addons/${fakeAppId}/addons`)).never()
   })
 })
@@ -564,15 +613,15 @@ describe('removeHerokuAuth', () => {
     const fakeResponse = new HTTP<OAuthAuthorization>('https://api.heroku.com/barfoo')
 
     const mockHerokuApiClientType: APIClient = mock()
-    when(mockHerokuApiClientType.delete<OAuthAuthorization>(anyString()))
-      .thenResolve(fakeResponse)
+    when(mockHerokuApiClientType.delete<OAuthAuthorization>(anyString())).thenResolve(fakeResponse)
     const mockHerokuApiClient = instance(mockHerokuApiClientType)
 
     await removeHerokuAuth(mockHerokuApiClient, fakeAuthorizationId)
 
     verify(
-      mockHerokuApiClientType
-        .delete<OAuthAuthorization>(`/oauth/authorizations/${fakeAuthorizationId}`))
-      .once()
+      mockHerokuApiClientType.delete<OAuthAuthorization>(
+        `/oauth/authorizations/${fakeAuthorizationId}`,
+      ),
+    ).once()
   })
 })

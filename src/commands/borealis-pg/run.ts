@@ -129,13 +129,15 @@ like pgAdmin).`
     const shellCommand = flags[shellCommandOptionName]
 
     if (
-      (typeof flags[dbCommandOptionName] === 'undefined') &&
-      (typeof flags[dbCommandFileOptionName] === 'undefined') &&
-      (typeof shellCommand === 'undefined')) {
+      typeof flags[dbCommandOptionName] === 'undefined' &&
+      typeof flags[dbCommandFileOptionName] === 'undefined' &&
+      typeof shellCommand === 'undefined'
+    ) {
       this.error(
         `Either ${formatCliOptionName(dbCommandOptionName)}, ` +
-        `${formatCliOptionName(dbCommandFileOptionName)} or ` +
-        `${formatCliOptionName(shellCommandOptionName)} must be specified`)
+          `${formatCliOptionName(dbCommandFileOptionName)} or ` +
+          `${formatCliOptionName(shellCommandOptionName)} must be specified`,
+      )
     }
 
     const dbCommand = this.getDbCommand(flags[dbCommandOptionName], flags[dbCommandFileOptionName])
@@ -143,15 +145,20 @@ like pgAdmin).`
     /* istanbul ignore next */
     const normalizedOutputFormat: string = flags.format || defaultOutputFormat
 
-    const attachmentInfo =
-      await fetchAddonAttachmentInfo(this.heroku, flags.addon, flags.app, this.error)
+    const attachmentInfo = await fetchAddonAttachmentInfo(
+      this.heroku,
+      flags.addon,
+      flags.app,
+      this.error,
+    )
     const addonInfo = processAddonAttachmentInfo(attachmentInfo, this.error)
 
     const [sshConnInfo, dbConnInfo] = await this.prepareUsers(
       addonInfo,
       flags[personalUserOptionName],
       flags[writeAccessOptionName],
-      normalizedOutputFormat === defaultOutputFormat)
+      normalizedOutputFormat === defaultOutputFormat,
+    )
 
     const localPgHost = await getLocalPgHost()
     const fullConnInfo = {ssh: sshConnInfo, db: dbConnInfo, localPgHost, localPgPort: flags.port}
@@ -169,35 +176,32 @@ like pgAdmin).`
     addonInfo: {addonName: string; appName: string; attachmentName: string},
     usePersonalUser: boolean,
     enableWriteAccess: boolean,
-    showSpinner: boolean): Promise<[SshConnectionInfo, DbConnectionInfo]> {
+    showSpinner: boolean,
+  ): Promise<[SshConnectionInfo, DbConnectionInfo]> {
     const authorization = await createHerokuAuth(this.heroku)
     try {
-      const dbConnInfoPromise =
-        !usePersonalUser ?
-          this.fetchAppDbConnInfo(addonInfo.appName, addonInfo.attachmentName, enableWriteAccess) :
-          HTTP
-            .post<DbConnectionInfo>(
-              getBorealisPgApiUrl(`/heroku/resources/${addonInfo.addonName}/personal-db-users`),
-              {
-                headers: {Authorization: getBorealisPgAuthHeader(authorization)},
-                body: {enableWriteAccess},
-              })
-            .then(value => value.body)
+      const dbConnInfoPromise = !usePersonalUser
+        ? this.fetchAppDbConnInfo(addonInfo.appName, addonInfo.attachmentName, enableWriteAccess)
+        : HTTP.post<DbConnectionInfo>(
+            getBorealisPgApiUrl(`/heroku/resources/${addonInfo.addonName}/personal-db-users`),
+            {
+              headers: {Authorization: getBorealisPgAuthHeader(authorization)},
+              body: {enableWriteAccess},
+            },
+          ).then(value => value.body)
 
       const fullConnInfoPromise = Promise.allSettled([
-        HTTP
-          .post<SshConnectionInfo>(
-            getBorealisPgApiUrl(`/heroku/resources/${addonInfo.addonName}/personal-ssh-users`),
-            {headers: {Authorization: getBorealisPgAuthHeader(authorization)}})
-          .then(value => value.body),
+        HTTP.post<SshConnectionInfo>(
+          getBorealisPgApiUrl(`/heroku/resources/${addonInfo.addonName}/personal-ssh-users`),
+          {headers: {Authorization: getBorealisPgAuthHeader(authorization)}},
+        ).then(value => value.body),
         dbConnInfoPromise,
       ])
 
       const accessLevelName = enableWriteAccess ? 'read/write' : 'read-only'
-      const [sshConnInfoResult, dbConnInfoResult] =
-        !showSpinner ?
-          await fullConnInfoPromise :
-          await applyActionSpinner(
+      const [sshConnInfoResult, dbConnInfoResult] = !showSpinner
+        ? await fullConnInfoPromise
+        : await applyActionSpinner(
             `Configuring ${accessLevelName} user session for add-on ${color.addon(addonInfo.addonName)}`,
             fullConnInfoPromise,
           )
@@ -217,15 +221,15 @@ like pgAdmin).`
   private async fetchAppDbConnInfo(
     appName: string,
     attachmentName: string,
-    enableWriteAccess: boolean): Promise<DbConnectionInfo> {
+    enableWriteAccess: boolean,
+  ): Promise<DbConnectionInfo> {
     const newConnInfoConfigVarName = `${attachmentName}_TUNNEL_BPG_CONN_INFO`
     const obsoleteConnInfoConfigVarName = `${attachmentName}_SSH_TUNNEL_BPG_CONNECTION_INFO`
 
     const configVarsInfo = await this.heroku.get<ConfigVars>(`/apps/${appName}/config-vars`)
-    const appConnInfoConfigVarName =
-      configVarsInfo.body[newConnInfoConfigVarName] ?
-        newConnInfoConfigVarName :
-        obsoleteConnInfoConfigVarName
+    const appConnInfoConfigVarName = configVarsInfo.body[newConnInfoConfigVarName]
+      ? newConnInfoConfigVarName
+      : obsoleteConnInfoConfigVarName
     const appConnInfo = configVarsInfo.body[appConnInfoConfigVarName]
 
     const dbHostVar = enableWriteAccess ? 'POSTGRES_WRITER_HOST' : 'POSTGRES_READER_HOST'
@@ -239,13 +243,15 @@ like pgAdmin).`
     const dbNamePattern = /POSTGRES_DB_NAME:=([^|]+)/
     const dbNameMatch = appConnInfo.match(dbNamePattern)
 
-    const dbUsernameVar =
-      enableWriteAccess ? 'POSTGRES_WRITER_USERNAME' : 'POSTGRES_READER_USERNAME'
+    const dbUsernameVar = enableWriteAccess
+      ? 'POSTGRES_WRITER_USERNAME'
+      : 'POSTGRES_READER_USERNAME'
     const dbUsernamePattern = new RegExp(`${dbUsernameVar}:=([^|]+)`)
     const dbUsernameMatch = appConnInfo.match(dbUsernamePattern)
 
-    const dbPasswordVar =
-      enableWriteAccess ? 'POSTGRES_WRITER_PASSWORD' : 'POSTGRES_READER_PASSWORD'
+    const dbPasswordVar = enableWriteAccess
+      ? 'POSTGRES_WRITER_PASSWORD'
+      : 'POSTGRES_READER_PASSWORD'
     const dbPasswordPattern = new RegExp(`${dbPasswordVar}:=([^|]+)`)
     const dbPasswordMatch = appConnInfo.match(dbPasswordPattern)
 
@@ -260,34 +266,39 @@ like pgAdmin).`
     } else {
       this.error(
         `The ${color.configVar(appConnInfoConfigVarName)} config variable value for ` +
-        `${color.app(appName)} is invalid. ` +
-        'This may indicate that the config variable was manually edited.')
+          `${color.app(appName)} is invalid. ` +
+          'This may indicate that the config variable was manually edited.',
+      )
     }
   }
 
   private executeDbCommand(
     connInfo: FullConnectionInfo,
     dbCommand: string,
-    outputFormat: string): void {
+    outputFormat: string,
+  ): void {
     openSshTunnel(
       connInfo,
       {debug: this.debug, info: this.log, warn: this.warn, error: this.error},
       sshClient => {
-        const pgClient = tunnelServices.pgClientFactory.create({
-          host: connInfo.localPgHost,
-          port: connInfo.localPgPort,
-          database: connInfo.db.dbName,
-          user: connInfo.db.dbUsername,
-          password: connInfo.db.dbPassword,
-          ssl: {rejectUnauthorized: false},
-        }).on('end', () => {
-          sshClient.end()
-          tunnelServices.nodeProcess.exit()
-        }).on('error', (err: Error) => {
-          // Do not let the error function exit or it will generate an ugly stack trace
-          this.error(err, {exit: false})
-          tunnelServices.nodeProcess.exit(1)
-        })
+        const pgClient = tunnelServices.pgClientFactory
+          .create({
+            host: connInfo.localPgHost,
+            port: connInfo.localPgPort,
+            database: connInfo.db.dbName,
+            user: connInfo.db.dbUsername,
+            password: connInfo.db.dbPassword,
+            ssl: {rejectUnauthorized: false},
+          })
+          .on('end', () => {
+            sshClient.end()
+            tunnelServices.nodeProcess.exit()
+          })
+          .on('error', (err: Error) => {
+            // Do not let the error function exit or it will generate an ugly stack trace
+            this.error(err, {exit: false})
+            tunnelServices.nodeProcess.exit(1)
+          })
 
         pgClient.connect()
 
@@ -322,8 +333,10 @@ like pgAdmin).`
             }
 
             pgClient.end()
-          })
-      })
+          },
+        )
+      },
+    )
   }
 
   private executeShellCommand(connInfo: FullConnectionInfo, shellCommand: string): void {
@@ -331,24 +344,26 @@ like pgAdmin).`
       connInfo,
       {debug: this.debug, info: this.log, warn: this.warn, error: this.error},
       sshClient => {
-        const commandProc = tunnelServices.childProcessFactory.spawn(shellCommand, {
-          env: {
-            ...tunnelServices.nodeProcess.env,
-            PGHOST: connInfo.localPgHost,
-            PGPORT: connInfo.localPgPort.toString(),
-            PGDATABASE: connInfo.db.dbName,
-            PGUSER: connInfo.db.dbUsername,
-            PGPASSWORD: connInfo.db.dbPassword,
-            DATABASE_URL:
-              `postgres://${connInfo.db.dbUsername}:${connInfo.db.dbPassword}@` +
-              `${connInfo.localPgHost}:${connInfo.localPgPort}/${connInfo.db.dbName}`,
-          },
-          shell: true,
-          stdio: ['ignore', null, null], // Disable stdin but use the defaults for stdout and stderr
-        }).on('exit', (code, _) => {
-          sshClient.end()
-          tunnelServices.nodeProcess.exit(code ?? undefined)
-        })
+        const commandProc = tunnelServices.childProcessFactory
+          .spawn(shellCommand, {
+            env: {
+              ...tunnelServices.nodeProcess.env,
+              PGHOST: connInfo.localPgHost,
+              PGPORT: connInfo.localPgPort.toString(),
+              PGDATABASE: connInfo.db.dbName,
+              PGUSER: connInfo.db.dbUsername,
+              PGPASSWORD: connInfo.db.dbPassword,
+              DATABASE_URL:
+                `postgres://${connInfo.db.dbUsername}:${connInfo.db.dbPassword}@` +
+                `${connInfo.localPgHost}:${connInfo.localPgPort}/${connInfo.db.dbName}`,
+            },
+            shell: true,
+            stdio: ['ignore', null, null], // Disable stdin but use the defaults for stdout and stderr
+          })
+          .on('exit', (code, _) => {
+            sshClient.end()
+            tunnelServices.nodeProcess.exit(code ?? undefined)
+          })
 
         if (commandProc.stdout) {
           commandProc.stdout.on('data', data => this.log(data.toString()))
@@ -358,7 +373,8 @@ like pgAdmin).`
           // Do not let the error function exit or it will generate an ugly stack trace
           commandProc.stderr.on('data', data => this.error(data.toString(), {exit: false}))
         }
-      })
+      },
+    )
   }
 
   private getDbCommand(commandValue?: string, commandFileValue?: string): string | null {
@@ -389,15 +405,17 @@ like pgAdmin).`
       if (err.statusCode === 403) {
         this.error(
           'Access to the add-on database has been temporarily revoked for personal users. ' +
-          'Generally this indicates the database has persistently exceeded its storage limit. ' +
-          'Try upgrading to a new add-on plan to restore access.')
+            'Generally this indicates the database has persistently exceeded its storage limit. ' +
+            'Try upgrading to a new add-on plan to restore access.',
+        )
       } else if (err.statusCode === 404) {
         this.error('Add-on is not a Borealis Isolated Postgres add-on')
       } else if (err.statusCode === 422) {
         this.error('Add-on is not finished provisioning')
       } else if (err.statusCode === 423) {
-        this.error('Add-on is undergoing a PostgreSQL major version upgrade.\n' +
-          `Try again later or run ${consoleColours.cliCmdName('borealis-pg:upgrade:cancel')} to cancel the upgrade process.`,
+        this.error(
+          'Add-on is undergoing a PostgreSQL major version upgrade.\n' +
+            `Try again later or run ${consoleColours.cliCmdName('borealis-pg:upgrade:cancel')} to cancel the upgrade process.`,
         )
       } else {
         this.error('Add-on service is temporarily unavailable. Try again later.')
@@ -409,27 +427,30 @@ like pgAdmin).`
 }
 
 function renderResultsTable(resultInstance: QueryResult<any>) {
-  const headers: Header[] = resultInstance.fields.map(field => (
-    {
-      value: field.name,
-      headerAlign: 'left',
-      align: 'left',
-      headerColor: 'white',
-      formatter: cellValue => (cellValue instanceof Date) ? cellValue.toISOString() : cellValue,
-    }))
+  const headers: Header[] = resultInstance.fields.map(field => ({
+    value: field.name,
+    align: 'left',
+    headerAlign: 'left',
+    headerColor: 'bold',
+    formatter: cellValue => (cellValue instanceof Date ? cellValue.toISOString() : cellValue),
+  }))
 
-  const table = Table(
-    headers,
-    resultInstance.rows,
-    {truncate: false, borderStyle: 'dashed', compact: true}
-  )
+  const table = Table(headers, resultInstance.rows, {
+    truncate: false,
+    borderStyle: 'dashed',
+    compact: true,
+  })
 
   return table.render()
 }
 
 async function renderResultsCsv(resultInstance: QueryResult<any>) {
   return streamToText(
-    csvStringify(resultInstance.rows, {header: true, cast: {date: value => value.toISOString()}}))
+    csvStringify(resultInstance.rows, {
+      header: true,
+      cast: {date: value => value.toISOString()},
+    }),
+  )
 }
 
 function renderResultsJson(resultInstance: QueryResult<any>) {

@@ -17,16 +17,13 @@ const keyColour = consoleColours.dataFieldName
 const valueColour = consoleColours.dataFieldValue
 
 export default class PgVersionInfoCommand extends Command {
-  static description =
-    `Show PostgreSQL version upgrade info for a Borealis Isolated Postgres add-on
+  static description = `Show PostgreSQL version upgrade info for a Borealis Isolated Postgres add-on
 
 Indicates whether an add-on can be upgraded to a newer PostgreSQL major
 version, and if so, to which version. If an upgrade is available, you can use
 the ${consoleColours.cliCmdName('borealis-pg:restore:execute')} command to begin.`
 
-  static examples = [
-    `$ heroku borealis-pg:upgrade:info --${appOptionName} sushi`,
-  ]
+  static examples = [`$ heroku borealis-pg:upgrade:info --${appOptionName} sushi`]
 
   static flags = {
     [addonOptionName]: cliOptions.addon,
@@ -37,8 +34,12 @@ the ${consoleColours.cliCmdName('borealis-pg:restore:execute')} command to begin
     const {flags} = await this.parse(PgVersionInfoCommand)
 
     const authorization = await createHerokuAuth(this.heroku)
-    const attachmentInfo =
-      await fetchAddonAttachmentInfo(this.heroku, flags.addon, flags.app, this.error)
+    const attachmentInfo = await fetchAddonAttachmentInfo(
+      this.heroku,
+      flags.addon,
+      flags.app,
+      this.error,
+    )
     const {addonName} = processAddonAttachmentInfo(attachmentInfo, this.error)
 
     try {
@@ -57,17 +58,25 @@ the ${consoleColours.cliCmdName('borealis-pg:restore:execute')} command to begin
     const nextPgMajorVersion = pgVersionUpgradeInfo.nextPgMajorVersion ?? 'N/A'
 
     this.log()
-    this.log(` ${keyColour('Current PostgreSQL major version')}: ${valueColour(pgVersionUpgradeInfo.currentPgMajorVersion)}`)
-    this.log(`    ${keyColour('Next PostgreSQL major version')}: ${valueColour(nextPgMajorVersion)}`)
-    this.log(`                   ${keyColour('Upgrade Status')}: ${valueColour(pgVersionUpgradeInfo.upgradeStatus)}`)
+    this.log(
+      ` ${keyColour('Current PostgreSQL major version')}: ${valueColour(pgVersionUpgradeInfo.currentPgMajorVersion)}`,
+    )
+    this.log(
+      `    ${keyColour('Next PostgreSQL major version')}: ${valueColour(nextPgMajorVersion)}`,
+    )
+    this.log(
+      `                   ${keyColour('Upgrade Status')}: ${valueColour(pgVersionUpgradeInfo.upgradeStatus)}`,
+    )
   }
 
   private async triggerPgVersionUpgrade(
     addonName: string,
-    authorization: OAuthAuthorization): Promise<PgVersionUpgradeInfo> {
+    authorization: OAuthAuthorization,
+  ): Promise<PgVersionUpgradeInfo> {
     const response: HTTP<PgVersionUpgradeInfo> = await HTTP.get(
       getBorealisPgApiUrl(`/heroku/resources/${addonName}/pg-version-upgrades`),
-      {headers: {Authorization: getBorealisPgAuthHeader(authorization)}})
+      {headers: {Authorization: getBorealisPgAuthHeader(authorization)}},
+    )
 
     return response.body
   }
@@ -89,7 +98,7 @@ the ${consoleColours.cliCmdName('borealis-pg:restore:execute')} command to begin
 }
 
 interface PgVersionUpgradeInfo {
-  currentPgMajorVersion: string;
-  nextPgMajorVersion: string | null;
-  upgradeStatus: string;
+  currentPgMajorVersion: string
+  nextPgMajorVersion: string | null
+  upgradeStatus: string
 }

@@ -14,8 +14,7 @@ import {
 import {createHerokuAuth, fetchAddonAttachmentInfo, removeHerokuAuth} from '../../../heroku-api'
 
 export default class PgVersionCancellationCommand extends Command {
-  static description =
-    `Cancel a PostgreSQL version upgrade of a Borealis Isolated Postgres add-on
+  static description = `Cancel a PostgreSQL version upgrade of a Borealis Isolated Postgres add-on
 
 Run this command to cancel a PostgreSQL version upgrade that was started with
 the ${consoleColours.cliCmdName('borealis-pg:upgrade:execute')} command. Can only be used when an upgrade is
@@ -25,9 +24,7 @@ There is no disruption to an add-on database's availability when this command
 is executed. It simply discards the logical replica that was created to perform
 the upgrade behind the scenes.`
 
-  static examples = [
-    `$ heroku borealis-pg:upgrade:cancel --${appOptionName} sushi`,
-  ]
+  static examples = [`$ heroku borealis-pg:upgrade:cancel --${appOptionName} sushi`]
 
   static flags = {
     [addonOptionName]: cliOptions.addon,
@@ -38,8 +35,12 @@ the upgrade behind the scenes.`
     const {flags} = await this.parse(PgVersionCancellationCommand)
 
     const authorization = await createHerokuAuth(this.heroku)
-    const attachmentInfo =
-      await fetchAddonAttachmentInfo(this.heroku, flags.addon, flags.app, this.error)
+    const attachmentInfo = await fetchAddonAttachmentInfo(
+      this.heroku,
+      flags.addon,
+      flags.app,
+      this.error,
+    )
     const {addonName} = processAddonAttachmentInfo(attachmentInfo, this.error)
 
     try {
@@ -57,10 +58,12 @@ the upgrade behind the scenes.`
 
   private async cancelPgVersionUpgrade(
     addonName: string,
-    authorization: OAuthAuthorization): Promise<any> {
+    authorization: OAuthAuthorization,
+  ): Promise<any> {
     const response = await HTTP.delete(
       getBorealisPgApiUrl(`/heroku/resources/${addonName}/pg-version-upgrades/current`),
-      {headers: {Authorization: getBorealisPgAuthHeader(authorization)}})
+      {headers: {Authorization: getBorealisPgAuthHeader(authorization)}},
+    )
 
     return response.body
   }

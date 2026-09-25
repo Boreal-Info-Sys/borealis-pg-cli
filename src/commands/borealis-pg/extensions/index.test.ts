@@ -71,7 +71,8 @@ describe('extension list command', () => {
 
     expect(stdout).to.equal(
       `- ${fakeExt1} (version: ${fakeExt1Version}, schema: ${fakeExt1Schema})\n` +
-      `- ${fakeExt2} (version: ${fakeExt2Version}, schema: ${fakeExt2Schema})\n`)
+        `- ${fakeExt2} (version: ${fakeExt2Version}, schema: ${fakeExt2Schema})\n`,
+    )
     expect(error).to.be.undefined
   })
 
@@ -80,8 +81,11 @@ describe('extension list command', () => {
       .get(`/heroku/resources/${fakeAddonName}/pg-extensions`)
       .reply(200, {extensions: []})
 
-    const {stdout, stderr, error} = await runCommand(
-      ['borealis-pg:extensions', '-a', fakeHerokuAppName])
+    const {stdout, stderr, error} = await runCommand([
+      'borealis-pg:extensions',
+      '-a',
+      fakeHerokuAppName,
+    ])
 
     expect(stdout).to.equal('')
     expect(stderr.trim()).to.endWith('Warning: No extensions found')

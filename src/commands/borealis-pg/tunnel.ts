@@ -65,12 +65,18 @@ ${consoleColours.cliCmdName('borealis-pg:psql')} command to launch an interactiv
 
   async run() {
     const {flags} = await this.parse(TunnelCommand)
-    const attachmentInfo =
-      await fetchAddonAttachmentInfo(this.heroku, flags.addon, flags.app, this.error)
+    const attachmentInfo = await fetchAddonAttachmentInfo(
+      this.heroku,
+      flags.addon,
+      flags.app,
+      this.error,
+    )
     const {addonName} = processAddonAttachmentInfo(attachmentInfo, this.error)
 
-    const [sshConnInfo, dbConnInfo] =
-      await this.createPersonalUsers(addonName, flags[writeAccessOptionName])
+    const [sshConnInfo, dbConnInfo] = await this.createPersonalUsers(
+      addonName,
+      flags[writeAccessOptionName],
+    )
 
     const localPgHost = await getLocalPgHost()
 
@@ -89,7 +95,8 @@ ${consoleColours.cliCmdName('borealis-pg:psql')} command to launch an interactiv
 
   private async createPersonalUsers(
     addonName: string,
-    enableWriteAccess: boolean): Promise<[SshConnectionInfo, DbConnectionInfo]> {
+    enableWriteAccess: boolean,
+  ): Promise<[SshConnectionInfo, DbConnectionInfo]> {
     const authorization = await createHerokuAuth(this.heroku)
     const accessLevelName = enableWriteAccess ? 'read/write' : 'read-only'
     try {
@@ -98,13 +105,15 @@ ${consoleColours.cliCmdName('borealis-pg:psql')} command to launch an interactiv
         Promise.allSettled([
           HTTP.post<SshConnectionInfo>(
             getBorealisPgApiUrl(`/heroku/resources/${addonName}/personal-ssh-users`),
-            {headers: {Authorization: getBorealisPgAuthHeader(authorization)}}),
+            {headers: {Authorization: getBorealisPgAuthHeader(authorization)}},
+          ),
           HTTP.post<DbConnectionInfo>(
             getBorealisPgApiUrl(`/heroku/resources/${addonName}/personal-db-users`),
             {
               headers: {Authorization: getBorealisPgAuthHeader(authorization)},
               body: {enableWriteAccess},
-            }),
+            },
+          ),
         ]),
       )
 
@@ -122,16 +131,14 @@ ${consoleColours.cliCmdName('borealis-pg:psql')} command to launch an interactiv
 
   private connect(connInfo: FullConnectionInfo): SshClient {
     const {db, localPgHost, localPgPort} = connInfo
-    const dbUrl =
-      `postgres://${db.dbUsername}:${db.dbPassword}@${localPgHost}:${localPgPort}/${db.dbName}`
+    const dbUrl = `postgres://${db.dbUsername}:${db.dbPassword}@${localPgHost}:${localPgPort}/${db.dbName}`
 
     return openSshTunnel(
       connInfo,
       {debug: this.debug, info: this.log, warn: this.warn, error: this.error},
       _ => {
         this.log()
-        this.log(
-          'Secure tunnel established. Use the following values to connect to the database:')
+        this.log('Secure tunnel established. Use the following values to connect to the database:')
 
         this.log(`      ${connKeyColour('Username')}: ${connValueColour(db.dbUsername)}`)
         this.log(`      ${connKeyColour('Password')}: ${connValueColour(db.dbPassword)}`)
@@ -149,7 +156,8 @@ steps are required to use a graphical user interface (e.g. pgAdmin).`)
         this.log()
         this.log(
           `Press ${keyboardKeyColour('Ctrl')}+${keyboardKeyColour('C')} ` +
-          'to close the tunnel and exit')
+            'to close the tunnel and exit',
+        )
       },
     )
   }
@@ -160,15 +168,17 @@ steps are required to use a graphical user interface (e.g. pgAdmin).`)
       if (err.statusCode === 403) {
         this.error(
           'Access to the add-on database has been temporarily revoked for personal users. ' +
-          'Generally this indicates the database has persistently exceeded its storage limit. ' +
-          'Try upgrading to a new add-on plan to restore access.')
+            'Generally this indicates the database has persistently exceeded its storage limit. ' +
+            'Try upgrading to a new add-on plan to restore access.',
+        )
       } else if (err.statusCode === 404) {
         this.error('Add-on is not a Borealis Isolated Postgres add-on')
       } else if (err.statusCode === 422) {
         this.error('Add-on is not finished provisioning')
       } else if (err.statusCode === 423) {
-        this.error('Add-on is undergoing a PostgreSQL major version upgrade.\n' +
-          `Try again later or run ${consoleColours.cliCmdName('borealis-pg:upgrade:cancel')} to cancel the upgrade process.`,
+        this.error(
+          'Add-on is undergoing a PostgreSQL major version upgrade.\n' +
+            `Try again later or run ${consoleColours.cliCmdName('borealis-pg:upgrade:cancel')} to cancel the upgrade process.`,
         )
       } else {
         this.error('Add-on service is temporarily unavailable. Try again later.')

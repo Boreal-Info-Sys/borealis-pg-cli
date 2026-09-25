@@ -24,7 +24,7 @@ const defaultSshPort = 22
 const defaultPgPort = 5432
 const customPgPort = 65_432
 const defaulPsqlPath = 'psql'
-const customPsqlPath = 'bin/run'  // This is a real file path
+const customPsqlPath = 'bin/run' // This is a real file path
 
 const fakeAddonId = '0d6058d6-8ac1-4938-825c-f6ceae650093'
 const fakeAddonName = 'borealis-pg-my-fake-addon'
@@ -85,8 +85,9 @@ describe('interactive psql command', () => {
     when(mockChildProcessType.on(anyString(), anyFunction())).thenReturn(mockChildProcessInstance)
 
     mockChildProcessFactoryType = mock()
-    when(mockChildProcessFactoryType.spawn(anyString(), anything()))
-      .thenReturn(mockChildProcessInstance)
+    when(mockChildProcessFactoryType.spawn(anyString(), anything())).thenReturn(
+      mockChildProcessInstance,
+    )
     tunnelServices.childProcessFactory = instance(mockChildProcessFactoryType)
 
     mockNodeProcessType = mock()
@@ -194,7 +195,7 @@ describe('interactive psql command', () => {
     expect(connectConfig.algorithms).to.deep.equal({serverHostKey: [expectedSshHostKeyFormat]})
 
     expect(connectConfig.hostVerifier).to.exist
-    const hostVerifier = connectConfig.hostVerifier as ((keyHash: unknown) => boolean)
+    const hostVerifier = connectConfig.hostVerifier as (keyHash: unknown) => boolean
     expect(hostVerifier(expectedSshHostKey)).to.be.true
     expect(hostVerifier('no good!')).to.be.false
   })
@@ -208,20 +209,23 @@ describe('interactive psql command', () => {
 
     executeSshClientListener()
 
-    verify(mockChildProcessFactoryType.spawn(
-      defaulPsqlPath,
-      deepEqual({
-        env: {
-          ...tunnelServices.nodeProcess.env,
-          PGHOST: localPgHostname,
-          PGPORT: defaultPgPort.toString(),
-          PGDATABASE: fakePgDbName,
-          PGUSER: fakePgPersonalUsername,
-          PGPASSWORD: fakePgPersonalPassword,
-        },
-        shell: true,
-        stdio: 'inherit',
-      }))).once()
+    verify(
+      mockChildProcessFactoryType.spawn(
+        defaulPsqlPath,
+        deepEqual({
+          env: {
+            ...tunnelServices.nodeProcess.env,
+            PGHOST: localPgHostname,
+            PGPORT: defaultPgPort.toString(),
+            PGDATABASE: fakePgDbName,
+            PGUSER: fakePgPersonalUsername,
+            PGPASSWORD: fakePgPersonalPassword,
+          },
+          shell: true,
+          stdio: 'inherit',
+        }),
+      ),
+    ).once()
 
     // Check what happens when the child process ends with a nonzero exit code
     const fakeExitCode = 14
@@ -250,20 +254,23 @@ describe('interactive psql command', () => {
 
     executeSshClientListener()
 
-    verify(mockChildProcessFactoryType.spawn(
-      defaulPsqlPath,
-      deepEqual({
-        env: {
-          ...tunnelServices.nodeProcess.env,
-          PGHOST: localPgHostname,
-          PGPORT: defaultPgPort.toString(),
-          PGDATABASE: fakePgDbName,
-          PGUSER: fakePgPersonalUsername,
-          PGPASSWORD: fakePgPersonalPassword,
-        },
-        shell: true,
-        stdio: 'inherit',
-      }))).once()
+    verify(
+      mockChildProcessFactoryType.spawn(
+        defaulPsqlPath,
+        deepEqual({
+          env: {
+            ...tunnelServices.nodeProcess.env,
+            PGHOST: localPgHostname,
+            PGPORT: defaultPgPort.toString(),
+            PGDATABASE: fakePgDbName,
+            PGUSER: fakePgPersonalUsername,
+            PGPASSWORD: fakePgPersonalPassword,
+          },
+          shell: true,
+          stdio: 'inherit',
+        }),
+      ),
+    ).once()
 
     // Check what happens when the child process ends without an exit code
     verify(mockChildProcessType.on(anyString(), anyFunction())).once()
@@ -284,8 +291,12 @@ describe('interactive psql command', () => {
   it('starts a psql session with DB write access', async () => {
     initPersonalUserRequestMocks(true)
 
-    const {error} = await runCommand(
-      ['borealis-pg:psql', '--app', fakeHerokuAppName, '--write-access'])
+    const {error} = await runCommand([
+      'borealis-pg:psql',
+      '--app',
+      fakeHerokuAppName,
+      '--write-access',
+    ])
 
     expect(error).to.be.undefined
 
@@ -293,27 +304,35 @@ describe('interactive psql command', () => {
 
     expect(nock.pendingMocks()).to.be.empty
 
-    verify(mockChildProcessFactoryType.spawn(
-      defaulPsqlPath,
-      deepEqual({
-        env: {
-          ...tunnelServices.nodeProcess.env,
-          PGHOST: localPgHostname,
-          PGPORT: defaultPgPort.toString(),
-          PGDATABASE: fakePgDbName,
-          PGUSER: fakePgPersonalUsername,
-          PGPASSWORD: fakePgPersonalPassword,
-        },
-        shell: true,
-        stdio: 'inherit',
-      }))).once()
+    verify(
+      mockChildProcessFactoryType.spawn(
+        defaulPsqlPath,
+        deepEqual({
+          env: {
+            ...tunnelServices.nodeProcess.env,
+            PGHOST: localPgHostname,
+            PGPORT: defaultPgPort.toString(),
+            PGDATABASE: fakePgDbName,
+            PGUSER: fakePgPersonalUsername,
+            PGPASSWORD: fakePgPersonalPassword,
+          },
+          shell: true,
+          stdio: 'inherit',
+        }),
+      ),
+    ).once()
   })
 
   it('starts a psql session with a custom Postgres port', async () => {
     initPersonalUserRequestMocks(false)
 
-    const {error} = await runCommand(
-      ['borealis-pg:psql', '--app', fakeHerokuAppName, '--port', customPgPort.toString()])
+    const {error} = await runCommand([
+      'borealis-pg:psql',
+      '--app',
+      fakeHerokuAppName,
+      '--port',
+      customPgPort.toString(),
+    ])
 
     expect(error).to.be.undefined
 
@@ -321,27 +340,35 @@ describe('interactive psql command', () => {
 
     expect(nock.pendingMocks()).to.be.empty
 
-    verify(mockChildProcessFactoryType.spawn(
-      defaulPsqlPath,
-      deepEqual({
-        env: {
-          ...tunnelServices.nodeProcess.env,
-          PGHOST: localPgHostname,
-          PGPORT: customPgPort.toString(),
-          PGDATABASE: fakePgDbName,
-          PGUSER: fakePgPersonalUsername,
-          PGPASSWORD: fakePgPersonalPassword,
-        },
-        shell: true,
-        stdio: 'inherit',
-      }))).once()
+    verify(
+      mockChildProcessFactoryType.spawn(
+        defaulPsqlPath,
+        deepEqual({
+          env: {
+            ...tunnelServices.nodeProcess.env,
+            PGHOST: localPgHostname,
+            PGPORT: customPgPort.toString(),
+            PGDATABASE: fakePgDbName,
+            PGUSER: fakePgPersonalUsername,
+            PGPASSWORD: fakePgPersonalPassword,
+          },
+          shell: true,
+          stdio: 'inherit',
+        }),
+      ),
+    ).once()
   })
 
   it('starts a psql session with a custom psql path', async () => {
     initPersonalUserRequestMocks(false)
 
-    const {error} = await runCommand(
-      ['borealis-pg:psql', '--app', fakeHerokuAppName, '--binary-path', customPsqlPath])
+    const {error} = await runCommand([
+      'borealis-pg:psql',
+      '--app',
+      fakeHerokuAppName,
+      '--binary-path',
+      customPsqlPath,
+    ])
 
     expect(error).to.be.undefined
 
@@ -349,20 +376,23 @@ describe('interactive psql command', () => {
 
     expect(nock.pendingMocks()).to.be.empty
 
-    verify(mockChildProcessFactoryType.spawn(
-      customPsqlPath,
-      deepEqual({
-        env: {
-          ...tunnelServices.nodeProcess.env,
-          PGHOST: localPgHostname,
-          PGPORT: defaultPgPort.toString(),
-          PGDATABASE: fakePgDbName,
-          PGUSER: fakePgPersonalUsername,
-          PGPASSWORD: fakePgPersonalPassword,
-        },
-        shell: true,
-        stdio: 'inherit',
-      }))).once()
+    verify(
+      mockChildProcessFactoryType.spawn(
+        customPsqlPath,
+        deepEqual({
+          env: {
+            ...tunnelServices.nodeProcess.env,
+            PGHOST: localPgHostname,
+            PGPORT: defaultPgPort.toString(),
+            PGDATABASE: fakePgDbName,
+            PGUSER: fakePgPersonalUsername,
+            PGPASSWORD: fakePgPersonalPassword,
+          },
+          shell: true,
+          stdio: 'inherit',
+        }),
+      ),
+    ).once()
   })
 
   it('starts SSH port forwarding for a read-only user', async () => {
@@ -375,12 +405,15 @@ describe('interactive psql command', () => {
     const [tcpConnectionListener] = capture(mockTcpServerFactoryType.create).last()
     tcpConnectionListener(mockTcpSocketInstance)
 
-    verify(mockSshClientType.forwardOut(
-      localPgHostname,
-      defaultPgPort,
-      fakePgReaderHost,
-      customPgPort,
-      anyFunction())).once()
+    verify(
+      mockSshClientType.forwardOut(
+        localPgHostname,
+        defaultPgPort,
+        fakePgReaderHost,
+        customPgPort,
+        anyFunction(),
+      ),
+    ).once()
 
     const [_, _1, _2, _3, portForwardListener] = capture(mockSshClientType.forwardOut).last()
     assert(typeof portForwardListener !== 'undefined')
@@ -404,12 +437,15 @@ describe('interactive psql command', () => {
     const [tcpConnectionListener] = capture(mockTcpServerFactoryType.create).last()
     tcpConnectionListener(mockTcpSocketInstance)
 
-    verify(mockSshClientType.forwardOut(
-      localPgHostname,
-      defaultPgPort,
-      fakePgWriterHost,
-      customPgPort,
-      anyFunction())).once()
+    verify(
+      mockSshClientType.forwardOut(
+        localPgHostname,
+        defaultPgPort,
+        fakePgWriterHost,
+        customPgPort,
+        anyFunction(),
+      ),
+    ).once()
 
     const [_, _1, _2, _3, portForwardListener] = capture(mockSshClientType.forwardOut).last()
     assert(typeof portForwardListener !== 'undefined')
@@ -434,7 +470,7 @@ describe('interactive psql command', () => {
     verify(mockNodeProcessType.on('SIGINT', anyFunction())).once()
 
     const [_, processListener] = capture(mockNodeProcessType.on).last()
-    const sigintListener = (processListener as unknown) as NodeJS.SignalsListener
+    const sigintListener = processListener as unknown as NodeJS.SignalsListener
     sigintListener('SIGINT')
 
     verify(mockSshClientType.end()).never()
@@ -458,8 +494,13 @@ describe('interactive psql command', () => {
   })
 
   it('rejects a custom port that is not an integer', async () => {
-    const {error} = await runCommand(
-      ['borealis-pg:psql', '--app', fakeHerokuAppName, '--port', 'port-must-be-an-integer'])
+    const {error} = await runCommand([
+      'borealis-pg:psql',
+      '--app',
+      fakeHerokuAppName,
+      '--port',
+      'port-must-be-an-integer',
+    ])
 
     verify(mockTcpServerFactoryType.create(anyFunction())).never()
     verify(mockSshClientFactoryType.create()).never()
@@ -474,7 +515,8 @@ describe('interactive psql command', () => {
     verify(mockSshClientFactoryType.create()).never()
 
     expect(error?.message).to.contain(
-      'Expected an integer greater than or equal to 1 but received: 0')
+      'Expected an integer greater than or equal to 1 but received: 0',
+    )
   })
 
   it('rejects a custom port that is greater than 65535', async () => {
@@ -484,7 +526,8 @@ describe('interactive psql command', () => {
     verify(mockSshClientFactoryType.create()).never()
 
     expect(error?.message).to.contain(
-      'Expected an integer less than or equal to 65535 but received: 65536')
+      'Expected an integer less than or equal to 65535 but received: 65536',
+    )
   })
 
   it('throws an unexpected SSH client error when encountered', async () => {
@@ -502,13 +545,18 @@ describe('interactive psql command', () => {
   it('handles a local port conflict', async () => {
     initPersonalUserRequestMocks(false)
 
-    const {error} = await runCommand(
-      ['borealis-pg:psql', '-a', fakeHerokuAppName, '-p', customPgPort.toString()])
+    const {error} = await runCommand([
+      'borealis-pg:psql',
+      '-a',
+      fakeHerokuAppName,
+      '-p',
+      customPgPort.toString(),
+    ])
 
     expect(error).to.be.undefined
 
     const [_, listener] = capture(mockTcpServerType.on).last()
-    const errorListener = listener as ((err: unknown) => void)
+    const errorListener = listener as (err: unknown) => void
 
     const {stderr} = await captureOutput(async () => errorListener({code: 'EADDRINUSE'}))
 
@@ -525,7 +573,7 @@ describe('interactive psql command', () => {
     expect(cmdError).to.be.undefined
 
     const [_, listener] = capture(mockTcpServerType.on).last()
-    const errorListener = listener as ((err: unknown) => void)
+    const errorListener = listener as (err: unknown) => void
 
     const fakeError = new Error("This isn't a real error")
     const {error} = await captureOutput(async () => errorListener(fakeError))
@@ -548,7 +596,8 @@ describe('interactive psql command', () => {
 
     const fakeError = new Error('Just testing!')
     const {error} = await captureOutput(async () =>
-      portForwardListener(fakeError, mockSshStreamInstance))
+      portForwardListener(fakeError, mockSshStreamInstance),
+    )
 
     expect(error).to.equal(fakeError)
 
@@ -583,14 +632,12 @@ describe('interactive psql command', () => {
       .post(`/heroku/resources/${fakeAddonName}/personal-ssh-users`)
       .reply(404, {reason: 'Add-on does not exist for this personal SSH user'})
       .post(`/heroku/resources/${fakeAddonName}/personal-db-users`)
-      .reply(
-        200,
-        {
-          dbHost: fakePgReaderHost,
-          dbName: fakePgDbName,
-          dbUsername: fakePgPersonalUsername,
-          dbPassword: fakePgPersonalPassword,
-        })
+      .reply(200, {
+        dbHost: fakePgReaderHost,
+        dbName: fakePgDbName,
+        dbUsername: fakePgPersonalUsername,
+        dbPassword: fakePgPersonalPassword,
+      })
 
     const {error} = await runCommand(['borealis-pg:psql', '-a', fakeHerokuAppName])
 
@@ -605,14 +652,12 @@ describe('interactive psql command', () => {
       .post(`/heroku/resources/${fakeAddonName}/personal-ssh-users`)
       .reply(422, {reason: 'Add-on is not ready for a personal SSH user yet'})
       .post(`/heroku/resources/${fakeAddonName}/personal-db-users`)
-      .reply(
-        201,
-        {
-          dbHost: fakePgReaderHost,
-          dbName: fakePgDbName,
-          dbUsername: fakePgPersonalUsername,
-          dbPassword: fakePgPersonalPassword,
-        })
+      .reply(201, {
+        dbHost: fakePgReaderHost,
+        dbName: fakePgDbName,
+        dbUsername: fakePgPersonalUsername,
+        dbPassword: fakePgPersonalPassword,
+      })
 
     const {error} = await runCommand(['borealis-pg:psql', '-a', fakeHerokuAppName])
 
@@ -625,15 +670,13 @@ describe('interactive psql command', () => {
   it('exits with an error if the add-on is undergoing a PostgreSQL version upgrade', async () => {
     nock(borealisPgApiBaseUrl)
       .post(`/heroku/resources/${fakeAddonName}/personal-ssh-users`)
-      .reply(
-        200,
-        {
-          sshHost: fakeSshHost,
-          sshPort: defaultSshPort,
-          sshUsername: fakeSshUsername,
-          sshPrivateKey: fakeSshPrivateKey,
-          publicSshHostKey: expectedSshHostKeyEntry,
-        })
+      .reply(200, {
+        sshHost: fakeSshHost,
+        sshPort: defaultSshPort,
+        sshUsername: fakeSshUsername,
+        sshPrivateKey: fakeSshPrivateKey,
+        publicSshHostKey: expectedSshHostKeyEntry,
+      })
       .post(`/heroku/resources/${fakeAddonName}/personal-db-users`)
       .reply(423, {reason: 'Locked'})
 
@@ -650,14 +693,12 @@ describe('interactive psql command', () => {
       .post(`/heroku/resources/${fakeAddonName}/personal-ssh-users`)
       .reply(503, {reason: 'Server error!'})
       .post(`/heroku/resources/${fakeAddonName}/personal-db-users`)
-      .reply(
-        200,
-        {
-          dbHost: fakePgReaderHost,
-          dbName: fakePgDbName,
-          dbUsername: fakePgPersonalUsername,
-          dbPassword: fakePgPersonalPassword,
-        })
+      .reply(200, {
+        dbHost: fakePgReaderHost,
+        dbName: fakePgDbName,
+        dbUsername: fakePgPersonalUsername,
+        dbPassword: fakePgPersonalPassword,
+      })
 
     const {error} = await runCommand(['borealis-pg:psql', '-a', fakeHerokuAppName])
 
@@ -672,14 +713,12 @@ describe('interactive psql command', () => {
       .post(`/heroku/resources/${fakeAddonName}/personal-db-users`)
       .reply(403, {reason: 'DB write access revoked'})
       .post(`/heroku/resources/${fakeAddonName}/personal-ssh-users`)
-      .reply(
-        200,
-        {
-          sshHost: fakeSshHost,
-          sshUsername: fakeSshUsername,
-          sshPrivateKey: fakeSshPrivateKey,
-          publicSshHostKey: expectedSshHostKeyEntry,
-        })
+      .reply(200, {
+        sshHost: fakeSshHost,
+        sshUsername: fakeSshUsername,
+        sshPrivateKey: fakeSshPrivateKey,
+        publicSshHostKey: expectedSshHostKeyEntry,
+      })
 
     const {error} = await runCommand(['borealis-pg:psql', '-a', fakeHerokuAppName])
 
@@ -687,37 +726,34 @@ describe('interactive psql command', () => {
     verify(mockSshClientFactoryType.create()).never()
 
     expect(error?.message).to.contain(
-      'Access to the add-on database has been temporarily revoked for personal users')
+      'Access to the add-on database has been temporarily revoked for personal users',
+    )
   })
 
-  it(
-    'exits with an error when there is an API error while creating a personal DB user',
-    async () => {
-      nock(borealisPgApiBaseUrl)
-        .post(`/heroku/resources/${fakeAddonName}/personal-db-users`, {enableWriteAccess: false})
-        .reply(503, {reason: 'Server error!'})
-        .post(`/heroku/resources/${fakeAddonName}/personal-ssh-users`)
-        .reply(
-          200,
-          {
-            sshHost: fakeSshHost,
-            sshUsername: fakeSshUsername,
-            sshPrivateKey: fakeSshPrivateKey,
-            publicSshHostKey: expectedSshHostKeyEntry,
-          })
+  it('exits with an error when there is an API error while creating a personal DB user', async () => {
+    nock(borealisPgApiBaseUrl)
+      .post(`/heroku/resources/${fakeAddonName}/personal-db-users`, {enableWriteAccess: false})
+      .reply(503, {reason: 'Server error!'})
+      .post(`/heroku/resources/${fakeAddonName}/personal-ssh-users`)
+      .reply(200, {
+        sshHost: fakeSshHost,
+        sshUsername: fakeSshUsername,
+        sshPrivateKey: fakeSshPrivateKey,
+        publicSshHostKey: expectedSshHostKeyEntry,
+      })
 
-      const {error} = await runCommand(['borealis-pg:psql', '-a', fakeHerokuAppName])
+    const {error} = await runCommand(['borealis-pg:psql', '-a', fakeHerokuAppName])
 
-      verify(mockTcpServerFactoryType.create(anyFunction())).never()
-      verify(mockSshClientFactoryType.create()).never()
+    verify(mockTcpServerFactoryType.create(anyFunction())).never()
+    verify(mockSshClientFactoryType.create()).never()
 
-      expect(error?.message).to.contain(
-        'Add-on service is temporarily unavailable. Try again later.')
-    })
+    expect(error?.message).to.contain('Add-on service is temporarily unavailable. Try again later.')
+  })
 
   function getTcpSocketListener(
     expectedEventName: string,
-    expectedCallCount: number): (...args: unknown[]) => void {
+    expectedCallCount: number,
+  ): (...args: unknown[]) => void {
     for (let callIndex = 0; callIndex < expectedCallCount; callIndex++) {
       const [eventName, socketListener] = capture(mockTcpSocketType.on).byCallIndex(callIndex)
       if (eventName === expectedEventName) {
@@ -734,7 +770,7 @@ describe('interactive psql command', () => {
 
     expect(sshClientEvent).to.equal('ready')
 
-    const sshClientListener = (listener as unknown) as (() => void)
+    const sshClientListener = listener as unknown as () => void
     sshClientListener()
   }
 })
@@ -742,23 +778,19 @@ describe('interactive psql command', () => {
 function initPersonalUserRequestMocks(enableWriteAccess: boolean) {
   nock(borealisPgApiBaseUrl, {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}})
     .post(`/heroku/resources/${fakeAddonName}/personal-ssh-users`)
-    .reply(
-      200,
-      {
-        sshHost: fakeSshHost,
-        sshPort: defaultSshPort,
-        sshUsername: fakeSshUsername,
-        sshPrivateKey: fakeSshPrivateKey,
-        publicSshHostKey: expectedSshHostKeyEntry,
-      })
+    .reply(200, {
+      sshHost: fakeSshHost,
+      sshPort: defaultSshPort,
+      sshUsername: fakeSshUsername,
+      sshPrivateKey: fakeSshPrivateKey,
+      publicSshHostKey: expectedSshHostKeyEntry,
+    })
     .post(`/heroku/resources/${fakeAddonName}/personal-db-users`, {enableWriteAccess})
-    .reply(
-      200,
-      {
-        dbHost: enableWriteAccess ? fakePgWriterHost : fakePgReaderHost,
-        dbPort: customPgPort,
-        dbName: fakePgDbName,
-        dbUsername: fakePgPersonalUsername,
-        dbPassword: fakePgPersonalPassword,
-      })
+    .reply(200, {
+      dbHost: enableWriteAccess ? fakePgWriterHost : fakePgReaderHost,
+      dbPort: customPgPort,
+      dbName: fakePgDbName,
+      dbUsername: fakePgPersonalUsername,
+      dbPassword: fakePgPersonalPassword,
+    })
 }

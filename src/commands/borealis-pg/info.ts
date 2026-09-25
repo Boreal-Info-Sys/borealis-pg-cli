@@ -64,16 +64,20 @@ export default class AddonInfoCommand extends Command {
   async run() {
     const {flags} = await this.parse(AddonInfoCommand)
     const authorization = await createHerokuAuth(this.heroku)
-    const attachmentInfo =
-      await fetchAddonAttachmentInfo(this.heroku, flags.addon, flags.app, this.error)
+    const attachmentInfo = await fetchAddonAttachmentInfo(
+      this.heroku,
+      flags.addon,
+      flags.app,
+      this.error,
+    )
     const {addonName} = processAddonAttachmentInfo(attachmentInfo, this.error)
 
     try {
       const response = await applyActionSpinner<HTTP<AddonInfo>>(
         `Fetching information about add-on ${color.addon(addonName)}`,
-        HTTP.get(
-          getBorealisPgApiUrl(`/heroku/resources/${addonName}`),
-          {headers: {Authorization: getBorealisPgAuthHeader(authorization)}}),
+        HTTP.get(getBorealisPgApiUrl(`/heroku/resources/${addonName}`), {
+          headers: {Authorization: getBorealisPgAuthHeader(authorization)},
+        }),
       )
 
       this.printAddonInfo(response.body)
@@ -87,18 +91,19 @@ export default class AddonInfoCommand extends Command {
     const dbTenancyType = dbTenancyTypes[addonInfo.dbTenancyType] ?? addonInfo.dbTenancyType
 
     const addonStatus = addonStatuses[addonInfo.status] ?? addonInfo.status
-    const storageComplianceStatus = storageComplianceStatuses[addonInfo.storageComplianceStatus] ??
+    const storageComplianceStatus =
+      storageComplianceStatuses[addonInfo.storageComplianceStatus] ??
       addonInfo.storageComplianceStatus
-    const storageComplianceDeadline = addonInfo.storageComplianceDeadline ?
-      DateTime.fromISO(addonInfo.storageComplianceDeadline).toISO() as string :
-      'N/A'
+    const storageComplianceDeadline = addonInfo.storageComplianceDeadline
+      ? (DateTime.fromISO(addonInfo.storageComplianceDeadline).toISO() as string)
+      : 'N/A'
 
     const dbStorageMaxGib = addonInfo.dbStorageMaxBytes / bytesPerGib
-    const dbStorageMaxFractionDigits = (dbStorageMaxGib < 1) ? 2 : 0
+    const dbStorageMaxFractionDigits = dbStorageMaxGib < 1 ? 2 : 0
     const dbStorageMaxDisplay = dbStorageMaxGib.toFixed(dbStorageMaxFractionDigits) + ' GiB'
 
     const dbStorageUsageGib = addonInfo.dbStorageUsageBytes / bytesPerGib
-    const dbStorageUsageFractionDigits = (dbStorageUsageGib < 1) ? 3 : 1
+    const dbStorageUsageFractionDigits = dbStorageUsageGib < 1 ? 3 : 1
     const dbStorageUsageDisplay = dbStorageUsageGib.toFixed(dbStorageUsageFractionDigits) + ' GiB'
 
     const appDbName = addonInfo.appDbName ?? '(pending)'
@@ -113,15 +118,23 @@ export default class AddonInfoCommand extends Command {
     this.log(`                      ${keyColour('Region')}: ${valueColour(region)}`)
     this.log(`                   ${keyColour('Plan Name')}: ${valueColour(addonInfo.planName)}`)
     this.log(`                 ${keyColour('Environment')}: ${valueColour(dbTenancyType)}`)
-    this.log(`          ${keyColour('PostgreSQL Version')}: ${valueColour(addonInfo.postgresVersion)}`)
+    this.log(
+      `          ${keyColour('PostgreSQL Version')}: ${valueColour(addonInfo.postgresVersion)}`,
+    )
     this.log(`             ${keyColour('Maximum Storage')}: ${valueColour(dbStorageMaxDisplay)}`)
     this.log(`                ${keyColour('Storage Used')}: ${valueColour(dbStorageUsageDisplay)}`)
-    this.log(`          ${keyColour('Read-only Replicas')}: ${valueColour(addonInfo.replicaQuantity.toString())}`)
+    this.log(
+      `          ${keyColour('Read-only Replicas')}: ${valueColour(addonInfo.replicaQuantity.toString())}`,
+    )
     this.log(`                 ${keyColour('App DB Name')}: ${valueColour(appDbName)}`)
     this.log(`                  ${keyColour('Created At')}: ${valueColour(createdAt)}`)
     this.log(` ${keyColour('Restored/Cloned From Add-on')}: ${valueColour(restoreSourceAddonName)}`)
-    this.log(`   ${keyColour('Storage Compliance Status')}: ${valueColour(storageComplianceStatus)}`)
-    this.log(` ${keyColour('Storage Compliance Deadline')}: ${valueColour(storageComplianceDeadline)}`)
+    this.log(
+      `   ${keyColour('Storage Compliance Status')}: ${valueColour(storageComplianceStatus)}`,
+    )
+    this.log(
+      ` ${keyColour('Storage Compliance Deadline')}: ${valueColour(storageComplianceDeadline)}`,
+    )
   }
 
   async catch(err: Error) {
@@ -139,18 +152,18 @@ export default class AddonInfoCommand extends Command {
 }
 
 interface AddonInfo {
-  addonName: string;
-  appDbName: string | null;
-  createdAt: string;
-  dbStorageMaxBytes: number;
-  dbStorageUsageBytes: number;
-  dbTenancyType: string;
-  planName: string;
-  postgresVersion: string;
-  region: string;
-  replicaQuantity: number;
-  restoreSourceAddonName: string | null;
-  status: string;
-  storageComplianceDeadline: string | null;
-  storageComplianceStatus: string;
+  addonName: string
+  appDbName: string | null
+  createdAt: string
+  dbStorageMaxBytes: number
+  dbStorageUsageBytes: number
+  dbTenancyType: string
+  planName: string
+  postgresVersion: string
+  region: string
+  replicaQuantity: number
+  restoreSourceAddonName: string | null
+  status: string
+  storageComplianceDeadline: string | null
+  storageComplianceStatus: string
 }

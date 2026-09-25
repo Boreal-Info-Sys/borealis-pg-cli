@@ -81,13 +81,11 @@ describe('data integration registration command', () => {
 
   it('registers a data integration without write access', async () => {
     nock(borealisPgApiBaseUrl, {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}})
-      .post(
-        `/heroku/resources/${fakeAddonName}/data-integrations`,
-        {
-          integrationName: fakeIntegrationName,
-          sshPublicKey: fakeSshPublicKey,
-          enableWriteAccess: false,
-        })
+      .post(`/heroku/resources/${fakeAddonName}/data-integrations`, {
+        integrationName: fakeIntegrationName,
+        sshPublicKey: fakeSshPublicKey,
+        enableWriteAccess: false,
+      })
       .reply(201, expectedResponseContent)
 
     const {stdout, error} = await runCommand([
@@ -107,8 +105,7 @@ describe('data integration registration command', () => {
     expect(stdout).to.containIgnoreSpaces(`SSH Host: ${fakeSshHost}`)
     expect(stdout).to.containIgnoreSpaces(`SSH Port: ${fakeSshPort}`)
     expect(stdout).to.containIgnoreSpaces(`SSH Username: ${fakeSshUsername}`)
-    expect(stdout).to.containIgnoreSpaces(
-      `SSH Server Public Host Key: ${fakePublicSshHostKey}`)
+    expect(stdout).to.containIgnoreSpaces(`SSH Server Public Host Key: ${fakePublicSshHostKey}`)
 
     expect(error).to.be.undefined
 
@@ -117,13 +114,11 @@ describe('data integration registration command', () => {
 
   it('registers a data integration with write access', async () => {
     nock(borealisPgApiBaseUrl, {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}})
-      .post(
-        `/heroku/resources/${fakeAddonName}/data-integrations`,
-        {
-          integrationName: fakeIntegrationName,
-          sshPublicKey: fakeSshPublicKey,
-          enableWriteAccess: true,
-        })
+      .post(`/heroku/resources/${fakeAddonName}/data-integrations`, {
+        integrationName: fakeIntegrationName,
+        sshPublicKey: fakeSshPublicKey,
+        enableWriteAccess: true,
+      })
       .reply(201, expectedResponseContent)
 
     const {stdout, error} = await runCommand([
@@ -144,8 +139,7 @@ describe('data integration registration command', () => {
     expect(stdout).to.containIgnoreSpaces(`SSH Host: ${fakeSshHost}`)
     expect(stdout).to.containIgnoreSpaces(`SSH Port: ${fakeSshPort}`)
     expect(stdout).to.containIgnoreSpaces(`SSH Username: ${fakeSshUsername}`)
-    expect(stdout).to.containIgnoreSpaces(
-      `SSH Server Public Host Key: ${fakePublicSshHostKey}`)
+    expect(stdout).to.containIgnoreSpaces(`SSH Server Public Host Key: ${fakePublicSshHostKey}`)
 
     expect(error).to.be.undefined
 
@@ -154,13 +148,11 @@ describe('data integration registration command', () => {
 
   it('registers a data integration with an unquoted SSH public key', async () => {
     nock(borealisPgApiBaseUrl, {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}})
-      .post(
-        `/heroku/resources/${fakeAddonName}/data-integrations`,
-        {
-          integrationName: fakeIntegrationName,
-          sshPublicKey: fakeSshPublicKey,
-          enableWriteAccess: false,
-        })
+      .post(`/heroku/resources/${fakeAddonName}/data-integrations`, {
+        integrationName: fakeIntegrationName,
+        sshPublicKey: fakeSshPublicKey,
+        enableWriteAccess: false,
+      })
       .reply(201, expectedResponseContent)
 
     const {stdout, error} = await runCommand([
@@ -169,7 +161,7 @@ describe('data integration registration command', () => {
       fakeHerokuAppName,
       '--name',
       fakeIntegrationName,
-      ...fakeSshPublicKeyPieces,  // Note that the SSH public key is split across two separate args
+      ...fakeSshPublicKeyPieces, // Note that the SSH public key is split across two separate args
     ])
 
     expect(stdout).to.containIgnoreSpaces(`Database Host: ${fakeDbHost}`)
@@ -180,8 +172,7 @@ describe('data integration registration command', () => {
     expect(stdout).to.containIgnoreSpaces(`SSH Host: ${fakeSshHost}`)
     expect(stdout).to.containIgnoreSpaces(`SSH Port: ${fakeSshPort}`)
     expect(stdout).to.containIgnoreSpaces(`SSH Username: ${fakeSshUsername}`)
-    expect(stdout).to.containIgnoreSpaces(
-      `SSH Server Public Host Key: ${fakePublicSshHostKey}`)
+    expect(stdout).to.containIgnoreSpaces(`SSH Server Public Host Key: ${fakePublicSshHostKey}`)
 
     expect(error).to.be.undefined
 
@@ -329,8 +320,12 @@ describe('data integration registration command', () => {
   })
 
   it('exits with an error if there is no integration name option', async () => {
-    const {stdout, error} = await runCommand(
-      ['borealis-pg:integrations:register', '-a', fakeHerokuAppName, fakeSshPublicKey])
+    const {stdout, error} = await runCommand([
+      'borealis-pg:integrations:register',
+      '-a',
+      fakeHerokuAppName,
+      fakeSshPublicKey,
+    ])
 
     expect(stdout).to.equal('')
     expect(error?.message).to.contain('Missing required flag name')

@@ -63,165 +63,154 @@ describe('extension installation command', () => {
 
   it('installs the requested extension', async () => {
     nock(borealisPgApiBaseUrl, {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}})
-      .post(
-        `/heroku/resources/${fakeAddonName}/pg-extensions`,
-        {pgExtensionName: fakeExt1})
+      .post(`/heroku/resources/${fakeAddonName}/pg-extensions`, {pgExtensionName: fakeExt1})
       .reply(201, {pgExtensionSchema: fakeExt1Schema, pgExtensionVersion: fakeExt1Version})
 
-    const {stdout, error} = await runCommand(
-      ['borealis-pg:extensions:install', '--app', fakeHerokuAppName, fakeExt1])
+    const {stdout, error} = await runCommand([
+      'borealis-pg:extensions:install',
+      '--app',
+      fakeHerokuAppName,
+      fakeExt1,
+    ])
 
     expect(stdout).to.equal(
-      `- ${fakeExt1} (version: ${fakeExt1Version}, schema: ${fakeExt1Schema})\n`)
+      `- ${fakeExt1} (version: ${fakeExt1Version}, schema: ${fakeExt1Schema})\n`,
+    )
     expect(error).to.be.undefined
     expect(nock.pendingMocks()).to.be.empty
   })
 
-  it(
-    'suppresses errors with the --suppress-conflict option when an extension is already installed',
-    async () => {
-      nock(borealisPgApiBaseUrl, {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}})
-        .post(
-          `/heroku/resources/${fakeAddonName}/pg-extensions`,
-          {pgExtensionName: fakeExt1})
-        .reply(409, {reason: 'Already installed!'})
+  it('suppresses errors with the --suppress-conflict option when an extension is already installed', async () => {
+    nock(borealisPgApiBaseUrl, {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}})
+      .post(`/heroku/resources/${fakeAddonName}/pg-extensions`, {pgExtensionName: fakeExt1})
+      .reply(409, {reason: 'Already installed!'})
 
-      const {stdout, stderr, error} = await runCommand([
-        'borealis-pg:extensions:install',
-        '--app',
-        fakeHerokuAppName,
-        '--suppress-conflict',
-        fakeExt1,
-      ])
+    const {stdout, stderr, error} = await runCommand([
+      'borealis-pg:extensions:install',
+      '--app',
+      fakeHerokuAppName,
+      '--suppress-conflict',
+      fakeExt1,
+    ])
 
-      expect(stderr).to.contain(`Extension ${fakeExt1} is already installed`)
-      expect(stdout).to.equal('')
-      expect(error).to.be.undefined
-      expect(nock.pendingMocks()).to.be.empty
-    })
+    expect(stderr).to.contain(`Extension ${fakeExt1} is already installed`)
+    expect(stdout).to.equal('')
+    expect(error).to.be.undefined
+    expect(nock.pendingMocks()).to.be.empty
+  })
 
   it('recursively installs the extension and its dependencies', async () => {
     nock(borealisPgApiBaseUrl)
-      .post(
-        `/heroku/resources/${fakeAddonName}/pg-extensions`,
-        {pgExtensionName: fakeExt1})
+      .post(`/heroku/resources/${fakeAddonName}/pg-extensions`, {pgExtensionName: fakeExt1})
       .reply(400, {reason: 'Missing dependencies', dependencies: [fakeExt2]})
-      .post(
-        `/heroku/resources/${fakeAddonName}/pg-extensions`,
-        {pgExtensionName: fakeExt2})
+      .post(`/heroku/resources/${fakeAddonName}/pg-extensions`, {pgExtensionName: fakeExt2})
       .reply(400, {reason: 'Missing dependencies', dependencies: [fakeExt3]})
-      .post(
-        `/heroku/resources/${fakeAddonName}/pg-extensions`,
-        {pgExtensionName: fakeExt3})
+      .post(`/heroku/resources/${fakeAddonName}/pg-extensions`, {pgExtensionName: fakeExt3})
       .reply(201, {pgExtensionSchema: fakeExt3Schema, pgExtensionVersion: fakeExt3Version})
-      .post(
-        `/heroku/resources/${fakeAddonName}/pg-extensions`,
-        {pgExtensionName: fakeExt2})
+      .post(`/heroku/resources/${fakeAddonName}/pg-extensions`, {pgExtensionName: fakeExt2})
       .reply(201, {pgExtensionSchema: fakeExt2Schema, pgExtensionVersion: fakeExt2Version})
-      .post(
-        `/heroku/resources/${fakeAddonName}/pg-extensions`,
-        {pgExtensionName: fakeExt1})
+      .post(`/heroku/resources/${fakeAddonName}/pg-extensions`, {pgExtensionName: fakeExt1})
       .reply(201, {pgExtensionSchema: fakeExt1Schema, pgExtensionVersion: fakeExt1Version})
 
-    const {stdout, error} = await runCommand(
-      ['borealis-pg:extensions:install', '-r', '-a', fakeHerokuAppName, fakeExt1])
+    const {stdout, error} = await runCommand([
+      'borealis-pg:extensions:install',
+      '-r',
+      '-a',
+      fakeHerokuAppName,
+      fakeExt1,
+    ])
 
     expect(stdout).to.equal(
       `- ${fakeExt1} (version: ${fakeExt1Version}, schema: ${fakeExt1Schema})\n` +
-      `- ${fakeExt2} (version: ${fakeExt2Version}, schema: ${fakeExt2Schema})\n` +
-      `- ${fakeExt3} (version: ${fakeExt3Version}, schema: ${fakeExt3Schema})\n`)
+        `- ${fakeExt2} (version: ${fakeExt2Version}, schema: ${fakeExt2Schema})\n` +
+        `- ${fakeExt3} (version: ${fakeExt3Version}, schema: ${fakeExt3Schema})\n`,
+    )
     expect(error).to.be.undefined
     expect(nock.pendingMocks()).to.be.empty
   })
 
-  it(
-    'recursively installs the extension and its dependencies when one is already installed',
-    async () => {
-      nock(borealisPgApiBaseUrl)
-        .post(
-          `/heroku/resources/${fakeAddonName}/pg-extensions`,
-          {pgExtensionName: fakeExt1})
-        .reply(400, {reason: 'Missing dependencies', dependencies: [fakeExt2, fakeExt3]})
-        .post(
-          `/heroku/resources/${fakeAddonName}/pg-extensions`,
-          {pgExtensionName: fakeExt2})
-        .reply(409, {reason: 'Already installed'})
-        .post(
-          `/heroku/resources/${fakeAddonName}/pg-extensions`,
-          {pgExtensionName: fakeExt3})
-        .reply(201, {pgExtensionSchema: fakeExt3Schema, pgExtensionVersion: fakeExt3Version})
-        .post(
-          `/heroku/resources/${fakeAddonName}/pg-extensions`,
-          {pgExtensionName: fakeExt1})
-        .reply(201, {pgExtensionSchema: fakeExt1Schema, pgExtensionVersion: fakeExt1Version})
+  it('recursively installs the extension and its dependencies when one is already installed', async () => {
+    nock(borealisPgApiBaseUrl)
+      .post(`/heroku/resources/${fakeAddonName}/pg-extensions`, {pgExtensionName: fakeExt1})
+      .reply(400, {reason: 'Missing dependencies', dependencies: [fakeExt2, fakeExt3]})
+      .post(`/heroku/resources/${fakeAddonName}/pg-extensions`, {pgExtensionName: fakeExt2})
+      .reply(409, {reason: 'Already installed'})
+      .post(`/heroku/resources/${fakeAddonName}/pg-extensions`, {pgExtensionName: fakeExt3})
+      .reply(201, {pgExtensionSchema: fakeExt3Schema, pgExtensionVersion: fakeExt3Version})
+      .post(`/heroku/resources/${fakeAddonName}/pg-extensions`, {pgExtensionName: fakeExt1})
+      .reply(201, {pgExtensionSchema: fakeExt1Schema, pgExtensionVersion: fakeExt1Version})
 
-      const {stdout, error} = await runCommand([
-        'borealis-pg:extensions:install',
-        '--recursive',
-        '--app',
-        fakeHerokuAppName,
-        fakeExt1,
-      ])
+    const {stdout, error} = await runCommand([
+      'borealis-pg:extensions:install',
+      '--recursive',
+      '--app',
+      fakeHerokuAppName,
+      fakeExt1,
+    ])
 
-      expect(stdout).to.equal(
-        `- ${fakeExt1} (version: ${fakeExt1Version}, schema: ${fakeExt1Schema})\n` +
-        `- ${fakeExt3} (version: ${fakeExt3Version}, schema: ${fakeExt3Schema})\n`)
-      expect(error).to.be.undefined
-      expect(nock.pendingMocks()).to.be.empty
-    })
+    expect(stdout).to.equal(
+      `- ${fakeExt1} (version: ${fakeExt1Version}, schema: ${fakeExt1Schema})\n` +
+        `- ${fakeExt3} (version: ${fakeExt3Version}, schema: ${fakeExt3Schema})\n`,
+    )
+    expect(error).to.be.undefined
+    expect(nock.pendingMocks()).to.be.empty
+  })
 
-  it(
-    'does not get stuck in infinite recursion if retrying after missing dependencies',
-    async () => {
-      nock(borealisPgApiBaseUrl)
-        .post(
-          `/heroku/resources/${fakeAddonName}/pg-extensions`,
-          {pgExtensionName: fakeExt2})
-        .reply(400, {reason: 'Missing dependencies', dependencies: [fakeExt1]})
-        .post(
-          `/heroku/resources/${fakeAddonName}/pg-extensions`,
-          {pgExtensionName: fakeExt1})
-        .reply(201, {pgExtensionSchema: fakeExt3Schema})
-        .post(
-          `/heroku/resources/${fakeAddonName}/pg-extensions`,
-          {pgExtensionName: fakeExt2})
-        .reply(400, {reason: 'Missing dependencies', dependencies: [fakeExt1]})
+  it('does not get stuck in infinite recursion if retrying after missing dependencies', async () => {
+    nock(borealisPgApiBaseUrl)
+      .post(`/heroku/resources/${fakeAddonName}/pg-extensions`, {pgExtensionName: fakeExt2})
+      .reply(400, {reason: 'Missing dependencies', dependencies: [fakeExt1]})
+      .post(`/heroku/resources/${fakeAddonName}/pg-extensions`, {pgExtensionName: fakeExt1})
+      .reply(201, {pgExtensionSchema: fakeExt3Schema})
+      .post(`/heroku/resources/${fakeAddonName}/pg-extensions`, {pgExtensionName: fakeExt2})
+      .reply(400, {reason: 'Missing dependencies', dependencies: [fakeExt1]})
 
-      const {stdout, error} = await runCommand(
-        ['borealis-pg:extensions:install', '-r', '-a', fakeHerokuAppName, fakeExt2])
+    const {stdout, error} = await runCommand([
+      'borealis-pg:extensions:install',
+      '-r',
+      '-a',
+      fakeHerokuAppName,
+      fakeExt2,
+    ])
 
-      expect(stdout).to.equal('')
-      expect(error?.message).to.contain('Unexpected error during installation')
-      expect(nock.pendingMocks()).to.be.empty
-    })
+    expect(stdout).to.equal('')
+    expect(error?.message).to.contain('Unexpected error during installation')
+    expect(nock.pendingMocks()).to.be.empty
+  })
 
   it('exits with an error if the extension has missing dependencies', async () => {
     nock(borealisPgApiBaseUrl)
       .post(`/heroku/resources/${fakeAddonName}/pg-extensions`)
       .reply(400, {reason: 'Missing dependencies', dependencies: [fakeExt2, fakeExt3]})
 
-    const {stdout, error} = await runCommand(
-      ['borealis-pg:extensions:install', '-a', fakeHerokuAppName, fakeExt1])
+    const {stdout, error} = await runCommand([
+      'borealis-pg:extensions:install',
+      '-a',
+      fakeHerokuAppName,
+      fakeExt1,
+    ])
 
     expect(stdout).to.equal('')
     expect(error?.message).to.contain(
       `Extension ${fakeExt1} has one or more unsatisfied dependencies. ` +
-      `All of its dependencies (${fakeExt2}, ${fakeExt3}) must be installed.`)
+        `All of its dependencies (${fakeExt2}, ${fakeExt3}) must be installed.`,
+    )
   })
 
   it('exits with an error if installation of a dependency fails', async () => {
     nock(borealisPgApiBaseUrl)
-      .post(
-        `/heroku/resources/${fakeAddonName}/pg-extensions`,
-        {pgExtensionName: fakeExt1})
+      .post(`/heroku/resources/${fakeAddonName}/pg-extensions`, {pgExtensionName: fakeExt1})
       .reply(400, {reason: 'Missing dependencies', dependencies: [fakeExt3]})
-      .post(
-        `/heroku/resources/${fakeAddonName}/pg-extensions`,
-        {pgExtensionName: fakeExt3})
+      .post(`/heroku/resources/${fakeAddonName}/pg-extensions`, {pgExtensionName: fakeExt3})
       .reply(500, {reason: 'Internal server error'})
 
-    const {stdout, error} = await runCommand(
-      ['borealis-pg:extensions:install', '-r', '-a', fakeHerokuAppName, fakeExt1])
+    const {stdout, error} = await runCommand([
+      'borealis-pg:extensions:install',
+      '-r',
+      '-a',
+      fakeHerokuAppName,
+      fakeExt1,
+    ])
 
     expect(stdout).to.equal('')
     expect(error?.message).to.contain('Add-on service is temporarily unavailable. Try again later.')
@@ -232,8 +221,12 @@ describe('extension installation command', () => {
       .post(`/heroku/resources/${fakeAddonName}/pg-extensions`)
       .reply(400, {reason: 'Bad extension name'})
 
-    const {stdout, error} = await runCommand(
-      ['borealis-pg:extensions:install', '-a', fakeHerokuAppName, fakeExt1])
+    const {stdout, error} = await runCommand([
+      'borealis-pg:extensions:install',
+      '-a',
+      fakeHerokuAppName,
+      fakeExt1,
+    ])
 
     expect(stdout).to.equal('')
     expect(error?.message).to.contain(`${fakeExt1} is not a supported Postgres extension`)
@@ -244,8 +237,12 @@ describe('extension installation command', () => {
       .post(`/heroku/resources/${fakeAddonName}/pg-extensions`)
       .reply(404, {reason: 'Add-on does not exist'})
 
-    const {stdout, error} = await runCommand(
-      ['borealis-pg:extensions:install', '-a', fakeHerokuAppName, fakeExt2])
+    const {stdout, error} = await runCommand([
+      'borealis-pg:extensions:install',
+      '-a',
+      fakeHerokuAppName,
+      fakeExt2,
+    ])
 
     expect(stdout).to.equal('')
     expect(error?.message).to.contain('Add-on is not a Borealis Isolated Postgres add-on')
@@ -256,8 +253,12 @@ describe('extension installation command', () => {
       .post(`/heroku/resources/${fakeAddonName}/pg-extensions`)
       .reply(409, {reason: 'Already installed'})
 
-    const {stdout, error} = await runCommand(
-      ['borealis-pg:extensions:install', '-a', fakeHerokuAppName, fakeExt1])
+    const {stdout, error} = await runCommand([
+      'borealis-pg:extensions:install',
+      '-a',
+      fakeHerokuAppName,
+      fakeExt1,
+    ])
 
     expect(stdout).to.equal('')
     expect(error?.message).to.contain(`Extension ${fakeExt1} is already installed`)
@@ -268,9 +269,12 @@ describe('extension installation command', () => {
       .post(`/heroku/resources/${fakeAddonName}/pg-extensions`)
       .reply(422, {reason: 'Not ready yet'})
 
-    const {stdout, error} = await runCommand(
-      ['borealis-pg:extensions:install', '-a', fakeHerokuAppName, fakeExt2]
-    )
+    const {stdout, error} = await runCommand([
+      'borealis-pg:extensions:install',
+      '-a',
+      fakeHerokuAppName,
+      fakeExt2,
+    ])
 
     expect(stdout).to.equal('')
     expect(error?.message).to.contain('Add-on is not finished provisioning')
@@ -281,8 +285,12 @@ describe('extension installation command', () => {
       .post(`/heroku/resources/${fakeAddonName}/pg-extensions`)
       .reply(423, {reason: 'Locked'})
 
-    const {stdout, error} = await runCommand(
-      ['borealis-pg:extensions:install', '-a', fakeHerokuAppName, fakeExt1])
+    const {stdout, error} = await runCommand([
+      'borealis-pg:extensions:install',
+      '-a',
+      fakeHerokuAppName,
+      fakeExt1,
+    ])
 
     expect(stdout).to.equal('')
     expect(error?.message).to.contain('Add-on is undergoing a PostgreSQL major version upgrade')
@@ -293,16 +301,23 @@ describe('extension installation command', () => {
       .post(`/heroku/resources/${fakeAddonName}/pg-extensions`)
       .reply(500, {reason: 'Something went wrong'})
 
-    const {stdout, error} = await runCommand(
-      ['borealis-pg:extensions:install', '-a', fakeHerokuAppName, fakeExt1])
+    const {stdout, error} = await runCommand([
+      'borealis-pg:extensions:install',
+      '-a',
+      fakeHerokuAppName,
+      fakeExt1,
+    ])
 
     expect(stdout).to.equal('')
     expect(error?.message).to.contain('Add-on service is temporarily unavailable. Try again later.')
   })
 
   it('exits with an error if there is no Postgres extension argument', async () => {
-    const {stdout, error} = await runCommand(
-      ['borealis-pg:extensions:install', '-a', fakeHerokuAppName])
+    const {stdout, error} = await runCommand([
+      'borealis-pg:extensions:install',
+      '-a',
+      fakeHerokuAppName,
+    ])
 
     expect(stdout).to.equal('')
     expect(error?.message).to.contain('Missing 1 required arg')

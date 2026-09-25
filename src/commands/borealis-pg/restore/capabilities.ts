@@ -18,8 +18,7 @@ const valueColour = consoleColours.dataFieldValue
 const cliCmdColour = consoleColours.cliCmdName
 
 export default class DbRestoreInfoCommand extends Command {
-  static description =
-    `Show the restore capabilities of a Borealis Isolated Postgres add-on database
+  static description = `Show the restore capabilities of a Borealis Isolated Postgres add-on database
 
 Qualifying add-on databases may be restored to an earlier point in time or
 cloned. This operation outputs the earliest and latest points in time to which
@@ -39,16 +38,20 @@ See the ${cliCmdColour('borealis-pg:restore:execute')} command to perform a rest
   async run() {
     const {flags} = await this.parse(DbRestoreInfoCommand)
     const authorization = await createHerokuAuth(this.heroku)
-    const attachmentInfo =
-      await fetchAddonAttachmentInfo(this.heroku, flags.addon, flags.app, this.error)
+    const attachmentInfo = await fetchAddonAttachmentInfo(
+      this.heroku,
+      flags.addon,
+      flags.app,
+      this.error,
+    )
     const {addonName} = processAddonAttachmentInfo(attachmentInfo, this.error)
 
     try {
       const response = await applyActionSpinner<HTTP<DbRestoreInfo>>(
         `Fetching database restore capabilities of add-on ${color.addon(addonName)}`,
-        HTTP.get(
-          getBorealisPgApiUrl(`/heroku/resources/${addonName}/restore-capabilities`),
-          {headers: {Authorization: getBorealisPgAuthHeader(authorization)}}),
+        HTTP.get(getBorealisPgApiUrl(`/heroku/resources/${addonName}/restore-capabilities`), {
+          headers: {Authorization: getBorealisPgAuthHeader(authorization)},
+        }),
       )
 
       this.printDbRestoreInfo(response.body)
@@ -61,19 +64,29 @@ See the ${cliCmdColour('borealis-pg:restore:execute')} command to perform a rest
     const nightlyBackupsStatus = 'Enabled'
     const cloneSupportedDisplay = dbRestoreInfo.cloneSupported ? 'Yes' : 'No'
     const restoreSupportedDisplay = dbRestoreInfo.restoreSupported ? 'Yes' : 'No'
-    const earliestRestoreTimeDisplay = dbRestoreInfo.earliestRestorableTime ?
-      DateTime.fromISO(dbRestoreInfo.earliestRestorableTime).toISO() as string :
-      'N/A'
-    const latestRestoreTimeDisplay = dbRestoreInfo.latestRestorableTime ?
-      DateTime.fromISO(dbRestoreInfo.latestRestorableTime).toISO() as string :
-      'N/A'
+    const earliestRestoreTimeDisplay = dbRestoreInfo.earliestRestorableTime
+      ? (DateTime.fromISO(dbRestoreInfo.earliestRestorableTime).toISO() as string)
+      : 'N/A'
+    const latestRestoreTimeDisplay = dbRestoreInfo.latestRestorableTime
+      ? (DateTime.fromISO(dbRestoreInfo.latestRestorableTime).toISO() as string)
+      : 'N/A'
 
     this.log()
-    this.log(`          ${keyColour('Nightly Backups Status')}: ${valueColour(nightlyBackupsStatus)}`)
-    this.log(`                 ${keyColour('Clone Supported')}: ${valueColour(cloneSupportedDisplay)}`)
-    this.log(` ${keyColour('Point-in-time Restore Supported')}: ${valueColour(restoreSupportedDisplay)}`)
-    this.log(`        ${keyColour('Earliest Restorable Time')}: ${valueColour(earliestRestoreTimeDisplay)}`)
-    this.log(`          ${keyColour('Latest Restorable Time')}: ${valueColour(latestRestoreTimeDisplay)}`)
+    this.log(
+      `          ${keyColour('Nightly Backups Status')}: ${valueColour(nightlyBackupsStatus)}`,
+    )
+    this.log(
+      `                 ${keyColour('Clone Supported')}: ${valueColour(cloneSupportedDisplay)}`,
+    )
+    this.log(
+      ` ${keyColour('Point-in-time Restore Supported')}: ${valueColour(restoreSupportedDisplay)}`,
+    )
+    this.log(
+      `        ${keyColour('Earliest Restorable Time')}: ${valueColour(earliestRestoreTimeDisplay)}`,
+    )
+    this.log(
+      `          ${keyColour('Latest Restorable Time')}: ${valueColour(latestRestoreTimeDisplay)}`,
+    )
   }
 
   async catch(err: Error) {
@@ -93,8 +106,8 @@ See the ${cliCmdColour('borealis-pg:restore:execute')} command to perform a rest
 }
 
 interface DbRestoreInfo {
-  cloneSupported: boolean;
-  earliestRestorableTime: string | null;
-  latestRestorableTime: string | null;
-  restoreSupported: boolean;
+  cloneSupported: boolean
+  earliestRestorableTime: string | null
+  latestRestorableTime: string | null
+  restoreSupported: boolean
 }

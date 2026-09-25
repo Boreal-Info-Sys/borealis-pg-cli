@@ -105,8 +105,13 @@ describe('data integration removal command', () => {
 
     setTimeout(() => mockStdin.send(` ${fakeIntegration1} \n`), 1000)
 
-    const {error} = await runCommand(
-      ['borealis-pg:integrations:remove', '-a', fakeHerokuAppName, '-n', fakeIntegration1])
+    const {error} = await runCommand([
+      'borealis-pg:integrations:remove',
+      '-a',
+      fakeHerokuAppName,
+      '-n',
+      fakeIntegration1,
+    ])
 
     expect(error).to.be.undefined
     expect(nock.pendingMocks()).to.be.empty
@@ -115,8 +120,13 @@ describe('data integration removal command', () => {
   it('exits with an error if the confirmation prompt fails', async () => {
     setTimeout(() => mockStdin.send('INCORRECT!\n'), 1000)
 
-    const {error} = await runCommand(
-      ['borealis-pg:integrations:remove', '-a', fakeHerokuAppName, '-n', fakeIntegration2])
+    const {error} = await runCommand([
+      'borealis-pg:integrations:remove',
+      '-a',
+      fakeHerokuAppName,
+      '-n',
+      fakeIntegration2,
+    ])
 
     expect(error?.message).to.contain('Invalid confirmation provided')
   })
@@ -231,8 +241,11 @@ describe('data integration removal command', () => {
   })
 
   it('exits with an error if the data integration option is missing', async () => {
-    const {stdout, error} = await runCommand(
-      ['borealis-pg:integrations:remove', '-a', fakeHerokuAppName])
+    const {stdout, error} = await runCommand([
+      'borealis-pg:integrations:remove',
+      '-a',
+      fakeHerokuAppName,
+    ])
 
     expect(stdout).to.equal('')
     expect(error?.message).to.contain('Missing required flag name')

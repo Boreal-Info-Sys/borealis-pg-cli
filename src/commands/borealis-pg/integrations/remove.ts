@@ -45,24 +45,34 @@ export default class RemoveDataIntegrationCommand extends Command {
   async run() {
     const {flags} = await this.parse(RemoveDataIntegrationCommand)
     const integrationName = flags[dataIntegrationOptionName]
-    const confirmation: string = flags.confirm ? flags.confirm : await promptForConfirmation()
+    const confirmation: string = flags.confirm
+      ? flags.confirm
+      : await promptForConfirmation(integrationName)
 
     if (confirmation.trim() !== integrationName) {
       this.error(
-        `Invalid confirmation provided. Expected ${dataIntegrationNameColour(integrationName)}.`)
+        `Invalid confirmation provided. Expected ${dataIntegrationNameColour(integrationName)}.`,
+      )
     }
 
     const authorization = await createHerokuAuth(this.heroku)
-    const attachmentInfo =
-      await fetchAddonAttachmentInfo(this.heroku, flags.addon, flags.app, this.error)
+    const attachmentInfo = await fetchAddonAttachmentInfo(
+      this.heroku,
+      flags.addon,
+      flags.app,
+      this.error,
+    )
     const {addonName} = processAddonAttachmentInfo(attachmentInfo, this.error)
 
     try {
       await applyActionSpinner(
         `Removing data integration from add-on ${color.addon(addonName)}`,
         HTTP.delete(
-          getBorealisPgApiUrl(`/heroku/resources/${addonName}/data-integrations/${integrationName}`),
-          {headers: {Authorization: getBorealisPgAuthHeader(authorization)}}),
+          getBorealisPgApiUrl(
+            `/heroku/resources/${addonName}/data-integrations/${integrationName}`,
+          ),
+          {headers: {Authorization: getBorealisPgAuthHeader(authorization)}},
+        ),
       )
     } finally {
       await removeHerokuAuth(this.heroku, authorization.id as string)
@@ -89,12 +99,12 @@ export default class RemoveDataIntegrationCommand extends Command {
   }
 }
 
-async function promptForConfirmation(): Promise<string> {
-  const result = await inquirer.prompt({
-    type: 'input',
-    name: 'confirmation',
-    message: 'Enter the name of the extension to confirm its removal'
-  })
+async function promptForConfirmation(integrationName: string): Promise<string> {
+  const message =
+    "Enter the data integration's name " +
+    `(${dataIntegrationNameColour(integrationName)}) to confirm its removal:`
+
+  const result = await inquirer.prompt({type: 'input', name: 'confirmation', message})
 
   return result.confirmation
 }

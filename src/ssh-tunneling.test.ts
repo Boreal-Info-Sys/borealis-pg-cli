@@ -93,10 +93,10 @@ describe('openSshTunnel', () => {
   let mockSshStreamInstance: typeof mockSshStreamType
 
   let mockLoggerType: {
-    debug: (...args: any[]) => void;
-    info: (...args: any[]) => void;
-    warn: (...args: any[]) => void;
-    error: (...args: any[]) => void;
+    debug: (...args: any[]) => void
+    info: (...args: any[]) => void
+    warn: (...args: any[]) => void
+    error: (...args: any[]) => void
   }
   let mockLoggerInstance: typeof mockLoggerType
 
@@ -180,7 +180,7 @@ describe('openSshTunnel', () => {
     expect(connectConfig.algorithms).to.deep.equal({serverHostKey: [expectedSshHostKeyFormat]})
 
     expect(connectConfig.hostVerifier).to.exist
-    const hostVerifier = connectConfig.hostVerifier as ((keyHash: unknown) => boolean)
+    const hostVerifier = connectConfig.hostVerifier as (keyHash: unknown) => boolean
     expect(hostVerifier(expectedSshHostKey)).to.be.true
     expect(hostVerifier('no good!')).to.be.false
   })
@@ -201,7 +201,7 @@ describe('openSshTunnel', () => {
     expect(connectConfig.algorithms).to.deep.equal({serverHostKey: [expectedSshHostKeyFormat]})
 
     expect(connectConfig.hostVerifier).to.exist
-    const hostVerifier = connectConfig.hostVerifier as ((keyHash: unknown) => boolean)
+    const hostVerifier = connectConfig.hostVerifier as (keyHash: unknown) => boolean
     expect(hostVerifier(Buffer.from(expectedSshHostKey, 'base64'))).to.be.true
     expect(hostVerifier(Buffer.from('no good!', 'base64'))).to.be.false
   })
@@ -210,7 +210,8 @@ describe('openSshTunnel', () => {
     const result = openSshTunnel(
       fakeNoPortsConnInfo,
       mockLoggerInstance,
-      mockReadyListenerContainerInstance.func)
+      mockReadyListenerContainerInstance.func,
+    )
 
     expect(result).to.equal(mockSshClientInstance)
 
@@ -218,7 +219,7 @@ describe('openSshTunnel', () => {
     const [event, listener] = capture(mockSshClientType.on).last()
     expect(event).to.equal('ready')
 
-    const sshClientListener = (listener as unknown) as (() => void)
+    const sshClientListener = listener as unknown as () => void
     sshClientListener()
 
     verify(mockReadyListenerContainerType.func(result)).once()
@@ -230,12 +231,15 @@ describe('openSshTunnel', () => {
     const [tcpConnectionListener] = capture(mockTcpServerFactoryType.create).last()
     tcpConnectionListener(mockTcpSocketInstance)
 
-    verify(mockSshClientType.forwardOut(
-      localPgHostname,
-      customPgPort,
-      fakePgHost,
-      customPgPort,
-      anyFunction())).once()
+    verify(
+      mockSshClientType.forwardOut(
+        localPgHostname,
+        customPgPort,
+        fakePgHost,
+        customPgPort,
+        anyFunction(),
+      ),
+    ).once()
 
     const [_, _1, _2, _3, portForwardListener] = capture(mockSshClientType.forwardOut).last()
     assert(typeof portForwardListener !== 'undefined')
@@ -255,12 +259,15 @@ describe('openSshTunnel', () => {
     const [tcpConnectionListener] = capture(mockTcpServerFactoryType.create).last()
     tcpConnectionListener(mockTcpSocketInstance)
 
-    verify(mockSshClientType.forwardOut(
-      localPgHostname,
-      defaultPgPort,
-      fakePgHost,
-      defaultPgPort,
-      anyFunction())).once()
+    verify(
+      mockSshClientType.forwardOut(
+        localPgHostname,
+        defaultPgPort,
+        fakePgHost,
+        defaultPgPort,
+        anyFunction(),
+      ),
+    ).once()
 
     const [_, _1, _2, _3, portForwardListener] = capture(mockSshClientType.forwardOut).last()
     assert(typeof portForwardListener !== 'undefined')
@@ -286,16 +293,17 @@ describe('openSshTunnel', () => {
     openSshTunnel(fakeCompleteConnInfo, mockLoggerInstance, _ => true)
 
     const [_, listener] = capture(mockTcpServerType.on).last()
-    const errorListener = listener as ((err: unknown) => void)
+    const errorListener = listener as (err: unknown) => void
 
     errorListener({code: 'EADDRINUSE'})
     verify(
       mockLoggerType.error(
         `Local port ${fakeCompleteConnInfo.localPgPort} is not available to listen on (port in ` +
-        `use). Specify a different port number with the ${consoleColours.cliOption('--port')} ` +
-        'option.',
-        deepEqual({exit: false})))
-      .once()
+          `use). Specify a different port number with the ${consoleColours.cliOption('--port')} ` +
+          'option.',
+        deepEqual({exit: false}),
+      ),
+    ).once()
     verify(mockNodeProcessType.exit(1)).once()
   })
 
@@ -303,16 +311,17 @@ describe('openSshTunnel', () => {
     openSshTunnel(fakeCompleteConnInfo, mockLoggerInstance, _ => true)
 
     const [_, listener] = capture(mockTcpServerType.on).last()
-    const errorListener = listener as ((err: unknown) => void)
+    const errorListener = listener as (err: unknown) => void
 
     errorListener({code: 'EACCES'})
     verify(
       mockLoggerType.error(
         `Local port ${fakeCompleteConnInfo.localPgPort} is not available to listen on ` +
-        '(permission denied). Specify a different port number with the ' +
-        `${consoleColours.cliOption('--port')} option.`,
-        deepEqual({exit: false})))
-      .once()
+          '(permission denied). Specify a different port number with the ' +
+          `${consoleColours.cliOption('--port')} option.`,
+        deepEqual({exit: false}),
+      ),
+    ).once()
     verify(mockNodeProcessType.exit(1)).once()
   })
 
@@ -320,7 +329,7 @@ describe('openSshTunnel', () => {
     openSshTunnel(fakeCompleteConnInfo, mockLoggerInstance, _ => true)
 
     const [_, listener] = capture(mockTcpServerType.on).last()
-    const errorListener = listener as ((err: unknown) => void)
+    const errorListener = listener as (err: unknown) => void
 
     const fakeError = new Error("This isn't a real error")
     try {
@@ -412,7 +421,8 @@ describe('openSshTunnel', () => {
 
   function getTcpSocketListener(
     expectedEventName: string,
-    expectedCallCount: number): (...args: unknown[]) => void {
+    expectedCallCount: number,
+  ): (...args: unknown[]) => void {
     for (let callIndex = 0; callIndex < expectedCallCount; callIndex++) {
       const [eventName, socketListener] = capture(mockTcpSocketType.on).byCallIndex(callIndex)
       if (eventName === expectedEventName) {

@@ -27,25 +27,31 @@ export default class ListPgExtensionsCommand extends Command {
   async run() {
     const {flags} = await this.parse(ListPgExtensionsCommand)
     const authorization = await createHerokuAuth(this.heroku)
-    const attachmentInfo =
-      await fetchAddonAttachmentInfo(this.heroku, flags.addon, flags.app, this.error)
+    const attachmentInfo = await fetchAddonAttachmentInfo(
+      this.heroku,
+      flags.addon,
+      flags.app,
+      this.error,
+    )
     const {addonName} = processAddonAttachmentInfo(attachmentInfo, this.error)
     try {
       const response = await applyActionSpinner(
         `Fetching Postgres extension list for add-on ${color.addon(addonName)}`,
-        HTTP.get(
-          getBorealisPgApiUrl(`/heroku/resources/${addonName}/pg-extensions`),
-          {headers: {Authorization: getBorealisPgAuthHeader(authorization)}}),
+        HTTP.get(getBorealisPgApiUrl(`/heroku/resources/${addonName}/pg-extensions`), {
+          headers: {Authorization: getBorealisPgAuthHeader(authorization)},
+        }),
       )
 
-      const responseBody = response.body as
-        {extensions: Array<{name: string, schema: string, version: string}>}
+      const responseBody = response.body as {
+        extensions: Array<{name: string; schema: string; version: string}>
+      }
       if (responseBody.extensions.length > 0) {
         for (const extInfo of responseBody.extensions) {
           this.log(
             `- ${pgExtensionColour(extInfo.name)} ` +
-            `(version: ${pgExtMetadataColour(extInfo.version)}, ` +
-            `schema: ${pgExtMetadataColour(extInfo.schema)})`)
+              `(version: ${pgExtMetadataColour(extInfo.version)}, ` +
+              `schema: ${pgExtMetadataColour(extInfo.schema)})`,
+          )
         }
       } else {
         this.warn('No extensions found')
