@@ -61,24 +61,22 @@ describe('add-on info command', () => {
   it('displays details of a single tenant add-on', async () => {
     nock(borealisPgApiBaseUrl, {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}})
       .get(`/heroku/resources/${fakeAddonName}`)
-      .reply(
-        200,
-        {
-          addonName: fakeAddonName,
-          appDbName: fakeAppDbName,
-          createdAt: fakeCreatedAt,
-          dbStorageMaxBytes: 21_474_836_480,
-          dbStorageUsageBytes: 4_582_038_115,
-          dbTenancyType: 'isolated',
-          planName: fakePlanName,
-          postgresVersion: fakePostgresVersion,
-          region: 'us-east-1',
-          replicaQuantity: 2,
-          status: 'available',
-          restoreSourceAddonName: null,
-          storageComplianceDeadline: null,
-          storageComplianceStatus: 'ok',
-        })
+      .reply(200, {
+        addonName: fakeAddonName,
+        appDbName: fakeAppDbName,
+        createdAt: fakeCreatedAt,
+        dbStorageMaxBytes: 21_474_836_480,
+        dbStorageUsageBytes: 4_582_038_115,
+        dbTenancyType: 'isolated',
+        planName: fakePlanName,
+        postgresVersion: fakePostgresVersion,
+        region: 'us-east-1',
+        replicaQuantity: 2,
+        status: 'available',
+        restoreSourceAddonName: null,
+        storageComplianceDeadline: null,
+        storageComplianceStatus: 'ok',
+      })
 
     const {stdout, error} = await runCommand(['borealis-pg:info', '--app', fakeHerokuAppName])
 
@@ -92,8 +90,7 @@ describe('add-on info command', () => {
     expect(stdout).to.containIgnoreSpaces('Storage Used: 4.3 GiB')
     expect(stdout).to.containIgnoreSpaces('Read-only Replicas: 2')
     expect(stdout).to.containIgnoreSpaces(`App DB Name: ${fakeAppDbName}`)
-    expect(stdout).to.containIgnoreSpaces(
-      `Created At: ${DateTime.fromISO(fakeCreatedAt).toISO()}`)
+    expect(stdout).to.containIgnoreSpaces(`Created At: ${DateTime.fromISO(fakeCreatedAt).toISO()}`)
     expect(stdout).to.containIgnoreSpaces('Restored/Cloned From Add-on: N/A')
     expect(stdout).to.containIgnoreSpaces('Storage Compliance Status: OK')
     expect(stdout).to.containIgnoreSpaces('Storage Compliance Deadline: N/A')
@@ -104,24 +101,22 @@ describe('add-on info command', () => {
   it('displays details of a multi-tenant add-on', async () => {
     nock(borealisPgApiBaseUrl, {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}})
       .get(`/heroku/resources/${fakeAddonName}`)
-      .reply(
-        200,
-        {
-          addonName: fakeAddonName,
-          appDbName: fakeAppDbName,
-          createdAt: fakeCreatedAt,
-          dbStorageMaxBytes: 268_435_456,
-          dbStorageUsageBytes: 251_274_003,
-          dbTenancyType: 'shared',
-          planName: fakePlanName,
-          postgresVersion: fakePostgresVersion,
-          region: 'eu-west-1',
-          replicaQuantity: 0,
-          status: 'requested',
-          restoreSourceAddonName: null,
-          storageComplianceDeadline: null,
-          storageComplianceStatus: 'proximity-warning',
-        })
+      .reply(200, {
+        addonName: fakeAddonName,
+        appDbName: fakeAppDbName,
+        createdAt: fakeCreatedAt,
+        dbStorageMaxBytes: 268_435_456,
+        dbStorageUsageBytes: 251_274_003,
+        dbTenancyType: 'shared',
+        planName: fakePlanName,
+        postgresVersion: fakePostgresVersion,
+        region: 'eu-west-1',
+        replicaQuantity: 0,
+        status: 'requested',
+        restoreSourceAddonName: null,
+        storageComplianceDeadline: null,
+        storageComplianceStatus: 'proximity-warning',
+      })
 
     const {stdout, error} = await runCommand(['borealis-pg:info', '-a', fakeHerokuAppName])
 
@@ -135,8 +130,7 @@ describe('add-on info command', () => {
     expect(stdout).to.containIgnoreSpaces('Storage Used: 0.234 GiB')
     expect(stdout).to.containIgnoreSpaces('Read-only Replicas: 0')
     expect(stdout).to.containIgnoreSpaces(`App DB Name: ${fakeAppDbName}`)
-    expect(stdout).to.containIgnoreSpaces(
-      `Created At: ${DateTime.fromISO(fakeCreatedAt).toISO()}`)
+    expect(stdout).to.containIgnoreSpaces(`Created At: ${DateTime.fromISO(fakeCreatedAt).toISO()}`)
     expect(stdout).to.containIgnoreSpaces('Restored/Cloned From Add-on: N/A')
     expect(stdout).to.containIgnoreSpaces('Storage Compliance Status: Proximity Warning')
     expect(stdout).to.containIgnoreSpaces('Storage Compliance Deadline: N/A')
@@ -147,24 +141,22 @@ describe('add-on info command', () => {
   it('displays details when called using the borealis-pg (index) alias', async () => {
     nock(borealisPgApiBaseUrl, {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}})
       .get(`/heroku/resources/${fakeAddonName}`)
-      .reply(
-        200,
-        {
-          addonName: fakeAddonName,
-          appDbName: fakeAppDbName,
-          createdAt: fakeCreatedAt,
-          dbStorageMaxBytes: 21_474_836_480,
-          dbStorageUsageBytes: 4_582_038_115,
-          dbTenancyType: 'isolated',
-          planName: fakePlanName,
-          postgresVersion: fakePostgresVersion,
-          region: 'ap-southeast-2',
-          replicaQuantity: 0,
-          status: 'maintenance-plan-change',
-          restoreSourceAddonName: null,
-          storageComplianceDeadline: null,
-          storageComplianceStatus: 'ok',
-        })
+      .reply(200, {
+        addonName: fakeAddonName,
+        appDbName: fakeAppDbName,
+        createdAt: fakeCreatedAt,
+        dbStorageMaxBytes: 21_474_836_480,
+        dbStorageUsageBytes: 4_582_038_115,
+        dbTenancyType: 'isolated',
+        planName: fakePlanName,
+        postgresVersion: fakePostgresVersion,
+        region: 'ap-southeast-2',
+        replicaQuantity: 0,
+        status: 'maintenance-plan-change',
+        restoreSourceAddonName: null,
+        storageComplianceDeadline: null,
+        storageComplianceStatus: 'ok',
+      })
 
     const {stdout, error} = await runCommand(['borealis-pg', '-a', fakeHerokuAppName])
 
@@ -178,8 +170,7 @@ describe('add-on info command', () => {
     expect(stdout).to.containIgnoreSpaces('Storage Used: 4.3 GiB')
     expect(stdout).to.containIgnoreSpaces('Read-only Replicas: 0')
     expect(stdout).to.containIgnoreSpaces(`App DB Name: ${fakeAppDbName}`)
-    expect(stdout).to.containIgnoreSpaces(
-      `Created At: ${DateTime.fromISO(fakeCreatedAt).toISO()}`)
+    expect(stdout).to.containIgnoreSpaces(`Created At: ${DateTime.fromISO(fakeCreatedAt).toISO()}`)
     expect(stdout).to.containIgnoreSpaces('Restored/Cloned From Add-on: N/A')
     expect(stdout).to.containIgnoreSpaces('Storage Compliance Status: OK')
     expect(stdout).to.containIgnoreSpaces('Storage Compliance Deadline: N/A')
@@ -190,24 +181,22 @@ describe('add-on info command', () => {
   it('displays details when the add-on has been restored/cloned from another add-on', async () => {
     nock(borealisPgApiBaseUrl, {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}})
       .get(`/heroku/resources/${fakeAddonName}`)
-      .reply(
-        200,
-        {
-          addonName: fakeAddonName,
-          appDbName: fakeAppDbName,
-          createdAt: fakeCreatedAt,
-          dbStorageMaxBytes: 644_245_094,
-          dbStorageUsageBytes: 139_586_437,
-          dbTenancyType: 'isolated',
-          planName: fakePlanName,
-          postgresVersion: fakePostgresVersion,
-          region: 'us-west-2',
-          replicaQuantity: 1,
-          status: 'provisioning',
-          restoreSourceAddonName: fakeRestoreSourceAddonName,
-          storageComplianceDeadline: null,
-          storageComplianceStatus: 'ok',
-        })
+      .reply(200, {
+        addonName: fakeAddonName,
+        appDbName: fakeAppDbName,
+        createdAt: fakeCreatedAt,
+        dbStorageMaxBytes: 644_245_094,
+        dbStorageUsageBytes: 139_586_437,
+        dbTenancyType: 'isolated',
+        planName: fakePlanName,
+        postgresVersion: fakePostgresVersion,
+        region: 'us-west-2',
+        replicaQuantity: 1,
+        status: 'provisioning',
+        restoreSourceAddonName: fakeRestoreSourceAddonName,
+        storageComplianceDeadline: null,
+        storageComplianceStatus: 'ok',
+      })
 
     const {stdout, error} = await runCommand(['borealis-pg:info', '-a', fakeHerokuAppName])
 
@@ -221,10 +210,10 @@ describe('add-on info command', () => {
     expect(stdout).to.containIgnoreSpaces('Storage Used: 0.130 GiB')
     expect(stdout).to.containIgnoreSpaces('Read-only Replicas: 1')
     expect(stdout).to.containIgnoreSpaces(`App DB Name: ${fakeAppDbName}`)
+    expect(stdout).to.containIgnoreSpaces(`Created At: ${DateTime.fromISO(fakeCreatedAt).toISO()}`)
     expect(stdout).to.containIgnoreSpaces(
-      `Created At: ${DateTime.fromISO(fakeCreatedAt).toISO()}`)
-    expect(stdout).to.containIgnoreSpaces(
-      `Restored/Cloned From Add-on: ${fakeRestoreSourceAddonName}`)
+      `Restored/Cloned From Add-on: ${fakeRestoreSourceAddonName}`,
+    )
     expect(stdout).to.containIgnoreSpaces('Storage Compliance Status: OK')
     expect(stdout).to.containIgnoreSpaces('Storage Compliance Deadline: N/A')
 
@@ -234,24 +223,22 @@ describe('add-on info command', () => {
   it('displays raw values for custom values in the response', async () => {
     nock(borealisPgApiBaseUrl, {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}})
       .get(`/heroku/resources/${fakeAddonName}`)
-      .reply(
-        200,
-        {
-          addonName: fakeAddonName,
-          appDbName: fakeAppDbName,
-          createdAt: fakeCreatedAt,
-          dbStorageMaxBytes: 536_870_912_000,
-          dbStorageUsageBytes: 92_234_422_682,
-          dbTenancyType: 'hyper-tenant',
-          planName: fakePlanName,
-          postgresVersion: fakePostgresVersion,
-          region: 'mars-orbit-1',
-          replicaQuantity: 1,
-          status: 'under-the-weather',
-          restoreSourceAddonName: null,
-          storageComplianceDeadline: null,
-          storageComplianceStatus: 'super-duper',
-        })
+      .reply(200, {
+        addonName: fakeAddonName,
+        appDbName: fakeAppDbName,
+        createdAt: fakeCreatedAt,
+        dbStorageMaxBytes: 536_870_912_000,
+        dbStorageUsageBytes: 92_234_422_682,
+        dbTenancyType: 'hyper-tenant',
+        planName: fakePlanName,
+        postgresVersion: fakePostgresVersion,
+        region: 'mars-orbit-1',
+        replicaQuantity: 1,
+        status: 'under-the-weather',
+        restoreSourceAddonName: null,
+        storageComplianceDeadline: null,
+        storageComplianceStatus: 'super-duper',
+      })
 
     const {stdout, error} = await runCommand(['borealis-pg:info', '-a', fakeHerokuAppName])
 
@@ -265,8 +252,7 @@ describe('add-on info command', () => {
     expect(stdout).to.containIgnoreSpaces('Storage Used: 85.9 GiB')
     expect(stdout).to.containIgnoreSpaces('Read-only Replicas: 1')
     expect(stdout).to.containIgnoreSpaces(`App DB Name: ${fakeAppDbName}`)
-    expect(stdout).to.containIgnoreSpaces(
-      `Created At: ${DateTime.fromISO(fakeCreatedAt).toISO()}`)
+    expect(stdout).to.containIgnoreSpaces(`Created At: ${DateTime.fromISO(fakeCreatedAt).toISO()}`)
     expect(stdout).to.containIgnoreSpaces('Restored/Cloned From Add-on: N/A')
     expect(stdout).to.containIgnoreSpaces('Storage Compliance Status: super-duper')
     expect(stdout).to.containIgnoreSpaces('Storage Compliance Deadline: N/A')
@@ -277,24 +263,22 @@ describe('add-on info command', () => {
   it('displays details when the add-on is not finished provisioning', async () => {
     nock(borealisPgApiBaseUrl, {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}})
       .get(`/heroku/resources/${fakeAddonName}`)
-      .reply(
-        200,
-        {
-          addonName: fakeAddonName,
-          appDbName: null,
-          createdAt: fakeCreatedAt,
-          dbStorageMaxBytes: 21_474_836_480,
-          dbStorageUsageBytes: 0,
-          dbTenancyType: 'isolated',
-          planName: fakePlanName,
-          postgresVersion: fakePostgresVersion,
-          region: 'us-east-1',
-          replicaQuantity: 2,
-          status: 'awaiting',
-          restoreSourceAddonName: null,
-          storageComplianceDeadline: null,
-          storageComplianceStatus: 'ok',
-        })
+      .reply(200, {
+        addonName: fakeAddonName,
+        appDbName: null,
+        createdAt: fakeCreatedAt,
+        dbStorageMaxBytes: 21_474_836_480,
+        dbStorageUsageBytes: 0,
+        dbTenancyType: 'isolated',
+        planName: fakePlanName,
+        postgresVersion: fakePostgresVersion,
+        region: 'us-east-1',
+        replicaQuantity: 2,
+        status: 'awaiting',
+        restoreSourceAddonName: null,
+        storageComplianceDeadline: null,
+        storageComplianceStatus: 'ok',
+      })
 
     const {stdout, error} = await runCommand(['borealis-pg:info', '-a', fakeHerokuAppName])
 
@@ -308,8 +292,7 @@ describe('add-on info command', () => {
     expect(stdout).to.containIgnoreSpaces('Storage Used: 0.000 GiB')
     expect(stdout).to.containIgnoreSpaces('Read-only Replicas: 2')
     expect(stdout).to.containIgnoreSpaces('App DB Name: (pending)')
-    expect(stdout).to.containIgnoreSpaces(
-      `Created At: ${DateTime.fromISO(fakeCreatedAt).toISO()}`)
+    expect(stdout).to.containIgnoreSpaces(`Created At: ${DateTime.fromISO(fakeCreatedAt).toISO()}`)
     expect(stdout).to.containIgnoreSpaces('Restored/Cloned From Add-on: N/A')
     expect(stdout).to.containIgnoreSpaces('Storage Compliance Status: OK')
     expect(stdout).to.containIgnoreSpaces('Storage Compliance Deadline: N/A')
@@ -320,24 +303,22 @@ describe('add-on info command', () => {
   it('displays details for an add-on with a storage compliance violation', async () => {
     nock(borealisPgApiBaseUrl, {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}})
       .get(`/heroku/resources/${fakeAddonName}`)
-      .reply(
-        200,
-        {
-          addonName: fakeAddonName,
-          appDbName: fakeAppDbName,
-          createdAt: fakeCreatedAt,
-          dbStorageMaxBytes: 21_474_836_480,
-          dbStorageUsageBytes: 4_582_038_115,
-          dbTenancyType: 'isolated',
-          planName: fakePlanName,
-          postgresVersion: fakePostgresVersion,
-          region: 'ap-northeast-1',
-          replicaQuantity: 0,
-          status: 'maintenance',
-          restoreSourceAddonName: null,
-          storageComplianceDeadline: fakeStorageComplianceDeadline,
-          storageComplianceStatus: 'violating',
-        })
+      .reply(200, {
+        addonName: fakeAddonName,
+        appDbName: fakeAppDbName,
+        createdAt: fakeCreatedAt,
+        dbStorageMaxBytes: 21_474_836_480,
+        dbStorageUsageBytes: 4_582_038_115,
+        dbTenancyType: 'isolated',
+        planName: fakePlanName,
+        postgresVersion: fakePostgresVersion,
+        region: 'ap-northeast-1',
+        replicaQuantity: 0,
+        status: 'maintenance',
+        restoreSourceAddonName: null,
+        storageComplianceDeadline: fakeStorageComplianceDeadline,
+        storageComplianceStatus: 'violating',
+      })
 
     const {stdout, error} = await runCommand(['borealis-pg:info', '-a', fakeHerokuAppName])
 
@@ -351,12 +332,12 @@ describe('add-on info command', () => {
     expect(stdout).to.containIgnoreSpaces('Storage Used: 4.3 GiB')
     expect(stdout).to.containIgnoreSpaces('Read-only Replicas: 0')
     expect(stdout).to.containIgnoreSpaces(`App DB Name: ${fakeAppDbName}`)
-    expect(stdout).to.containIgnoreSpaces(
-      `Created At: ${DateTime.fromISO(fakeCreatedAt).toISO()}`)
+    expect(stdout).to.containIgnoreSpaces(`Created At: ${DateTime.fromISO(fakeCreatedAt).toISO()}`)
     expect(stdout).to.containIgnoreSpaces('Restored/Cloned From Add-on: N/A')
     expect(stdout).to.containIgnoreSpaces('Storage Compliance Status: Violating')
     expect(stdout).to.containIgnoreSpaces(
-      `Storage Compliance Deadline: ${DateTime.fromISO(fakeStorageComplianceDeadline).toISO()}`)
+      `Storage Compliance Deadline: ${DateTime.fromISO(fakeStorageComplianceDeadline).toISO()}`,
+    )
 
     expect(error).to.be.undefined
   })
@@ -364,24 +345,22 @@ describe('add-on info command', () => {
   it('displays details for an add-on with a storage compliance status of restricted', async () => {
     nock(borealisPgApiBaseUrl, {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}})
       .get(`/heroku/resources/${fakeAddonName}`)
-      .reply(
-        200,
-        {
-          addonName: fakeAddonName,
-          appDbName: fakeAppDbName,
-          createdAt: fakeCreatedAt,
-          dbStorageMaxBytes: 644_245_094,
-          dbStorageUsageBytes: 139_586_437,
-          dbTenancyType: 'isolated',
-          planName: fakePlanName,
-          postgresVersion: fakePostgresVersion,
-          region: 'eu-central-1',
-          replicaQuantity: 0,
-          status: 'maintenance-revoke-db-write-access',
-          restoreSourceAddonName: null,
-          storageComplianceDeadline: null,
-          storageComplianceStatus: 'restricted',
-        })
+      .reply(200, {
+        addonName: fakeAddonName,
+        appDbName: fakeAppDbName,
+        createdAt: fakeCreatedAt,
+        dbStorageMaxBytes: 644_245_094,
+        dbStorageUsageBytes: 139_586_437,
+        dbTenancyType: 'isolated',
+        planName: fakePlanName,
+        postgresVersion: fakePostgresVersion,
+        region: 'eu-central-1',
+        replicaQuantity: 0,
+        status: 'maintenance-revoke-db-write-access',
+        restoreSourceAddonName: null,
+        storageComplianceDeadline: null,
+        storageComplianceStatus: 'restricted',
+      })
 
     const {stdout, error} = await runCommand(['borealis-pg:info', '-a', fakeHerokuAppName])
 
@@ -395,8 +374,7 @@ describe('add-on info command', () => {
     expect(stdout).to.containIgnoreSpaces('Storage Used: 0.130 GiB')
     expect(stdout).to.containIgnoreSpaces('Read-only Replicas: 0')
     expect(stdout).to.containIgnoreSpaces(`App DB Name: ${fakeAppDbName}`)
-    expect(stdout).to.containIgnoreSpaces(
-      `Created At: ${DateTime.fromISO(fakeCreatedAt).toISO()}`)
+    expect(stdout).to.containIgnoreSpaces(`Created At: ${DateTime.fromISO(fakeCreatedAt).toISO()}`)
     expect(stdout).to.containIgnoreSpaces('Restored/Cloned From Add-on: N/A')
     expect(stdout).to.containIgnoreSpaces('Storage Compliance Status: Restricted')
     expect(stdout).to.containIgnoreSpaces('Storage Compliance Deadline: N/A')

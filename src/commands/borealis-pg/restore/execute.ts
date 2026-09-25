@@ -4,7 +4,11 @@ import {Command, flags} from '@heroku-cli/command'
 import {AddOn} from '@heroku-cli/schema'
 import {DateTime} from 'luxon'
 import {applyActionSpinner} from '../../../async-actions'
-import {borealisApiOptions, getBorealisPgApiUrl, getBorealisPgAuthHeader} from '../../../borealis-api'
+import {
+  borealisApiOptions,
+  getBorealisPgApiUrl,
+  getBorealisPgAuthHeader,
+} from '../../../borealis-api'
 import {
   addonOptionName,
   addonServiceName,
@@ -95,34 +99,39 @@ latest restorable times of an add-on.`
 
   async run() {
     const {flags} = await this.parse(DbRestoreExecuteCommand)
-    const attachmentInfo =
-      await fetchAddonAttachmentInfo(this.heroku, flags.addon, flags.app, this.error)
+    const attachmentInfo = await fetchAddonAttachmentInfo(
+      this.heroku,
+      flags.addon,
+      flags.app,
+      this.error,
+    )
     const {addonName} = processAddonAttachmentInfo(attachmentInfo, this.error)
 
     const herokuAddonInfo = await this.fetchHerokuAddonInfo(addonName)
 
     /* istanbul ignore next */
-    const destinationApp =
-      flags[destinationAppOptionName] ?? herokuAddonInfo.app?.name as string
+    const destinationApp = flags[destinationAppOptionName] ?? (herokuAddonInfo.app?.name as string)
 
     const destinationPlan = this.getQualifiedPlanName(flags[newPlanOptionName], herokuAddonInfo)
 
-    const dbRestoreToken =
-      await applyActionSpinner('Checking authorization', this.createDbRestoreToken(addonName))
+    const dbRestoreToken = await applyActionSpinner(
+      'Checking authorization',
+      this.createDbRestoreToken(addonName),
+    )
 
     const operationVerb = flags[restoreToTimeOptionName] ? 'restore' : 'clone'
 
     const newAddon = await applyActionSpinner(
       `Starting ${operationVerb} of add-on ${color.addon(addonName)}`,
-      this.heroku.post<AddOn>(
-        `/apps/${destinationApp}/addons`,
-        {
-          body: this.getAddonCreationRequestBody(
-            dbRestoreToken,
-            destinationPlan,
-            flags[restoreToTimeOptionName],
-            flags[attachmentNameOptionName]),
-        }))
+      this.heroku.post<AddOn>(`/apps/${destinationApp}/addons`, {
+        body: this.getAddonCreationRequestBody(
+          dbRestoreToken,
+          destinationPlan,
+          flags[restoreToTimeOptionName],
+          flags[attachmentNameOptionName],
+        ),
+      }),
+    )
 
     const newAddonName = newAddon.body.name as string
     if (flags[waitOptionName]) {
@@ -140,20 +149,22 @@ latest restorable times of an add-on.`
     } else {
       console.warn(
         `${color.addon(newAddonName)} is being created on ${color.app(destinationApp)} in the ` +
-        'background. The app will restart when complete...')
+          'background. The app will restart when complete...',
+      )
     }
   }
 
   private getQualifiedPlanName(
     planNameOptionValue: string | null | undefined,
-    herokuAddonInfo: AddOn): string {
+    herokuAddonInfo: AddOn,
+  ): string {
     /* istanbul ignore next */
-    const planName = planNameOptionValue ?? herokuAddonInfo.plan?.name as string
+    const planName = planNameOptionValue ?? (herokuAddonInfo.plan?.name as string)
 
     // Ensure the plan name is fully qualified
-    return planName.startsWith(`${addonServiceName}:`) ?
-      planName :
-      `${addonServiceName}:${planName}`
+    return planName.startsWith(`${addonServiceName}:`)
+      ? planName
+      : `${addonServiceName}:${planName}`
   }
 
   private async waitForProvisioning(addonName: string) {
@@ -196,7 +207,8 @@ latest restorable times of an add-on.`
     try {
       const borealisAddonResponse = await HTTP.get<{status: string}>(
         getBorealisPgApiUrl(`/heroku/resources/${addonName}`),
-        {headers: {Authorization: getBorealisPgAuthHeader(authorization)}})
+        {headers: {Authorization: getBorealisPgAuthHeader(authorization)}},
+      )
 
       return borealisAddonResponse.body.status
     } catch (error) {
@@ -222,7 +234,8 @@ latest restorable times of an add-on.`
     try {
       const response = await HTTP.post<{restoreToken: string}>(
         getBorealisPgApiUrl(`/heroku/resources/${addonName}/restore-tokens`),
-        {headers: {Authorization: getBorealisPgAuthHeader(authorization)}})
+        {headers: {Authorization: getBorealisPgAuthHeader(authorization)}},
+      )
 
       return response.body.restoreToken
     } catch (error) {
@@ -246,7 +259,8 @@ latest restorable times of an add-on.`
     dbRestoreToken: string,
     destinationPlan: string,
     restoreToTime: string | null | undefined,
-    attachmentName: string | null | undefined): {[name: string]: any} {
+    attachmentName: string | null | undefined,
+  ): {[name: string]: any} {
     const restoreOptions: {[name: string]: string} = {'restore-token': dbRestoreToken}
     if (restoreToTime) {
       restoreOptions['restore-to-time'] = restoreToTime

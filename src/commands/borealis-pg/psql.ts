@@ -77,19 +77,25 @@ pgAdmin).`
       this.error(`The file "${customBinaryPath}" does not exist`)
     }
 
-    const attachmentInfo =
-      await fetchAddonAttachmentInfo(this.heroku, flags.addon, flags.app, this.error)
+    const attachmentInfo = await fetchAddonAttachmentInfo(
+      this.heroku,
+      flags.addon,
+      flags.app,
+      this.error,
+    )
     const addonInfo = processAddonAttachmentInfo(attachmentInfo, this.error)
 
     const [sshConnInfo, dbConnInfo] = await this.prepareUsers(
       addonInfo,
-      flags[writeAccessOptionName])
+      flags[writeAccessOptionName],
+    )
 
     const localPgHost = await getLocalPgHost()
 
     this.executePsql(
       {ssh: sshConnInfo, db: dbConnInfo, localPgHost, localPgPort: flags.port},
-      customBinaryPath ?? 'psql')
+      customBinaryPath ?? 'psql',
+    )
 
     // Prevent Ctrl+C from ending the process
     tunnelServices.nodeProcess.on('SIGINT', _ => null)
@@ -97,22 +103,21 @@ pgAdmin).`
 
   private async prepareUsers(
     addonInfo: {addonName: string; appName: string; attachmentName: string},
-    enableWriteAccess: boolean): Promise<[SshConnectionInfo, DbConnectionInfo]> {
+    enableWriteAccess: boolean,
+  ): Promise<[SshConnectionInfo, DbConnectionInfo]> {
     const authorization = await createHerokuAuth(this.heroku)
     try {
-      const sshConnInfoPromise = HTTP
-        .post<SshConnectionInfo>(
-          getBorealisPgApiUrl(`/heroku/resources/${addonInfo.addonName}/personal-ssh-users`),
-          {headers: {Authorization: getBorealisPgAuthHeader(authorization)}})
-        .then(value => value.body)
-      const dbConnInfoPromise = HTTP
-        .post<DbConnectionInfo>(
-          getBorealisPgApiUrl(`/heroku/resources/${addonInfo.addonName}/personal-db-users`),
-          {
-            headers: {Authorization: getBorealisPgAuthHeader(authorization)},
-            body: {enableWriteAccess},
-          })
-        .then(value => value.body)
+      const sshConnInfoPromise = HTTP.post<SshConnectionInfo>(
+        getBorealisPgApiUrl(`/heroku/resources/${addonInfo.addonName}/personal-ssh-users`),
+        {headers: {Authorization: getBorealisPgAuthHeader(authorization)}},
+      ).then(value => value.body)
+      const dbConnInfoPromise = HTTP.post<DbConnectionInfo>(
+        getBorealisPgApiUrl(`/heroku/resources/${addonInfo.addonName}/personal-db-users`),
+        {
+          headers: {Authorization: getBorealisPgAuthHeader(authorization)},
+          body: {enableWriteAccess},
+        },
+      ).then(value => value.body)
 
       const fullConnInfoPromise = Promise.allSettled([sshConnInfoPromise, dbConnInfoPromise])
 
@@ -138,21 +143,24 @@ pgAdmin).`
     openSshTunnel(
       connInfo,
       {debug: this.debug, info: this.log, warn: this.warn, error: this.error},
-      sshClient => tunnelServices.childProcessFactory.spawn(psqlPath, {
-        env: {
-          ...tunnelServices.nodeProcess.env,
-          PGHOST: connInfo.localPgHost,
-          PGPORT: connInfo.localPgPort.toString(),
-          PGDATABASE: connInfo.db.dbName,
-          PGUSER: connInfo.db.dbUsername,
-          PGPASSWORD: connInfo.db.dbPassword,
-        },
-        shell: true,
-        stdio: 'inherit',
-      }).on('exit', (code, _) => {
-        sshClient.end()
-        tunnelServices.nodeProcess.exit(code ?? undefined)
-      }),
+      sshClient =>
+        tunnelServices.childProcessFactory
+          .spawn(psqlPath, {
+            env: {
+              ...tunnelServices.nodeProcess.env,
+              PGHOST: connInfo.localPgHost,
+              PGPORT: connInfo.localPgPort.toString(),
+              PGDATABASE: connInfo.db.dbName,
+              PGUSER: connInfo.db.dbUsername,
+              PGPASSWORD: connInfo.db.dbPassword,
+            },
+            shell: true,
+            stdio: 'inherit',
+          })
+          .on('exit', (code, _) => {
+            sshClient.end()
+            tunnelServices.nodeProcess.exit(code ?? undefined)
+          }),
     )
   }
 
@@ -162,15 +170,17 @@ pgAdmin).`
       if (err.statusCode === 403) {
         this.error(
           'Access to the add-on database has been temporarily revoked for personal users.\n' +
-          'Generally this indicates the database has persistently exceeded its storage limit.\n' +
-          'Try upgrading to a new add-on plan to restore access.')
+            'Generally this indicates the database has persistently exceeded its storage limit.\n' +
+            'Try upgrading to a new add-on plan to restore access.',
+        )
       } else if (err.statusCode === 404) {
         this.error('Add-on is not a Borealis Isolated Postgres add-on')
       } else if (err.statusCode === 422) {
         this.error('Add-on is not finished provisioning')
       } else if (err.statusCode === 423) {
-        this.error('Add-on is undergoing a PostgreSQL major version upgrade.\n' +
-          `Try again later or run ${consoleColours.cliCmdName('borealis-pg:upgrade:cancel')} to cancel the upgrade process.`,
+        this.error(
+          'Add-on is undergoing a PostgreSQL major version upgrade.\n' +
+            `Try again later or run ${consoleColours.cliCmdName('borealis-pg:upgrade:cancel')} to cancel the upgrade process.`,
         )
       } else {
         this.error('Add-on service is temporarily unavailable. Try again later.')

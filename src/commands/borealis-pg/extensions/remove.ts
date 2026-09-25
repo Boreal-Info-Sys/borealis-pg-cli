@@ -55,16 +55,21 @@ export default class RemovePgExtensionCommand extends Command {
     const pgExtension = args[pgExtensionArgName]
     const suppressMissing = flags[suppressMissingOptionName]
 
-    const confirmation: string =
-      flags.confirm ? flags.confirm : await promptForConfirmation(pgExtension)
+    const confirmation: string = flags.confirm
+      ? flags.confirm
+      : await promptForConfirmation(pgExtension)
 
     if (confirmation.trim() !== pgExtension) {
       this.error(`Invalid confirmation provided. Expected ${pgExtensionColour(pgExtension)}.`)
     }
 
     const authorization = await createHerokuAuth(this.heroku)
-    const attachmentInfo =
-      await fetchAddonAttachmentInfo(this.heroku, flags.addon, flags.app, this.error)
+    const attachmentInfo = await fetchAddonAttachmentInfo(
+      this.heroku,
+      flags.addon,
+      flags.app,
+      this.error,
+    )
     const {addonName} = processAddonAttachmentInfo(attachmentInfo, this.error)
 
     try {
@@ -72,14 +77,16 @@ export default class RemovePgExtensionCommand extends Command {
         `Removing Postgres extension ${pgExtensionColour(pgExtension)} from add-on ${color.addon(addonName)}`,
         HTTP.delete(
           getBorealisPgApiUrl(`/heroku/resources/${addonName}/pg-extensions/${pgExtension}`),
-          {headers: {Authorization: getBorealisPgAuthHeader(authorization)}}),
+          {headers: {Authorization: getBorealisPgAuthHeader(authorization)}},
+        ),
       )
     } catch (error) {
       if (
         error instanceof HTTPError &&
         error.statusCode === 404 &&
         error.body.resourceType !== addonResourceType &&
-        suppressMissing) {
+        suppressMissing
+      ) {
         this.warn(getNotInstalledMessage(pgExtension))
       } else {
         throw error
@@ -98,7 +105,8 @@ export default class RemovePgExtensionCommand extends Command {
       if (err.statusCode === 400) {
         this.error(
           `Extension ${pgExtensionColour(pgExtension)} has dependent extensions or objects. ` +
-          'It can only be removed after its dependents are removed first.')
+            'It can only be removed after its dependents are removed first.',
+        )
       } else if (err.statusCode === 404) {
         if (err.body.resourceType === addonResourceType) {
           this.error('Add-on is not a Borealis Isolated Postgres add-on')
@@ -119,7 +127,8 @@ export default class RemovePgExtensionCommand extends Command {
 }
 
 async function promptForConfirmation(pgExtensionName: string): Promise<string> {
-  const message = `Enter the PostgreSQL extension's name (${pgExtensionColour(pgExtensionName)}) ` +
+  const message =
+    `Enter the PostgreSQL extension's name (${pgExtensionColour(pgExtensionName)}) ` +
     'to confirm its removal:'
 
   const result = await inquirer.prompt({type: 'input', name: 'confirmation', message})

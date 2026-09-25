@@ -8,10 +8,10 @@ on:
     branches:
       - '**'
 
-  workflow_dispatch:  # Allows the workflow to be triggered manually
+  workflow_dispatch: # Allows the workflow to be triggered manually
 
 env:
-  HEROKU_NODE_VERSION: 22  # Chosen to match what is used internally by the Heroku CLI
+  HEROKU_NODE_VERSION: 22 # Chosen to match what is used internally by the Heroku CLI
 
 jobs:
   lint:

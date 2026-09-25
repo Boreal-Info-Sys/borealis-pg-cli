@@ -22,8 +22,7 @@ const valueColour = consoleColours.dataFieldValue
 const dataIntegrationOptionName = 'name'
 
 export default class RegisterDataIntegrationsCommand extends Command {
-  static description =
-    `Register a data integration for a Borealis Isolated Postgres add-on
+  static description = `Register a data integration for a Borealis Isolated Postgres add-on
 
 A data integration allows a third party service access to an add-on database
 via a secure tunnel using semi-permanent SSH server and database credentials.
@@ -80,8 +79,12 @@ supports it.`
     const enableWriteAccess = flags[writeAccessOptionName]
 
     const authorization = await createHerokuAuth(this.heroku)
-    const attachmentInfo =
-      await fetchAddonAttachmentInfo(this.heroku, flags.addon, flags.app, this.error)
+    const attachmentInfo = await fetchAddonAttachmentInfo(
+      this.heroku,
+      flags.addon,
+      flags.app,
+      this.error,
+    )
     const {addonName} = processAddonAttachmentInfo(attachmentInfo, this.error)
 
     try {
@@ -103,25 +106,48 @@ supports it.`
   private async registerIntegration(
     addonName: string,
     registrationInfo: RegistrationInfo,
-    authorization: OAuthAuthorization): Promise<DataIntegrationInfo> {
+    authorization: OAuthAuthorization,
+  ): Promise<DataIntegrationInfo> {
     const response: HTTP<DataIntegrationInfo> = await HTTP.post(
       getBorealisPgApiUrl(`/heroku/resources/${addonName}/data-integrations`),
-      {headers: {Authorization: getBorealisPgAuthHeader(authorization)}, body: registrationInfo})
+      {
+        headers: {Authorization: getBorealisPgAuthHeader(authorization)},
+        body: registrationInfo,
+      },
+    )
 
     return response.body
   }
 
   private printResult(dataIntegrationInfo: DataIntegrationInfo) {
     this.log()
-    this.log(`              ${keyColour('Database Host')}: ${valueColour(dataIntegrationInfo.dbHost)}`)
-    this.log(`              ${keyColour('Database Port')}: ${valueColour(dataIntegrationInfo.dbPort.toString())}`)
-    this.log(`              ${keyColour('Database Name')}: ${valueColour(dataIntegrationInfo.dbName)}`)
-    this.log(`          ${keyColour('Database Username')}: ${valueColour(dataIntegrationInfo.dbUsername)}`)
-    this.log(`          ${keyColour('Database Password')}: ${valueColour(dataIntegrationInfo.dbPassword)}`)
-    this.log(`                   ${keyColour('SSH Host')}: ${valueColour(dataIntegrationInfo.sshHost)}`)
-    this.log(`                   ${keyColour('SSH Port')}: ${valueColour(dataIntegrationInfo.sshPort.toString())}`)
-    this.log(`               ${keyColour('SSH Username')}: ${valueColour(dataIntegrationInfo.sshUsername)}`)
-    this.log(` ${keyColour('SSH Server Public Host Key')}: ${valueColour(dataIntegrationInfo.publicSshHostKey)}`)
+    this.log(
+      `              ${keyColour('Database Host')}: ${valueColour(dataIntegrationInfo.dbHost)}`,
+    )
+    this.log(
+      `              ${keyColour('Database Port')}: ${valueColour(dataIntegrationInfo.dbPort.toString())}`,
+    )
+    this.log(
+      `              ${keyColour('Database Name')}: ${valueColour(dataIntegrationInfo.dbName)}`,
+    )
+    this.log(
+      `          ${keyColour('Database Username')}: ${valueColour(dataIntegrationInfo.dbUsername)}`,
+    )
+    this.log(
+      `          ${keyColour('Database Password')}: ${valueColour(dataIntegrationInfo.dbPassword)}`,
+    )
+    this.log(
+      `                   ${keyColour('SSH Host')}: ${valueColour(dataIntegrationInfo.sshHost)}`,
+    )
+    this.log(
+      `                   ${keyColour('SSH Port')}: ${valueColour(dataIntegrationInfo.sshPort.toString())}`,
+    )
+    this.log(
+      `               ${keyColour('SSH Username')}: ${valueColour(dataIntegrationInfo.sshUsername)}`,
+    )
+    this.log(
+      ` ${keyColour('SSH Server Public Host Key')}: ${valueColour(dataIntegrationInfo.publicSshHostKey)}`,
+    )
   }
 
   async catch(err: Error) {
@@ -151,19 +177,19 @@ supports it.`
 }
 
 interface RegistrationInfo {
-  enableWriteAccess: boolean;
-  integrationName: string;
-  sshPublicKey: string;
+  enableWriteAccess: boolean
+  integrationName: string
+  sshPublicKey: string
 }
 
 interface DataIntegrationInfo {
-  dbHost: string;
-  dbPort: number;
-  dbName: string;
-  dbUsername: string;
-  dbPassword: string;
-  sshHost: string;
-  sshPort: number;
-  sshUsername: string;
-  publicSshHostKey: string;
+  dbHost: string
+  dbPort: number
+  dbName: string
+  dbUsername: string
+  dbPassword: string
+  sshHost: string
+  sshPort: number
+  sshUsername: string
+  publicSshHostKey: string
 }

@@ -77,28 +77,26 @@ describe('extension removal command', () => {
     expect(nock.pendingMocks()).to.be.empty
   })
 
-  it(
-    'suppresses errors with the --suppress-missing option when an extension is not installed',
-    async () => {
-      nock(borealisPgApiBaseUrl, {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}})
-        .delete(`/heroku/resources/${fakeAddonName}/pg-extensions/${fakeExt1}`)
-        .reply(404, {resourceType: 'extension'})
+  it('suppresses errors with the --suppress-missing option when an extension is not installed', async () => {
+    nock(borealisPgApiBaseUrl, {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}})
+      .delete(`/heroku/resources/${fakeAddonName}/pg-extensions/${fakeExt1}`)
+      .reply(404, {resourceType: 'extension'})
 
-      const {stdout, stderr, error} = await runCommand([
-        'borealis-pg:extensions:remove',
-        '--confirm',
-        fakeExt1,
-        '--app',
-        fakeHerokuAppName,
-        '--suppress-missing',
-        fakeExt1,
-      ])
+    const {stdout, stderr, error} = await runCommand([
+      'borealis-pg:extensions:remove',
+      '--confirm',
+      fakeExt1,
+      '--app',
+      fakeHerokuAppName,
+      '--suppress-missing',
+      fakeExt1,
+    ])
 
-      expect(stdout).to.equal('')
-      expect(stderr.trim()).to.endWith(`Extension ${fakeExt1} is not installed`)
-      expect(error).to.be.undefined
-      expect(nock.pendingMocks()).to.be.empty
-    })
+    expect(stdout).to.equal('')
+    expect(stderr.trim()).to.endWith(`Extension ${fakeExt1} is not installed`)
+    expect(error).to.be.undefined
+    expect(nock.pendingMocks()).to.be.empty
+  })
 
   it('removes the requested extension after a successful confirmation prompt', async () => {
     nock(borealisPgApiBaseUrl, {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}})
@@ -107,8 +105,12 @@ describe('extension removal command', () => {
 
     setTimeout(() => mockStdin.send(` ${fakeExt1} \n`), 1000)
 
-    const {error} = await runCommand(
-      ['borealis-pg:extensions:remove', '-a', fakeHerokuAppName, fakeExt1])
+    const {error} = await runCommand([
+      'borealis-pg:extensions:remove',
+      '-a',
+      fakeHerokuAppName,
+      fakeExt1,
+    ])
 
     expect(error).to.be.undefined
     expect(nock.pendingMocks()).to.be.empty
@@ -117,8 +119,12 @@ describe('extension removal command', () => {
   it('exits with an error if the confirmation prompt fails', async () => {
     setTimeout(() => mockStdin.send('WRONG!\n'), 1000)
 
-    const {error} = await runCommand(
-      ['borealis-pg:extensions:remove', '-a', fakeHerokuAppName, fakeExt2])
+    const {error} = await runCommand([
+      'borealis-pg:extensions:remove',
+      '-a',
+      fakeHerokuAppName,
+      fakeExt2,
+    ])
 
     expect(error?.message).to.contain('Invalid confirmation provided')
   })

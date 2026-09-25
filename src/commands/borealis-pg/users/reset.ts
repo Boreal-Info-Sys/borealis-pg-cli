@@ -16,8 +16,7 @@ import {createHerokuAuth, fetchAddonAttachmentInfo, removeHerokuAuth} from '../.
 const cliCmdColour = consoleColours.cliCmdName
 
 export default class ResetUsersCommand extends Command {
-  static description =
-    `Reset all database credentials for a Borealis Isolated Postgres add-on
+  static description = `Reset all database credentials for a Borealis Isolated Postgres add-on
 
 The Heroku application's database user roles will be assigned new, random
 usernames and passwords and the application's config vars will be updated
@@ -48,15 +47,20 @@ ${cliCmdColour('borealis-pg:integrations:revoke')} command.`
   async run() {
     const {flags} = await this.parse(ResetUsersCommand)
     const authorization = await createHerokuAuth(this.heroku)
-    const attachmentInfo =
-      await fetchAddonAttachmentInfo(this.heroku, flags.addon, flags.app, this.error)
+    const attachmentInfo = await fetchAddonAttachmentInfo(
+      this.heroku,
+      flags.addon,
+      flags.app,
+      this.error,
+    )
     const {addonName} = processAddonAttachmentInfo(attachmentInfo, this.error)
     try {
       await applyActionSpinner(
         `Resetting all database credentials for add-on ${color.addon(addonName)}`,
         HTTP.delete<{success: boolean}>(
           getBorealisPgApiUrl(`/heroku/resources/${addonName}/db-users/credentials`),
-          {headers: {Authorization: getBorealisPgAuthHeader(authorization)}}),
+          {headers: {Authorization: getBorealisPgAuthHeader(authorization)}},
+        ),
       )
     } finally {
       await removeHerokuAuth(this.heroku, authorization.id as string)
@@ -71,15 +75,17 @@ ${cliCmdColour('borealis-pg:integrations:revoke')} command.`
       } else if (err.statusCode === 403) {
         this.error(
           'Write access to the add-on database has been temporarily revoked. ' +
-          'Generally this indicates the database has persistently exceeded its storage limit. ' +
-          'Try upgrading to a new add-on plan to restore access.')
+            'Generally this indicates the database has persistently exceeded its storage limit. ' +
+            'Try upgrading to a new add-on plan to restore access.',
+        )
       } else if (err.statusCode === 404) {
         this.error('Add-on is not a Borealis Isolated Postgres add-on')
       } else if (err.statusCode === 422) {
         this.error('Add-on is not finished provisioning')
       } else if (err.statusCode === 423) {
-        this.error('Add-on is undergoing a PostgreSQL major version upgrade.\n' +
-          `Try again later or run ${consoleColours.cliCmdName('borealis-pg:upgrade:cancel')} to cancel the upgrade process.`,
+        this.error(
+          'Add-on is undergoing a PostgreSQL major version upgrade.\n' +
+            `Try again later or run ${consoleColours.cliCmdName('borealis-pg:upgrade:cancel')} to cancel the upgrade process.`,
         )
       } else {
         this.error('Add-on service is temporarily unavailable. Try again later.')

@@ -23,8 +23,7 @@ const recursiveOptionName = 'recursive'
 const suppressConflictOptionName = 'suppress-conflict'
 
 export default class InstallPgExtensionsCommand extends Command {
-  static description =
-    `Install a PostgreSQL extension on a Borealis Isolated Postgres add-on database
+  static description = `Install a PostgreSQL extension on a Borealis Isolated Postgres add-on database
 
 Each extension is typically installed with its own dedicated database schema,
 which may be used to store types, functions, tables or other objects that are
@@ -66,8 +65,12 @@ https://www.borealis-data.com/pg-extensions-support.html`
     const pgExtension = args[pgExtensionArgName]
     const suppressConflict = flags[suppressConflictOptionName]
     const authorization = await createHerokuAuth(this.heroku)
-    const attachmentInfo =
-      await fetchAddonAttachmentInfo(this.heroku, flags.addon, flags.app, this.error)
+    const attachmentInfo = await fetchAddonAttachmentInfo(
+      this.heroku,
+      flags.addon,
+      flags.app,
+      this.error,
+    )
     const {addonName} = processAddonAttachmentInfo(attachmentInfo, this.error)
 
     try {
@@ -79,8 +82,9 @@ https://www.borealis-data.com/pg-extensions-support.html`
       for (const extInfo of extInfos) {
         this.log(
           `- ${pgExtensionColour(extInfo.extension)} ` +
-          `(version: ${pgExtMetadataColour(extInfo.version)}, ` +
-          `schema: ${pgExtMetadataColour(extInfo.schema)})`)
+            `(version: ${pgExtMetadataColour(extInfo.version)}, ` +
+            `schema: ${pgExtMetadataColour(extInfo.schema)})`,
+        )
       }
     } catch (error) {
       if (error instanceof HTTPError && error.statusCode === 409 && suppressConflict) {
@@ -97,11 +101,11 @@ https://www.borealis-data.com/pg-extensions-support.html`
     addonName: string,
     pgExtension: string,
     authorization: OAuthAuthorization,
-    recursive: boolean): Promise<PgExtensionDetails[]> {
+    recursive: boolean,
+  ): Promise<PgExtensionDetails[]> {
     try {
-      const response: HTTP<{pgExtensionSchema: string, pgExtensionVersion: string}> = await HTTP.post(
-        getBorealisPgApiUrl(`/heroku/resources/${addonName}/pg-extensions`),
-        {
+      const response: HTTP<{pgExtensionSchema: string; pgExtensionVersion: string}> =
+        await HTTP.post(getBorealisPgApiUrl(`/heroku/resources/${addonName}/pg-extensions`), {
           headers: {Authorization: getBorealisPgAuthHeader(authorization)},
           body: {pgExtensionName: pgExtension},
         })
@@ -114,16 +118,19 @@ https://www.borealis-data.com/pg-extensions-support.html`
         },
       ]
     } catch (error) {
-      if (error instanceof HTTPError &&
+      if (
+        error instanceof HTTPError &&
         error.statusCode === 400 &&
         error.body.dependencies &&
-        recursive) {
+        recursive
+      ) {
         // The extension has unsatisfied dependencies
         return this.recursiveInstallation(
           addonName,
           pgExtension,
           authorization,
-          error.body.dependencies)
+          error.body.dependencies,
+        )
       } else {
         throw error
       }
@@ -134,9 +141,10 @@ https://www.borealis-data.com/pg-extensions-support.html`
     addonName: string,
     pgExtension: string,
     authorization: OAuthAuthorization,
-    dependencies: string[]): Promise<PgExtensionDetails[]> {
-    const dependencyResults = await Promise.all(dependencies.map(
-      async (dependency: string) => {
+    dependencies: string[],
+  ): Promise<PgExtensionDetails[]> {
+    const dependencyResults = await Promise.all(
+      dependencies.map(async (dependency: string) => {
         try {
           return await this.installExtension(addonName, dependency, authorization, true)
         } catch (error) {
@@ -147,7 +155,8 @@ https://www.borealis-data.com/pg-extensions-support.html`
             throw error
           }
         }
-      }))
+      }),
+    )
 
     // Retry now that the dependencies are installed
     try {
@@ -168,14 +177,16 @@ https://www.borealis-data.com/pg-extensions-support.html`
       if (err.statusCode === 400) {
         if (err.body.dependencies) {
           const dependencies: string[] = err.body.dependencies
-          const dependenciesString =
-            dependencies.map(dependency => pgExtensionColour(dependency)).join(', ')
+          const dependenciesString = dependencies
+            .map(dependency => pgExtensionColour(dependency))
+            .join(', ')
           this.error(
             `Extension ${pgExtensionColour(pgExtension)} has one or more unsatisfied ` +
-            `dependencies. All of its dependencies (${dependenciesString}) must be installed.\n` +
-            `Run this command again with the ${formatCliOptionName(recursiveOptionName)} option ` +
-            'to automatically and recursively install the extension and the missing extension(s) ' +
-            'it depends on.')
+              `dependencies. All of its dependencies (${dependenciesString}) must be installed.\n` +
+              `Run this command again with the ${formatCliOptionName(recursiveOptionName)} option ` +
+              'to automatically and recursively install the extension and the missing extension(s) ' +
+              'it depends on.',
+          )
         } else {
           this.error(`${pgExtensionColour(pgExtension)} is not a supported Postgres extension`)
         }
@@ -197,12 +208,14 @@ https://www.borealis-data.com/pg-extensions-support.html`
 }
 
 function getAlreadyInstalledMessage(pgExtension: string): string {
-  return `Extension ${pgExtensionColour(pgExtension)} is already installed or there is a schema ` +
+  return (
+    `Extension ${pgExtensionColour(pgExtension)} is already installed or there is a schema ` +
     'name conflict with an existing database schema'
+  )
 }
 
 interface PgExtensionDetails {
-  extension: string;
-  schema: string;
-  version: string;
+  extension: string
+  schema: string
+  version: string
 }

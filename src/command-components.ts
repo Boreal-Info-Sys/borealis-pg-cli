@@ -100,11 +100,14 @@ export function formatCliOptionName(name: string): string {
  */
 export function processAddonAttachmentInfo(
   attachmentInfo: AddOnAttachment,
-  errorHandler: (message: string) => never): {
-    addonName: string;
-    appName: string;
-    attachmentName: string;
-  } | never {
+  errorHandler: (message: string) => never,
+):
+  | {
+      addonName: string
+      appName: string
+      attachmentName: string
+    }
+  | never {
   const addonName = attachmentInfo.addon?.name
   const appName = attachmentInfo.app?.name
   const attachmentName = attachmentInfo.name

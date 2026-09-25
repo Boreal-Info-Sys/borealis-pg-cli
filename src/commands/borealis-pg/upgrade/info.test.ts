@@ -19,11 +19,14 @@ const fakeOAuthPostRequestBody = {
   expires_in: 180,
   scope: ['read', 'identity'],
 }
-const fakeOAuthPostResponseBody = {id: fakeHerokuAuthId, access_token: {token: fakeHerokuAuthToken}}
+const fakeOAuthPostResponseBody = {
+  id: fakeHerokuAuthId,
+  access_token: {token: fakeHerokuAuthToken},
+}
 
 describe('PostgreSQL version upgrade info command', () => {
   beforeEach(() => {
-    nock(herokuApiBaseUrl,)
+    nock(herokuApiBaseUrl)
       .post('/oauth/authorizations', fakeOAuthPostRequestBody)
       .reply(201, fakeOAuthPostResponseBody)
       .delete(`/oauth/authorizations/${fakeHerokuAuthId}`)
@@ -55,17 +58,17 @@ describe('PostgreSQL version upgrade info command', () => {
   it('shows info when an upgrade is available', async () => {
     nock(borealisPgApiBaseUrl, {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}})
       .get(`/heroku/resources/${fakeAddonName}/pg-version-upgrades`)
-      .reply(
-        200,
-        {
-          currentPgMajorVersion: '16',
-          nextPgMajorVersion: '17',
-          upgradeStatus: 'available',
-        },
-      )
+      .reply(200, {
+        currentPgMajorVersion: '16',
+        nextPgMajorVersion: '17',
+        upgradeStatus: 'available',
+      })
 
-    const {stdout, error} = await runCommand(
-      ['borealis-pg:upgrade:info', '--app', fakeHerokuAppName])
+    const {stdout, error} = await runCommand([
+      'borealis-pg:upgrade:info',
+      '--app',
+      fakeHerokuAppName,
+    ])
 
     expect(stdout).to.containIgnoreSpaces('Current PostgreSQL major version: 16')
     expect(stdout).to.containIgnoreSpaces('Next PostgreSQL major version: 17')
@@ -77,17 +80,17 @@ describe('PostgreSQL version upgrade info command', () => {
   it('shows info when an upgrade is in progress', async () => {
     nock(borealisPgApiBaseUrl, {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}})
       .get(`/heroku/resources/${fakeAddonName}/pg-version-upgrades`)
-      .reply(
-        200,
-        {
-          currentPgMajorVersion: '16',
-          nextPgMajorVersion: '17',
-          upgradeStatus: 'upgrading',
-        },
-      )
+      .reply(200, {
+        currentPgMajorVersion: '16',
+        nextPgMajorVersion: '17',
+        upgradeStatus: 'upgrading',
+      })
 
-    const {stdout, error} = await runCommand(
-      ['borealis-pg:upgrade:info', '--app', fakeHerokuAppName])
+    const {stdout, error} = await runCommand([
+      'borealis-pg:upgrade:info',
+      '--app',
+      fakeHerokuAppName,
+    ])
 
     expect(stdout).to.containIgnoreSpaces('Current PostgreSQL major version: 16')
     expect(stdout).to.containIgnoreSpaces('Next PostgreSQL major version: 17')
@@ -99,14 +102,11 @@ describe('PostgreSQL version upgrade info command', () => {
   it('shows info when at the maximum version', async () => {
     nock(borealisPgApiBaseUrl, {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}})
       .get(`/heroku/resources/${fakeAddonName}/pg-version-upgrades`)
-      .reply(
-        200,
-        {
-          currentPgMajorVersion: '17',
-          nextPgMajorVersion: null,
-          upgradeStatus: 'maximum',
-        },
-      )
+      .reply(200, {
+        currentPgMajorVersion: '17',
+        nextPgMajorVersion: null,
+        upgradeStatus: 'maximum',
+      })
 
     const {stdout, error} = await runCommand(['borealis-pg:upgrade:info', '-a', fakeHerokuAppName])
 
@@ -122,8 +122,11 @@ describe('PostgreSQL version upgrade info command', () => {
       .get(`/heroku/resources/${fakeAddonName}/pg-version-upgrades`)
       .reply(404, {reason: 'Not found!'})
 
-    const {stdout, error} = await runCommand(
-      ['borealis-pg:upgrade:info', '--app', fakeHerokuAppName])
+    const {stdout, error} = await runCommand([
+      'borealis-pg:upgrade:info',
+      '--app',
+      fakeHerokuAppName,
+    ])
 
     expect(stdout).to.equal('')
     expect(error?.message).to.contain('Add-on is not a Borealis Isolated Postgres add-on')
@@ -145,8 +148,11 @@ describe('PostgreSQL version upgrade info command', () => {
       .get(`/heroku/resources/${fakeAddonName}/pg-version-upgrades`)
       .reply(500, {reason: 'Unexpected error!'})
 
-    const {stdout, error} = await runCommand(
-      ['borealis-pg:upgrade:info', '--app', fakeHerokuAppName])
+    const {stdout, error} = await runCommand([
+      'borealis-pg:upgrade:info',
+      '--app',
+      fakeHerokuAppName,
+    ])
 
     expect(stdout).to.equal('')
     expect(error?.message).to.contain('Add-on service is temporarily unavailable. Try again later.')

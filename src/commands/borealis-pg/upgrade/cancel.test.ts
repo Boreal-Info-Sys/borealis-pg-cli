@@ -19,7 +19,10 @@ const fakeOAuthPostRequestBody = {
   expires_in: 180,
   scope: ['read', 'identity'],
 }
-const fakeOAuthPostResponseBody = {id: fakeHerokuAuthId, access_token: {token: fakeHerokuAuthToken}}
+const fakeOAuthPostResponseBody = {
+  id: fakeHerokuAuthId,
+  access_token: {token: fakeHerokuAuthToken},
+}
 
 describe('PostgreSQL version upgrade cancellation command', () => {
   beforeEach(() => {
@@ -57,11 +60,15 @@ describe('PostgreSQL version upgrade cancellation command', () => {
       .delete(`/heroku/resources/${fakeAddonName}/pg-version-upgrades/current`)
       .reply(200, {})
 
-    const {stderr, error} = await runCommand(
-      ['borealis-pg:upgrade:cancel', '--app', fakeHerokuAppName])
+    const {stderr, error} = await runCommand([
+      'borealis-pg:upgrade:cancel',
+      '--app',
+      fakeHerokuAppName,
+    ])
 
     expect(stderr.trim()).to.endWith(
-      'It may be several minutes before the add-on is ready to try another upgrade.')
+      'It may be several minutes before the add-on is ready to try another upgrade.',
+    )
     expect(error).to.be.undefined
     expect(nock.pendingMocks()).to.be.empty
   })
@@ -71,12 +78,16 @@ describe('PostgreSQL version upgrade cancellation command', () => {
       .delete(`/heroku/resources/${fakeAddonName}/pg-version-upgrades/current`)
       .reply(400, {reason: 'Bad state!'})
 
-    const {stdout, error} = await runCommand(
-      ['borealis-pg:upgrade:cancel', '--app', fakeHerokuAppName])
+    const {stdout, error} = await runCommand([
+      'borealis-pg:upgrade:cancel',
+      '--app',
+      fakeHerokuAppName,
+    ])
 
     expect(stdout).to.equal('')
     expect(error?.message).to.contain(
-      'There is no PostgreSQL version upgrade in progress for add-on')
+      'There is no PostgreSQL version upgrade in progress for add-on',
+    )
   })
 
   it('exits with an error when the add-on does not exist', async () => {
@@ -84,8 +95,11 @@ describe('PostgreSQL version upgrade cancellation command', () => {
       .delete(`/heroku/resources/${fakeAddonName}/pg-version-upgrades/current`)
       .reply(404, {reason: 'Not found!'})
 
-    const {stdout, error} = await runCommand(
-      ['borealis-pg:upgrade:cancel', '--app', fakeHerokuAppName])
+    const {stdout, error} = await runCommand([
+      'borealis-pg:upgrade:cancel',
+      '--app',
+      fakeHerokuAppName,
+    ])
 
     expect(stdout).to.equal('')
     expect(error?.message).to.contain('Add-on is not a Borealis Isolated Postgres add-on')
@@ -96,8 +110,11 @@ describe('PostgreSQL version upgrade cancellation command', () => {
       .delete(`/heroku/resources/${fakeAddonName}/pg-version-upgrades/current`)
       .reply(422, {reason: 'Still provisioning!'})
 
-    const {stdout, error} = await runCommand(
-      ['borealis-pg:upgrade:cancel', '--app', fakeHerokuAppName])
+    const {stdout, error} = await runCommand([
+      'borealis-pg:upgrade:cancel',
+      '--app',
+      fakeHerokuAppName,
+    ])
 
     expect(stdout).to.equal('')
     expect(error?.message).to.contain('Add-on is not finished provisioning')
@@ -108,8 +125,11 @@ describe('PostgreSQL version upgrade cancellation command', () => {
       .delete(`/heroku/resources/${fakeAddonName}/pg-version-upgrades/current`)
       .reply(500, {reason: 'Unexpected error!'})
 
-    const {stdout, error} = await runCommand(
-      ['borealis-pg:upgrade:cancel', '-a', fakeHerokuAppName])
+    const {stdout, error} = await runCommand([
+      'borealis-pg:upgrade:cancel',
+      '-a',
+      fakeHerokuAppName,
+    ])
 
     expect(stdout).to.equal('')
     expect(error?.message).to.contain('Add-on service is temporarily unavailable. Try again later.')

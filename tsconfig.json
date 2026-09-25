@@ -8,15 +8,9 @@
     "rootDir": "src",
     "strict": true,
     "target": "es2022",
-    "types": [
-      "mocha",
-      "node"
-    ]
+    "types": ["mocha", "node"]
   },
-  "include": [
-    "src/**/*",
-    "types/**/*"
-  ],
+  "include": ["src/**/*", "types/**/*"],
   "ts-node": {
     "esm": true
   }

@@ -43,15 +43,20 @@ ${cliCmdColour('borealis-pg:users:reset')} command).`
   async run() {
     const {flags} = await this.parse(ListUsersCommand)
     const authorization = await createHerokuAuth(this.heroku)
-    const attachmentInfo =
-      await fetchAddonAttachmentInfo(this.heroku, flags.addon, flags.app, this.error)
+    const attachmentInfo = await fetchAddonAttachmentInfo(
+      this.heroku,
+      flags.addon,
+      flags.app,
+      this.error,
+    )
     const {addonName} = processAddonAttachmentInfo(attachmentInfo, this.error)
     try {
       const response = await applyActionSpinner(
         `Fetching user list for add-on ${color.addon(addonName)}`,
         HTTP.get<{users: [DbUserInfo]}>(
           getBorealisPgApiUrl(`/heroku/resources/${addonName}/db-users`),
-          {headers: {Authorization: getBorealisPgAuthHeader(authorization)}}),
+          {headers: {Authorization: getBorealisPgAuthHeader(authorization)}},
+        ),
       )
 
       if (response.body.users.length > 0) {
@@ -74,18 +79,18 @@ ${cliCmdColour('borealis-pg:users:reset')} command).`
         ]
         const normalizedRows = response.body.users.map(value => {
           return {
-            displayName: (value.displayName ?? 'Heroku App User'),
+            displayName: value.displayName ?? 'Heroku App User',
             readOnlyUsername: value.readOnlyUsername,
             readWriteUsername: value.readWriteUsername,
             userType: value.userType,
           }
         })
 
-        const table = Table(
-          headers,
-          normalizedRows,
-          {truncate: false, borderStyle: 'dashed', compact: true},
-        )
+        const table = Table(headers, normalizedRows, {
+          truncate: false,
+          borderStyle: 'dashed',
+          compact: true,
+        })
 
         this.log(table.render())
       } else {
@@ -113,8 +118,8 @@ ${cliCmdColour('borealis-pg:users:reset')} command).`
 }
 
 type DbUserInfo = {
-  displayName: string | null | undefined;
-  readOnlyUsername: string;
-  readWriteUsername: string;
-  userType: string;
+  displayName: string | null | undefined
+  readOnlyUsername: string
+  readWriteUsername: string
+  userType: string
 }
