@@ -69,10 +69,12 @@ describe('extension list command', () => {
 
     const {stdout, error} = await runCommand(['borealis-pg:extensions', '--app', fakeHerokuAppName])
 
-    expect(stdout).to.equal(
-      `- ${fakeExt1} (version: ${fakeExt1Version}, schema: ${fakeExt1Schema})\n` +
-        `- ${fakeExt2} (version: ${fakeExt2Version}, schema: ${fakeExt2Schema})\n`,
+    expect(stdout).to.containIgnoreSpaces('| Name | Version | Schema |\n')
+    expect(stdout).to.containIgnoreSpaces(
+      `| ${fakeExt1} | ${fakeExt1Version} | ${fakeExt1Schema} |\n` +
+        `| ${fakeExt2} | ${fakeExt2Version} | ${fakeExt2Schema} |\n`,
     )
+
     expect(error).to.be.undefined
   })
 

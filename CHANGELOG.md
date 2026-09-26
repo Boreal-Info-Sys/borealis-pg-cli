@@ -3,6 +3,7 @@ This project adheres to [Semantic Versioning](http://semver.org/). All notable c
 
 ## [Unreleased](https://github.com/Boreal-Info-Sys/borealis-pg-cli/compare/v1.7.1...HEAD)
 - Provide data integration/PostgreSQL extension name hint in removal command prompts
+- Render an add-on's PostgreSQL extension list as a table
 
 ## [1.7.1](https://github.com/Boreal-Info-Sys/borealis-pg-cli/compare/v1.7.0...v1.7.1)
 - Fixed: Handle errors for commands that attempt DDL during a PostgreSQL major version upgrade
