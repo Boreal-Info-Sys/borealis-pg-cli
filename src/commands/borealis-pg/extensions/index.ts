@@ -9,6 +9,8 @@ import {
   appOptionName,
   baseTableHeaderStyle,
   cliOptions,
+  formatJsonResults,
+  jsonOptionName,
   processAddonAttachmentInfo,
 } from '../../../command-components'
 import {createHerokuAuth, fetchAddonAttachmentInfo, removeHerokuAuth} from '../../../heroku-api'
@@ -20,6 +22,7 @@ export default class ListPgExtensionsCommand extends Command {
   static flags = {
     [addonOptionName]: cliOptions.addon,
     [appOptionName]: cliOptions.app,
+    [jsonOptionName]: cliOptions.json,
   }
 
   async run() {
@@ -33,18 +36,27 @@ export default class ListPgExtensionsCommand extends Command {
     )
     const {addonName} = processAddonAttachmentInfo(attachmentInfo, this.error)
     try {
-      const response = await applyActionSpinner(
-        `Fetching Postgres extension list for add-on ${color.addon(addonName)}`,
-        HTTP.get<{extensions: ExtensionInfo[]}>(
+      if (flags.json) {
+        const response = await HTTP.get<{extensions: ExtensionInfo[]}>(
           getBorealisPgApiUrl(`/heroku/resources/${addonName}/pg-extensions`),
           {headers: {Authorization: getBorealisPgAuthHeader(authorization)}},
-        ),
-      )
+        )
 
-      if (response.body.extensions.length > 0) {
-        this.log(renderResultsTable(response.body.extensions))
+        this.log(formatJsonResults(response.body))
       } else {
-        this.warn('No extensions found')
+        const response = await applyActionSpinner(
+          `Fetching Postgres extension list for add-on ${color.addon(addonName)}`,
+          HTTP.get<{extensions: ExtensionInfo[]}>(
+            getBorealisPgApiUrl(`/heroku/resources/${addonName}/pg-extensions`),
+            {headers: {Authorization: getBorealisPgAuthHeader(authorization)}},
+          ),
+        )
+
+        if (response.body.extensions.length > 0) {
+          this.log(renderResultsTable(response.body.extensions))
+        } else {
+          this.warn('No extensions found')
+        }
       }
     } finally {
       await removeHerokuAuth(this.heroku, authorization.id as string)
