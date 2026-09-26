@@ -58,6 +58,10 @@ export const cliOptions = {
   app: flags.app({
     description: 'app to which the add-on is attached',
   }),
+  json: flags.boolean({
+    default: false,
+    description: 'return results in JSON format',
+  }),
   port: flags.integer({
     char: 'p',
     default: defaultPorts.pg,
@@ -74,6 +78,7 @@ export const cliOptions = {
 
 export const addonOptionName = 'addon'
 export const appOptionName = 'app'
+export const jsonOptionName = 'json'
 export const portOptionName = 'port'
 export const writeAccessOptionName = 'write-access'
 
@@ -84,6 +89,17 @@ export const writeAccessOptionName = 'write-access'
  */
 export const componentServices = {
   notifier: {notify: notifier.notify},
+}
+
+/**
+ * Formats the given value as JSON for use in console output
+ *
+ * @param value The value to serialize
+ *
+ * @returns The serialized value
+ */
+export function formatJsonResults(value: any): string {
+  return JSON.stringify(value, undefined, 2)
 }
 
 /**

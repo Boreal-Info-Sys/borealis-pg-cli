@@ -704,6 +704,47 @@ describe('noninteractive run command', () => {
     verify(mockPgClientType.end()).once()
   })
 
+  it('executes a database command with the --json option', async () => {
+    initDefaultRequestMocks()
+
+    const {error} = await runCommand([
+      'borealis-pg:run',
+      '-a',
+      fakeHerokuAppName,
+      '-d',
+      fakeDbCommand,
+      '--json',
+    ])
+
+    expect(error).to.be.undefined
+
+    executeSshClientListener()
+
+    const queryCallback = getQueryCallbackFn()
+
+    const {stdout} = await captureOutput(async () =>
+      queryCallback(null, {
+        command: 'SELECT',
+        fields: [{name: 'id'}, {name: 'value1'}, {name: 'value2'}],
+        oid: 32_304,
+        rows: [
+          {id: 'foo', value1: 1, value2: 2},
+          {id: 'bar', value1: 'baz', value2: 'qux'},
+        ],
+        rowCount: 2,
+      }),
+    )
+
+    expect(stdout).to.equalIgnoreSpaces(
+      JSON.stringify([
+        {id: 'foo', value1: 1, value2: 2},
+        {id: 'bar', value1: 'baz', value2: 'qux'},
+      ]),
+    )
+
+    verify(mockPgClientType.end()).once()
+  })
+
   it('executes a database command with no result', async () => {
     initDefaultRequestMocks()
 
@@ -1199,6 +1240,36 @@ describe('noninteractive run command', () => {
     expect(error?.message).to.contain(
       `--shell-cmd=${fakeShellCommand} cannot also be provided when using --format`,
     )
+  })
+
+  it('exits with an error if the --json option is specified for a shell command', async () => {
+    const {stdout, error} = await runCommand([
+      'borealis-pg:run',
+      '--app',
+      fakeHerokuAppName,
+      '--shell-cmd',
+      fakeShellCommand,
+      '--json',
+    ])
+
+    expect(stdout).to.equal('')
+    expect(error?.message).to.contain('--json=true cannot also be provided when using --shell-cmd')
+  })
+
+  it('exits with an error if the --format and --json options are both specified', async () => {
+    const {stdout, error} = await runCommand([
+      'borealis-pg:run',
+      '-a',
+      fakeHerokuAppName,
+      '-d',
+      fakeDbCommand,
+      '--json',
+      '-f',
+      'json',
+    ])
+
+    expect(stdout).to.equal('')
+    expect(error?.message).to.contain('--json=true cannot also be provided when using --format')
   })
 
   it('exits with an error if an invalid output format is requested', async () => {
