@@ -9,15 +9,10 @@ import {
   addonOptionName,
   appOptionName,
   cliOptions,
+  baseTableHeaderStyle,
   processAddonAttachmentInfo,
 } from '../../../command-components'
 import {createHerokuAuth, fetchAddonAttachmentInfo, removeHerokuAuth} from '../../../heroku-api'
-
-const defaultTableHeader = {
-  align: 'left',
-  headerAlign: 'left',
-  headerColor: 'bold',
-}
 
 export default class ListDataIntegrationsCommand extends Command {
   static description = `List registered data integrations for a Borealis Isolated Postgres add-on
@@ -52,27 +47,27 @@ via a secure tunnel using semi-permanent SSH server and database credentials.`
       if (responseBody.integrations.length > 0) {
         const headers: Header[] = [
           {
-            ...defaultTableHeader,
+            ...baseTableHeaderStyle,
             alias: 'Data Integration',
             value: 'name',
           },
           {
-            ...defaultTableHeader,
+            ...baseTableHeaderStyle,
             alias: 'DB Username',
             value: 'dbUsername',
           },
           {
-            ...defaultTableHeader,
+            ...baseTableHeaderStyle,
             alias: 'SSH Username',
             value: 'sshUsername',
           },
           {
-            ...defaultTableHeader,
+            ...baseTableHeaderStyle,
             alias: 'Write Access',
             value: 'writeAccess',
           },
           {
-            ...defaultTableHeader,
+            ...baseTableHeaderStyle,
             alias: 'Created At',
             value: 'createdAt',
           },

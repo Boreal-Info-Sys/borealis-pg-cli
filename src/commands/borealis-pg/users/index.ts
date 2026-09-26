@@ -9,16 +9,11 @@ import {
   appOptionName,
   cliOptions,
   consoleColours,
+  baseTableHeaderStyle,
   formatCliOptionName,
   processAddonAttachmentInfo,
 } from '../../../command-components'
 import {createHerokuAuth, fetchAddonAttachmentInfo, removeHerokuAuth} from '../../../heroku-api'
-
-const defaultTableHeader = {
-  align: 'left',
-  headerAlign: 'left',
-  headerColor: 'bold',
-}
 
 const cliCmdColour = consoleColours.cliCmdName
 
@@ -62,17 +57,17 @@ ${cliCmdColour('borealis-pg:users:reset')} command).`
       if (response.body.users.length > 0) {
         const headers: Header[] = [
           {
-            ...defaultTableHeader,
+            ...baseTableHeaderStyle,
             alias: 'Add-on User',
             value: 'displayName',
           },
           {
-            ...defaultTableHeader,
+            ...baseTableHeaderStyle,
             alias: 'DB Read-only Username',
             value: 'readOnlyUsername',
           },
           {
-            ...defaultTableHeader,
+            ...baseTableHeaderStyle,
             alias: 'DB Read/Write Username',
             value: 'readWriteUsername',
           },

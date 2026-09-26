@@ -16,6 +16,7 @@ import {
   cliOptions,
   consoleColours,
   defaultPorts,
+  baseTableHeaderStyle,
   formatCliOptionName,
   getLocalPgHost,
   portOptionName,
@@ -428,10 +429,8 @@ like pgAdmin).`
 
 function renderResultsTable(resultInstance: QueryResult<any>) {
   const headers: Header[] = resultInstance.fields.map(field => ({
+    ...baseTableHeaderStyle,
     value: field.name,
-    align: 'left',
-    headerAlign: 'left',
-    headerColor: 'bold',
     formatter: cellValue => (cellValue instanceof Date ? cellValue.toISOString() : cellValue),
   }))
 

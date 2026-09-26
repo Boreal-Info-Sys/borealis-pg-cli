@@ -6,6 +6,7 @@ import dotenv from 'dotenv'
 import dns from 'node:dns/promises'
 import notifier from 'node-notifier'
 import path from 'path'
+import {Header} from 'tty-table'
 
 dotenv.config({path: path.join(__dirname, '..', '.env'), quiet: true})
 
@@ -30,6 +31,12 @@ export const consoleColours = {
   dataFieldName: color.bold,
   dataFieldValue: color.grey,
   pgExtension: color.green,
+}
+
+export const baseTableHeaderStyle: Partial<Header> = {
+  align: 'left',
+  headerAlign: 'left',
+  headerColor: 'bold',
 }
 
 export const defaultPorts = {
