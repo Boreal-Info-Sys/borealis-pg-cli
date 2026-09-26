@@ -12,6 +12,8 @@ import {
   baseTableHeaderStyle,
   formatCliOptionName,
   processAddonAttachmentInfo,
+  jsonOptionName,
+  formatJsonResults,
 } from '../../../command-components'
 import {createHerokuAuth, fetchAddonAttachmentInfo, removeHerokuAuth} from '../../../heroku-api'
 
@@ -33,6 +35,7 @@ ${cliCmdColour('borealis-pg:users:reset')} command).`
   static flags = {
     [addonOptionName]: cliOptions.addon,
     [appOptionName]: cliOptions.app,
+    [jsonOptionName]: cliOptions.json,
   }
 
   async run() {
@@ -46,50 +49,53 @@ ${cliCmdColour('borealis-pg:users:reset')} command).`
     )
     const {addonName} = processAddonAttachmentInfo(attachmentInfo, this.error)
     try {
-      const response = await applyActionSpinner(
-        `Fetching user list for add-on ${color.addon(addonName)}`,
-        HTTP.get<{users: [DbUserInfo]}>(
+      if (flags.json) {
+        const response = await HTTP.get<{users: [DbUserInfo]}>(
           getBorealisPgApiUrl(`/heroku/resources/${addonName}/db-users`),
           {headers: {Authorization: getBorealisPgAuthHeader(authorization)}},
-        ),
-      )
+        )
 
-      if (response.body.users.length > 0) {
-        const headers: Header[] = [
-          {
-            ...baseTableHeaderStyle,
-            alias: 'Add-on User',
-            value: 'displayName',
-          },
-          {
-            ...baseTableHeaderStyle,
-            alias: 'DB Read-only Username',
-            value: 'readOnlyUsername',
-          },
-          {
-            ...baseTableHeaderStyle,
-            alias: 'DB Read/Write Username',
-            value: 'readWriteUsername',
-          },
-        ]
-        const normalizedRows = response.body.users.map(value => {
-          return {
-            displayName: value.displayName ?? 'Heroku App User',
-            readOnlyUsername: value.readOnlyUsername,
-            readWriteUsername: value.readWriteUsername,
-            userType: value.userType,
-          }
-        })
-
-        const table = Table(headers, normalizedRows, {
-          truncate: false,
-          borderStyle: 'dashed',
-          compact: true,
-        })
-
-        this.log(table.render())
+        this.log(formatJsonResults(normalizeResults(response.body)))
       } else {
-        this.warn('No users found')
+        const response = await applyActionSpinner(
+          `Fetching user list for add-on ${color.addon(addonName)}`,
+          HTTP.get<{users: [DbUserInfo]}>(
+            getBorealisPgApiUrl(`/heroku/resources/${addonName}/db-users`),
+            {headers: {Authorization: getBorealisPgAuthHeader(authorization)}},
+          ),
+        )
+
+        if (response.body.users.length > 0) {
+          const headers: Header[] = [
+            {
+              ...baseTableHeaderStyle,
+              alias: 'Add-on User',
+              value: 'displayName',
+            },
+            {
+              ...baseTableHeaderStyle,
+              alias: 'DB Read-only Username',
+              value: 'readOnlyUsername',
+            },
+            {
+              ...baseTableHeaderStyle,
+              alias: 'DB Read/Write Username',
+              value: 'readWriteUsername',
+            },
+          ]
+
+          const normalizedResults = normalizeResults(response.body)
+
+          const table = Table(headers, normalizedResults.users, {
+            truncate: false,
+            borderStyle: 'dashed',
+            compact: true,
+          })
+
+          this.log(table.render())
+        } else {
+          this.warn('No users found')
+        }
       }
     } finally {
       await removeHerokuAuth(this.heroku, authorization.id as string)
@@ -110,6 +116,19 @@ ${cliCmdColour('borealis-pg:users:reset')} command).`
       throw err
     }
   }
+}
+
+function normalizeResults(results: {users: [DbUserInfo]}) {
+  const normalizedUsers = results.users.map(value => {
+    return {
+      displayName: value.displayName ?? 'Heroku App User',
+      readOnlyUsername: value.readOnlyUsername,
+      readWriteUsername: value.readWriteUsername,
+      userType: value.userType,
+    }
+  })
+
+  return {users: normalizedUsers}
 }
 
 type DbUserInfo = {
