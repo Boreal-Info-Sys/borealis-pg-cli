@@ -117,6 +117,40 @@ describe('data integration list command', () => {
     expect(error).to.be.undefined
   })
 
+  it('outputs as JSON', async () => {
+    const fakeResults = [
+      {
+        name: fakeIntegration1Name,
+        dbUsername: fakeIntegration1DbUsername,
+        sshUsername: fakeIntegration1SshUsername,
+        writeAccess: fakeIntegration1WriteAccess,
+        createdAt: fakeIntegration1CreatedAt,
+      },
+      {
+        name: fakeIntegration2Name,
+        dbUsername: fakeIntegration2DbUsername,
+        sshUsername: fakeIntegration2SshUsername,
+        writeAccess: fakeIntegration2WriteAccess,
+        createdAt: fakeIntegration2CreatedAt,
+      },
+    ]
+
+    nock(borealisPgApiBaseUrl, {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}})
+      .get(`/heroku/resources/${fakeAddonName}/data-integrations`)
+      .reply(200, {integrations: fakeResults})
+
+    const {stdout, stderr, error} = await runCommand([
+      'borealis-pg:integrations',
+      '-a',
+      fakeHerokuAppName,
+      '--json',
+    ])
+
+    expect(stdout).to.equalIgnoreSpaces(JSON.stringify({integrations: fakeResults}))
+    expect(stderr).to.equal('')
+    expect(error).to.be.undefined
+  })
+
   it('exits with an error if the add-on was not found', async () => {
     nock(borealisPgApiBaseUrl)
       .get(`/heroku/resources/${fakeAddonName}/data-integrations`)
