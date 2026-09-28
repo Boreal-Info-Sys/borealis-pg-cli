@@ -11,6 +11,8 @@ import {
   cliOptions,
   consoleColours,
   formatCliOptionName,
+  formatJsonResults,
+  jsonOptionName,
   pgExtensionArgName,
   processAddonAttachmentInfo,
 } from '../../../command-components'
@@ -48,6 +50,7 @@ https://www.borealis-data.com/pg-extensions-support.html`
   static flags = {
     [addonOptionName]: cliOptions.addon,
     [appOptionName]: cliOptions.app,
+    [jsonOptionName]: cliOptions.json,
     [recursiveOptionName]: flags.boolean({
       char: 'r',
       default: false,
@@ -74,17 +77,36 @@ https://www.borealis-data.com/pg-extensions-support.html`
     const {addonName} = processAddonAttachmentInfo(attachmentInfo, this.error)
 
     try {
-      const extInfos = await applyActionSpinner(
-        `Installing Postgres extension ${pgExtensionColour(pgExtension)} for add-on ${color.addon(addonName)}`,
-        this.installExtension(addonName, pgExtension, authorization, flags.recursive),
-      )
-
-      for (const extInfo of extInfos) {
-        this.log(
-          `- ${pgExtensionColour(extInfo.extension)} ` +
-            `(version: ${pgExtMetadataColour(extInfo.version)}, ` +
-            `schema: ${pgExtMetadataColour(extInfo.schema)})`,
+      if (flags.json) {
+        const extInfos = await this.installExtension(
+          addonName,
+          pgExtension,
+          authorization,
+          flags.recursive,
         )
+
+        this.log(
+          formatJsonResults({
+            extensions: extInfos.map(extInfo => ({
+              name: extInfo.extension,
+              schema: extInfo.schema,
+              version: extInfo.version,
+            })),
+          }),
+        )
+      } else {
+        const extInfos = await applyActionSpinner(
+          `Installing Postgres extension ${pgExtensionColour(pgExtension)} for add-on ${color.addon(addonName)}`,
+          this.installExtension(addonName, pgExtension, authorization, flags.recursive),
+        )
+
+        for (const extInfo of extInfos) {
+          this.log(
+            `- ${pgExtensionColour(extInfo.extension)} ` +
+              `(version: ${pgExtMetadataColour(extInfo.version)}, ` +
+              `schema: ${pgExtMetadataColour(extInfo.schema)})`,
+          )
+        }
       }
     } catch (error) {
       if (error instanceof HTTPError && error.statusCode === 409 && suppressConflict) {
