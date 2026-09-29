@@ -92,6 +92,31 @@ export const componentServices = {
 }
 
 /**
+ * Generates a summary of an item in table format
+ *
+ * @param item The item
+ *
+ * @returns The summary text
+ */
+export function generateItemSummary(item: {
+  data: {fieldName: string; fieldValue: string}[]
+}): string {
+  const leftColumnWidth =
+    item.data.reduce(
+      (accumulator, currentValue) =>
+        currentValue.fieldName.length > accumulator ? currentValue.fieldName.length : accumulator,
+      0,
+    ) + 1
+
+  const rows = item.data.map(
+    row =>
+      consoleColours.dataFieldName(row.fieldName.padStart(leftColumnWidth)) + `: ${row.fieldValue}`,
+  )
+
+  return rows.join('\n')
+}
+
+/**
  * Formats the given value as JSON for use in console output
  *
  * @param value The value to serialize
