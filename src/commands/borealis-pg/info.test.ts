@@ -382,6 +382,40 @@ describe('add-on info command', () => {
     expect(error).to.be.undefined
   })
 
+  it('displays details as JSON', async () => {
+    const fakeResult = {
+      addonName: fakeAddonName,
+      appDbName: fakeAppDbName,
+      createdAt: fakeCreatedAt,
+      dbStorageMaxBytes: 21_474_836_480,
+      dbStorageUsageBytes: 4_582_038_115,
+      dbTenancyType: 'isolated',
+      planName: fakePlanName,
+      postgresVersion: fakePostgresVersion,
+      region: 'us-east-1',
+      replicaQuantity: 1,
+      status: 'available',
+      restoreSourceAddonName: 'my-other-addon',
+      storageComplianceDeadline: null,
+      storageComplianceStatus: 'ok',
+    }
+
+    nock(borealisPgApiBaseUrl, {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}})
+      .get(`/heroku/resources/${fakeAddonName}`)
+      .reply(200, fakeResult)
+
+    const {stdout, stderr, error} = await runCommand([
+      'borealis-pg:info',
+      '-a',
+      fakeHerokuAppName,
+      '--json',
+    ])
+
+    expect(stdout).to.equalIgnoreSpaces(JSON.stringify(fakeResult))
+    expect(stderr).to.equal('')
+    expect(error).to.be.undefined
+  })
+
   it('exits with an error when the add-on was not found', async () => {
     nock(borealisPgApiBaseUrl, {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}})
       .get(`/heroku/resources/${fakeAddonName}`)

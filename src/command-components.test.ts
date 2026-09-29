@@ -3,10 +3,31 @@ import {anyString, anything, instance, mock, verify, when} from 'ts-mockito'
 import {
   consoleColours,
   formatCliOptionName,
+  formatJsonResults,
   getLocalPgHost,
   processAddonAttachmentInfo,
 } from './command-components'
 import {expect} from './test-utils'
+
+describe('formatJsonResults', () => {
+  it('serializes an object', () => {
+    const fakeDate = new Date(2026, 9, 25, 16, 23, 40, 107)
+
+    const result = formatJsonResults({w: undefined, x: 1, y: 'b', z: fakeDate})
+
+    expect(result).to.containIgnoreSpaces(JSON.stringify({x: 1, y: 'b', z: fakeDate.toISOString()}))
+  })
+
+  it('serializes an array', () => {
+    const fakeDate = new Date(2026, 9, 25, 13, 49, 27, 344)
+
+    const result = formatJsonResults([1, 2.2, {three: '3'}, true, {something: fakeDate}, null])
+
+    expect(result).to.containIgnoreSpaces(
+      JSON.stringify([1, 2.2, {three: '3'}, true, {something: fakeDate.toISOString()}, null]),
+    )
+  })
+})
 
 describe('formatCliOptionName', () => {
   it('returns a formatted CLI option name', () => {

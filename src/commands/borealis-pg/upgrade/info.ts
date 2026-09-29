@@ -9,6 +9,8 @@ import {
   appOptionName,
   cliOptions,
   consoleColours,
+  formatJsonResults,
+  jsonOptionName,
   processAddonAttachmentInfo,
 } from '../../../command-components'
 import {createHerokuAuth, fetchAddonAttachmentInfo, removeHerokuAuth} from '../../../heroku-api'
@@ -28,6 +30,7 @@ the ${consoleColours.cliCmdName('borealis-pg:restore:execute')} command to begin
   static flags = {
     [addonOptionName]: cliOptions.addon,
     [appOptionName]: cliOptions.app,
+    [jsonOptionName]: cliOptions.json,
   }
 
   async run() {
@@ -43,12 +46,18 @@ the ${consoleColours.cliCmdName('borealis-pg:restore:execute')} command to begin
     const {addonName} = processAddonAttachmentInfo(attachmentInfo, this.error)
 
     try {
-      const pgVersionUpgradeInfo = await applyActionSpinner(
-        `Fetching PostgreSQL version upgrade info for add-on ${color.addon(addonName)}`,
-        this.triggerPgVersionUpgrade(addonName, authorization),
-      )
+      if (flags.json) {
+        const pgVersionUpgradeInfo = await this.triggerPgVersionUpgrade(addonName, authorization)
 
-      this.printVersionUpgradeInfo(pgVersionUpgradeInfo)
+        this.log(formatJsonResults(pgVersionUpgradeInfo))
+      } else {
+        const pgVersionUpgradeInfo = await applyActionSpinner(
+          `Fetching PostgreSQL version upgrade info for add-on ${color.addon(addonName)}`,
+          this.triggerPgVersionUpgrade(addonName, authorization),
+        )
+
+        this.printVersionUpgradeInfo(pgVersionUpgradeInfo)
+      }
     } finally {
       await removeHerokuAuth(this.heroku, authorization.id as string)
     }

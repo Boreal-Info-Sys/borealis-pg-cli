@@ -60,6 +60,7 @@ describe('database restore capabilities command', () => {
         cloneSupported: true,
         earliestRestorableTime: fakeEarliestRestorableTime,
         latestRestorableTime: fakeLatestRestorableTime,
+        nightlyBackupsEnabled: true,
         restoreSupported: true,
       })
 
@@ -89,6 +90,7 @@ describe('database restore capabilities command', () => {
         cloneSupported: true,
         earliestRestorableTime: null,
         latestRestorableTime: null,
+        nightlyBackupsEnabled: false,
         restoreSupported: false,
       })
 
@@ -98,7 +100,7 @@ describe('database restore capabilities command', () => {
       fakeHerokuAppName,
     ])
 
-    expect(stdout).to.containIgnoreSpaces('Nightly Backups Status: Enabled')
+    expect(stdout).to.containIgnoreSpaces('Nightly Backups Status: Disabled')
     expect(stdout).to.containIgnoreSpaces('Clone Supported: Yes')
     expect(stdout).to.containIgnoreSpaces('Point-in-time Restore Supported: No')
     expect(stdout).to.containIgnoreSpaces('Earliest Restorable Time: N/A')
@@ -114,6 +116,7 @@ describe('database restore capabilities command', () => {
         cloneSupported: false,
         earliestRestorableTime: fakeEarliestRestorableTime,
         latestRestorableTime: fakeLatestRestorableTime,
+        nightlyBackupsEnabled: true,
         restoreSupported: true,
       })
 
@@ -129,6 +132,31 @@ describe('database restore capabilities command', () => {
       `Latest Restorable Time: ${DateTime.fromISO(fakeLatestRestorableTime).toISO()}`,
     )
 
+    expect(error).to.be.undefined
+  })
+
+  it('displays restore capabilities as JSON', async () => {
+    const fakeResult = {
+      cloneSupported: true,
+      earliestRestorableTime: fakeEarliestRestorableTime,
+      latestRestorableTime: fakeLatestRestorableTime,
+      nightlyBackupsEnabled: true,
+      restoreSupported: true,
+    }
+
+    nock(borealisPgApiBaseUrl, {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}})
+      .get(`/heroku/resources/${fakeAddonName}/restore-capabilities`)
+      .reply(200, fakeResult)
+
+    const {stdout, stderr, error} = await runCommand([
+      'borealis-pg:restore:capabilities',
+      '--app',
+      fakeHerokuAppName,
+      '--json',
+    ])
+
+    expect(stdout).to.equalIgnoreSpaces(JSON.stringify(fakeResult))
+    expect(stderr).to.equal('')
     expect(error).to.be.undefined
   })
 

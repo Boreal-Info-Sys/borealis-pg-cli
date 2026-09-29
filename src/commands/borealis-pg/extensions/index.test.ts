@@ -94,6 +94,27 @@ describe('extension list command', () => {
     expect(error).to.be.undefined
   })
 
+  it('outputs as JSON', async () => {
+    const fakeResults = [
+      {name: fakeExt1, schema: fakeExt1Schema, version: fakeExt1Version},
+      {name: fakeExt2, schema: fakeExt2Schema, version: fakeExt2Version},
+    ]
+    nock(borealisPgApiBaseUrl, {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}})
+      .get(`/heroku/resources/${fakeAddonName}/pg-extensions`)
+      .reply(200, {extensions: fakeResults})
+
+    const {stdout, stderr, error} = await runCommand([
+      'borealis-pg:extensions',
+      '-a',
+      fakeHerokuAppName,
+      '--json',
+    ])
+
+    expect(stdout).to.equalIgnoreSpaces(JSON.stringify({extensions: fakeResults}))
+    expect(stderr).to.equal('')
+    expect(error).to.be.undefined
+  })
+
   it('exits with an error if the add-on was not found', async () => {
     nock(borealisPgApiBaseUrl)
       .get(`/heroku/resources/${fakeAddonName}/pg-extensions`)

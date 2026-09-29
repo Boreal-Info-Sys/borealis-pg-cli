@@ -13,12 +13,14 @@ import {getBorealisPgApiUrl, getBorealisPgAuthHeader} from '../../borealis-api'
 import {
   addonOptionName,
   appOptionName,
+  baseTableHeaderStyle,
   cliOptions,
   consoleColours,
   defaultPorts,
-  baseTableHeaderStyle,
   formatCliOptionName,
+  formatJsonResults,
   getLocalPgHost,
+  jsonOptionName,
   portOptionName,
   processAddonAttachmentInfo,
   writeAccessOptionName,
@@ -104,11 +106,12 @@ like pgAdmin).`
       description: 'UTF-8 file containing database command(s) to execute over the secure tunnel',
       exclusive: [dbCommandOptionName, shellCommandOptionName],
     }),
+    [jsonOptionName]: cliOptions.json,
     [outputFormatOptionName]: flags.string({
       char: 'f',
       default: defaultOutputFormat,
       description: 'output format for database command results',
-      exclusive: [shellCommandOptionName],
+      exclusive: [jsonOptionName, shellCommandOptionName],
       options: [defaultOutputFormat, 'csv', 'json', 'yaml'],
     }),
     [personalUserOptionName]: flags.boolean({
@@ -120,7 +123,12 @@ like pgAdmin).`
     [shellCommandOptionName]: flags.string({
       char: 'e',
       description: 'shell command to execute when the secure tunnel is established',
-      exclusive: [dbCommandOptionName, dbCommandFileOptionName, outputFormatOptionName],
+      exclusive: [
+        dbCommandOptionName,
+        dbCommandFileOptionName,
+        jsonOptionName,
+        outputFormatOptionName,
+      ],
     }),
     [writeAccessOptionName]: cliOptions.writeAccess,
   }
@@ -144,7 +152,8 @@ like pgAdmin).`
     const dbCommand = this.getDbCommand(flags[dbCommandOptionName], flags[dbCommandFileOptionName])
 
     /* istanbul ignore next */
-    const normalizedOutputFormat: string = flags.format || defaultOutputFormat
+    const normalizedOutputFormat: string =
+      (flags.json ? 'json' : flags.format) || defaultOutputFormat
 
     const attachmentInfo = await fetchAddonAttachmentInfo(
       this.heroku,
@@ -453,7 +462,7 @@ async function renderResultsCsv(resultInstance: QueryResult<any>) {
 }
 
 function renderResultsJson(resultInstance: QueryResult<any>) {
-  return JSON.stringify(resultInstance.rows, undefined, 2)
+  return formatJsonResults(resultInstance.rows)
 }
 
 function renderResultsYaml(resultInstance: QueryResult<any>) {

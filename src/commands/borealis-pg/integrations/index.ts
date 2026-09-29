@@ -11,6 +11,8 @@ import {
   cliOptions,
   baseTableHeaderStyle,
   processAddonAttachmentInfo,
+  jsonOptionName,
+  formatJsonResults,
 } from '../../../command-components'
 import {createHerokuAuth, fetchAddonAttachmentInfo, removeHerokuAuth} from '../../../heroku-api'
 
@@ -23,6 +25,7 @@ via a secure tunnel using semi-permanent SSH server and database credentials.`
   static flags = {
     [addonOptionName]: cliOptions.addon,
     [appOptionName]: cliOptions.app,
+    [jsonOptionName]: cliOptions.json,
   }
 
   async run() {
@@ -36,62 +39,71 @@ via a secure tunnel using semi-permanent SSH server and database credentials.`
     )
     const {addonName} = processAddonAttachmentInfo(attachmentInfo, this.error)
     try {
-      const response = await applyActionSpinner(
-        `Fetching data integration list for add-on ${color.addon(addonName)}`,
-        HTTP.get(getBorealisPgApiUrl(`/heroku/resources/${addonName}/data-integrations`), {
-          headers: {Authorization: getBorealisPgAuthHeader(authorization)},
-        }),
-      )
+      if (flags.json) {
+        const response = await HTTP.get<{integrations: Array<DataIntegrationInfo>}>(
+          getBorealisPgApiUrl(`/heroku/resources/${addonName}/data-integrations`),
+          {headers: {Authorization: getBorealisPgAuthHeader(authorization)}},
+        )
 
-      const responseBody = response.body as {integrations: Array<DataIntegrationInfo>}
-      if (responseBody.integrations.length > 0) {
-        const headers: Header[] = [
-          {
-            ...baseTableHeaderStyle,
-            alias: 'Data Integration',
-            value: 'name',
-          },
-          {
-            ...baseTableHeaderStyle,
-            alias: 'DB Username',
-            value: 'dbUsername',
-          },
-          {
-            ...baseTableHeaderStyle,
-            alias: 'SSH Username',
-            value: 'sshUsername',
-          },
-          {
-            ...baseTableHeaderStyle,
-            alias: 'Write Access',
-            value: 'writeAccess',
-          },
-          {
-            ...baseTableHeaderStyle,
-            alias: 'Created At',
-            value: 'createdAt',
-          },
-        ]
-
-        const normalizedRows = responseBody.integrations.map(value => {
-          return {
-            name: value.name,
-            dbUsername: value.dbUsername,
-            sshUsername: value.sshUsername,
-            writeAccess: value.writeAccess,
-            createdAt: DateTime.fromISO(value.createdAt).toISO(),
-          }
-        })
-
-        const table = Table(headers, normalizedRows, {
-          truncate: false,
-          borderStyle: 'dashed',
-          compact: true,
-        })
-
-        this.log(table.render())
+        this.log(formatJsonResults(response.body))
       } else {
-        this.warn('No data integrations found')
+        const response = await applyActionSpinner(
+          `Fetching data integration list for add-on ${color.addon(addonName)}`,
+          HTTP.get<{integrations: Array<DataIntegrationInfo>}>(
+            getBorealisPgApiUrl(`/heroku/resources/${addonName}/data-integrations`),
+            {headers: {Authorization: getBorealisPgAuthHeader(authorization)}},
+          ),
+        )
+
+        if (response.body.integrations.length > 0) {
+          const headers: Header[] = [
+            {
+              ...baseTableHeaderStyle,
+              alias: 'Data Integration',
+              value: 'name',
+            },
+            {
+              ...baseTableHeaderStyle,
+              alias: 'DB Username',
+              value: 'dbUsername',
+            },
+            {
+              ...baseTableHeaderStyle,
+              alias: 'SSH Username',
+              value: 'sshUsername',
+            },
+            {
+              ...baseTableHeaderStyle,
+              alias: 'Write Access',
+              value: 'writeAccess',
+            },
+            {
+              ...baseTableHeaderStyle,
+              alias: 'Created At',
+              value: 'createdAt',
+            },
+          ]
+
+          const normalizedRows = response.body.integrations.map(value => {
+            return {
+              name: value.name,
+              dbUsername: value.dbUsername,
+              sshUsername: value.sshUsername,
+              writeAccess: value.writeAccess,
+              createdAt: DateTime.fromISO(value.createdAt).toISO(),
+            }
+          })
+
+          const table = Table(headers, normalizedRows, {
+            truncate: false,
+            borderStyle: 'dashed',
+            compact: true,
+          })
+
+          this.log(table.render())
+        } else {
+          this.warn('No data integrations found')
+        }
       }
     } finally {
       await removeHerokuAuth(this.heroku, authorization.id as string)

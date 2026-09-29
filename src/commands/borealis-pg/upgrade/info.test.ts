@@ -117,6 +117,29 @@ describe('PostgreSQL version upgrade info command', () => {
     expect(error).to.be.undefined
   })
 
+  it('shows info as JSON', async () => {
+    const fakeResult = {
+      currentPgMajorVersion: '17',
+      nextPgMajorVersion: '18',
+      upgradeStatus: 'available',
+    }
+
+    nock(borealisPgApiBaseUrl, {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}})
+      .get(`/heroku/resources/${fakeAddonName}/pg-version-upgrades`)
+      .reply(200, fakeResult)
+
+    const {stdout, stderr, error} = await runCommand([
+      'borealis-pg:upgrade:info',
+      '--app',
+      fakeHerokuAppName,
+      '--json',
+    ])
+
+    expect(stdout).to.equalIgnoreSpaces(JSON.stringify(fakeResult))
+    expect(stderr).to.equal('')
+    expect(error).to.be.undefined
+  })
+
   it('exits with an error when the add-on does not exist', async () => {
     nock(borealisPgApiBaseUrl, {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}})
       .get(`/heroku/resources/${fakeAddonName}/pg-version-upgrades`)

@@ -112,6 +112,55 @@ describe('database users command', () => {
     expect(error).to.be.undefined
   })
 
+  it('outputs as JSON', async () => {
+    nock(borealisPgApiBaseUrl, {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}})
+      .get(`/heroku/resources/${fakeAddonName}/db-users`)
+      .reply(200, {
+        users: [
+          {
+            displayName: fakePersonalUser2,
+            readOnlyUsername: fakePersonalReadOnlyUsername2,
+            readWriteUsername: fakePersonalReadWriteUsername2,
+            userType: 'personal',
+          },
+          {
+            displayName: null,
+            readOnlyUsername: fakeAppReadOnlyUsername,
+            readWriteUsername: fakeAppReadWriteUsername,
+            userType: 'app',
+          },
+        ],
+      })
+
+    const {stdout, stderr, error} = await runCommand([
+      'borealis-pg:users',
+      '-a',
+      fakeHerokuAppName,
+      '--json',
+    ])
+
+    expect(stdout).to.equalIgnoreSpaces(
+      JSON.stringify({
+        users: [
+          {
+            displayName: fakePersonalUser2,
+            readOnlyUsername: fakePersonalReadOnlyUsername2,
+            readWriteUsername: fakePersonalReadWriteUsername2,
+            userType: 'personal',
+          },
+          {
+            displayName: 'Heroku App User',
+            readOnlyUsername: fakeAppReadOnlyUsername,
+            readWriteUsername: fakeAppReadWriteUsername,
+            userType: 'app',
+          },
+        ],
+      }),
+    )
+    expect(stderr).to.equal('')
+    expect(error).to.be.undefined
+  })
+
   it('exits with an error when the add-on was not found', async () => {
     nock(borealisPgApiBaseUrl, {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}})
       .get(`/heroku/resources/${fakeAddonName}/db-users`)

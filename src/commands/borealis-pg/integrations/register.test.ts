@@ -179,6 +179,32 @@ describe('data integration registration command', () => {
     expect(nock.pendingMocks()).to.be.empty
   })
 
+  it('registers a data integration with JSON output', async () => {
+    nock(borealisPgApiBaseUrl, {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}})
+      .post(`/heroku/resources/${fakeAddonName}/data-integrations`, {
+        integrationName: fakeIntegrationName,
+        sshPublicKey: fakeSshPublicKey,
+        enableWriteAccess: false,
+      })
+      .reply(201, expectedResponseContent)
+
+    const {stdout, stderr, error} = await runCommand([
+      'borealis-pg:integrations:register',
+      '--app',
+      fakeHerokuAppName,
+      '--name',
+      fakeIntegrationName,
+      '--json',
+      fakeSshPublicKey,
+    ])
+
+    expect(stdout).to.equalIgnoreSpaces(JSON.stringify(expectedResponseContent))
+    expect(stderr).to.equal('')
+    expect(error).to.be.undefined
+
+    expect(nock.pendingMocks()).to.be.empty
+  })
+
   it('exits with an error if the request was invalid', async () => {
     nock(borealisPgApiBaseUrl)
       .post(`/heroku/resources/${fakeAddonName}/data-integrations`)
