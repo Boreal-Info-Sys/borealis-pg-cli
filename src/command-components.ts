@@ -28,8 +28,6 @@ export const borealisPgApiBaseUrl =
 export const consoleColours = {
   cliCmdName: color.italic,
   cliOption: color.bold.italic,
-  dataFieldName: color.bold,
-  dataFieldValue: color.grey,
   pgExtension: color.green,
 }
 
@@ -109,8 +107,7 @@ export function generateItemSummary(item: {
     ) + 1
 
   const rows = item.data.map(
-    row =>
-      consoleColours.dataFieldName(row.fieldName.padStart(leftColumnWidth)) + `: ${row.fieldValue}`,
+    row => color.bold(row.fieldName.padStart(leftColumnWidth)) + `: ${row.fieldValue}`,
   )
 
   return rows.join('\n')

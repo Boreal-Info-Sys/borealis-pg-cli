@@ -42,7 +42,7 @@ const personalUserOptionName = 'personal-user'
 const shellCommandOptionName = 'shell-cmd'
 
 const cliCmdColour = consoleColours.cliCmdName
-const envVarColour = consoleColours.dataFieldName
+const envVarColour = color.bold
 
 export default class RunCommand extends Command {
   static description = `Run a command with a secure tunnel to a Borealis Isolated Postgres add-on

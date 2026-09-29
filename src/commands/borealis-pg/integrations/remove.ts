@@ -8,12 +8,11 @@ import {
   addonOptionName,
   appOptionName,
   cliOptions,
-  consoleColours,
   processAddonAttachmentInfo,
 } from '../../../command-components'
 import {createHerokuAuth, fetchAddonAttachmentInfo, removeHerokuAuth} from '../../../heroku-api'
 
-const dataIntegrationNameColour = consoleColours.dataFieldValue
+const dataIntegrationNameColour = color.grey
 
 const confirmOptionName = 'confirm'
 const dataIntegrationOptionName = 'name'
