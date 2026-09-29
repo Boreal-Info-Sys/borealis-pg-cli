@@ -104,7 +104,7 @@ export default class RemovePgExtensionCommand extends Command {
     if (err instanceof HTTPError) {
       if (err.statusCode === 400) {
         this.error(
-          `Extension ${pgExtensionColour(pgExtension)} has dependent extensions or objects. ` +
+          `Extension ${pgExtensionColour(pgExtension)} has dependent extensions or objects.\n` +
             'It can only be removed after its dependents are removed first.',
         )
       } else if (err.statusCode === 404) {

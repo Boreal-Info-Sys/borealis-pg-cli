@@ -6,6 +6,7 @@ This project adheres to [Semantic Versioning](http://semver.org/). All notable c
 - Render an add-on's PostgreSQL extension list as a table
 - Introduces a `--json` option for commands that return structured data
 - Improve readability of item summaries by using default terminal colour for values
+- Tweak error messages to reduce line wrapping in terminal
 
 ## [1.7.1](https://github.com/Boreal-Info-Sys/borealis-pg-cli/compare/v1.7.0...v1.7.1)
 - Fixed: Handle errors for commands that attempt DDL during a PostgreSQL major version upgrade
