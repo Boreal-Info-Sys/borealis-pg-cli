@@ -204,10 +204,11 @@ https://www.borealis-data.com/pg-extensions-support.html`
             .join(', ')
           this.error(
             `Extension ${pgExtensionColour(pgExtension)} has one or more unsatisfied ` +
-              `dependencies. All of its dependencies (${dependenciesString}) must be installed.\n` +
-              `Run this command again with the ${formatCliOptionName(recursiveOptionName)} option ` +
-              'to automatically and recursively install the extension and the missing extension(s) ' +
-              'it depends on.',
+              'dependencies.\n' +
+              'All of the extensions it depends on must also be installed: ' +
+              `${dependenciesString}.\n` +
+              `Run this command again with the ${formatCliOptionName(recursiveOptionName)} ` +
+              'option to automatically install the extension and its missing dependencies.',
           )
         } else {
           this.error(`${pgExtensionColour(pgExtension)} is not a supported Postgres extension`)

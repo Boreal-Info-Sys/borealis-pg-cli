@@ -251,8 +251,8 @@ describe('extension installation command', () => {
 
     expect(stdout).to.equal('')
     expect(error?.message).to.contain(
-      `Extension ${fakeExt1} has one or more unsatisfied dependencies. ` +
-        `All of its dependencies (${fakeExt2}, ${fakeExt3}) must be installed.`,
+      `Extension ${fakeExt1} has one or more unsatisfied dependencies.\n` +
+        `All of the extensions it depends on must also be installed: ${fakeExt2}, ${fakeExt3}.`,
     )
   })
 

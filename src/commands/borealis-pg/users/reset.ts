@@ -74,8 +74,8 @@ ${cliCmdColour('borealis-pg:integrations:revoke')} command.`
         this.error('Add-on is currently undergoing maintenance. Try again in a few minutes.')
       } else if (err.statusCode === 403) {
         this.error(
-          'Write access to the add-on database has been temporarily revoked. ' +
-            'Generally this indicates the database has persistently exceeded its storage limit. ' +
+          'Write access to the add-on database has been temporarily revoked.\n' +
+            'Generally this indicates the database has persistently exceeded its storage limit.\n' +
             'Try upgrading to a new add-on plan to restore access.',
         )
       } else if (err.statusCode === 404) {

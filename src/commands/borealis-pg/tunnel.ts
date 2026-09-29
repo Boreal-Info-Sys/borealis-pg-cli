@@ -172,8 +172,8 @@ steps are required to use a graphical user interface (e.g. pgAdmin).`)
     if (err instanceof HTTPError) {
       if (err.statusCode === 403) {
         this.error(
-          'Access to the add-on database has been temporarily revoked for personal users. ' +
-            'Generally this indicates the database has persistently exceeded its storage limit. ' +
+          'Access to the add-on database has been temporarily revoked for personal users.\n' +
+            'Generally this indicates the database has persistently exceeded its storage limit.\n' +
             'Try upgrading to a new add-on plan to restore access.',
         )
       } else if (err.statusCode === 404) {
