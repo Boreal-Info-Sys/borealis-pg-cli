@@ -10,13 +10,11 @@ import {
   cliOptions,
   consoleColours,
   formatJsonResults,
+  generateItemSummary,
   jsonOptionName,
   processAddonAttachmentInfo,
 } from '../../../command-components'
 import {createHerokuAuth, fetchAddonAttachmentInfo, removeHerokuAuth} from '../../../heroku-api'
-
-const keyColour = consoleColours.dataFieldName
-const valueColour = consoleColours.dataFieldValue
 
 export default class PgVersionInfoCommand extends Command {
   static description = `Show PostgreSQL version upgrade info for a Borealis Isolated Postgres add-on
@@ -68,13 +66,16 @@ the ${consoleColours.cliCmdName('borealis-pg:restore:execute')} command to begin
 
     this.log()
     this.log(
-      ` ${keyColour('Current PostgreSQL major version')}: ${valueColour(pgVersionUpgradeInfo.currentPgMajorVersion)}`,
-    )
-    this.log(
-      `    ${keyColour('Next PostgreSQL major version')}: ${valueColour(nextPgMajorVersion)}`,
-    )
-    this.log(
-      `                   ${keyColour('Upgrade Status')}: ${valueColour(pgVersionUpgradeInfo.upgradeStatus)}`,
+      generateItemSummary({
+        data: [
+          {
+            fieldName: 'Current PostgreSQL major version',
+            fieldValue: pgVersionUpgradeInfo.currentPgMajorVersion,
+          },
+          {fieldName: 'Next PostgreSQL major version', fieldValue: nextPgMajorVersion},
+          {fieldName: 'Upgrade Status', fieldValue: pgVersionUpgradeInfo.upgradeStatus},
+        ],
+      }),
     )
   }
 

@@ -19,7 +19,7 @@ import {
 import {createHerokuAuth, fetchAddonAttachmentInfo, removeHerokuAuth} from '../../../heroku-api'
 
 const pgExtensionColour = consoleColours.pgExtension
-const pgExtMetadataColour = consoleColours.dataFieldValue
+const pgExtMetadataColour = color.grey
 
 const recursiveOptionName = 'recursive'
 const suppressConflictOptionName = 'suppress-conflict'

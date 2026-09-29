@@ -1,13 +1,32 @@
+import color from '@heroku-cli/color'
 import {AddOnAttachment} from '@heroku-cli/schema'
 import {anyString, anything, instance, mock, verify, when} from 'ts-mockito'
 import {
-  consoleColours,
   formatCliOptionName,
   formatJsonResults,
+  generateItemSummary,
   getLocalPgHost,
   processAddonAttachmentInfo,
 } from './command-components'
 import {expect} from './test-utils'
+
+describe('generateEntitySummary', () => {
+  it('produces a summary table', () => {
+    const result = generateItemSummary({
+      data: [
+        {fieldName: 'First', fieldValue: '#1'},
+        {fieldName: 'Second', fieldValue: '#2!!'},
+        {fieldName: '3rd', fieldValue: '3.1415926535897932385'},
+      ],
+    })
+
+    expect(result).to.equal(
+      `${color.bold('  First')}: #1\n` +
+        `${color.bold(' Second')}: #2!!\n` +
+        `${color.bold('    3rd')}: 3.1415926535897932385`,
+    )
+  })
+})
 
 describe('formatJsonResults', () => {
   it('serializes an object', () => {
@@ -35,7 +54,7 @@ describe('formatCliOptionName', () => {
 
     const result = formatCliOptionName(cliOptionName)
 
-    expect(result).to.equal(consoleColours.cliOption(`--${cliOptionName}`))
+    expect(result).to.equal(color.bold.italic(`--${cliOptionName}`))
   })
 })
 

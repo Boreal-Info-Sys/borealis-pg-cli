@@ -8,18 +8,15 @@ import {
   addonOptionName,
   appOptionName,
   cliOptions,
-  consoleColours,
   formatCliOptionName,
   formatJsonResults,
+  generateItemSummary,
   jsonOptionName,
   processAddonAttachmentInfo,
   writeAccessOptionName,
 } from '../../../command-components'
 import {createHerokuAuth, fetchAddonAttachmentInfo, removeHerokuAuth} from '../../../heroku-api'
 import {Args} from '@oclif/core'
-
-const keyColour = consoleColours.dataFieldName
-const valueColour = consoleColours.dataFieldValue
 
 const dataIntegrationOptionName = 'name'
 
@@ -135,31 +132,22 @@ supports it.`
   private printResult(dataIntegrationInfo: DataIntegrationInfo) {
     this.log()
     this.log(
-      `              ${keyColour('Database Host')}: ${valueColour(dataIntegrationInfo.dbHost)}`,
-    )
-    this.log(
-      `              ${keyColour('Database Port')}: ${valueColour(dataIntegrationInfo.dbPort.toString())}`,
-    )
-    this.log(
-      `              ${keyColour('Database Name')}: ${valueColour(dataIntegrationInfo.dbName)}`,
-    )
-    this.log(
-      `          ${keyColour('Database Username')}: ${valueColour(dataIntegrationInfo.dbUsername)}`,
-    )
-    this.log(
-      `          ${keyColour('Database Password')}: ${valueColour(dataIntegrationInfo.dbPassword)}`,
-    )
-    this.log(
-      `                   ${keyColour('SSH Host')}: ${valueColour(dataIntegrationInfo.sshHost)}`,
-    )
-    this.log(
-      `                   ${keyColour('SSH Port')}: ${valueColour(dataIntegrationInfo.sshPort.toString())}`,
-    )
-    this.log(
-      `               ${keyColour('SSH Username')}: ${valueColour(dataIntegrationInfo.sshUsername)}`,
-    )
-    this.log(
-      ` ${keyColour('SSH Server Public Host Key')}: ${valueColour(dataIntegrationInfo.publicSshHostKey)}`,
+      generateItemSummary({
+        data: [
+          {fieldName: 'Database Host', fieldValue: dataIntegrationInfo.dbHost},
+          {fieldName: 'Database Port', fieldValue: dataIntegrationInfo.dbPort.toString()},
+          {fieldName: 'Database Name', fieldValue: dataIntegrationInfo.dbName},
+          {fieldName: 'Database Username', fieldValue: dataIntegrationInfo.dbUsername},
+          {fieldName: 'Database Password', fieldValue: dataIntegrationInfo.dbPassword},
+          {fieldName: 'SSH Host', fieldValue: dataIntegrationInfo.sshHost},
+          {fieldName: 'SSH Port', fieldValue: dataIntegrationInfo.sshPort.toString()},
+          {fieldName: 'SSH Username', fieldValue: dataIntegrationInfo.sshUsername},
+          {
+            fieldName: 'SSH Server Public Host Key',
+            fieldValue: dataIntegrationInfo.publicSshHostKey,
+          },
+        ],
+      }),
     )
   }
 

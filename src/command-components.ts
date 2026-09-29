@@ -28,8 +28,6 @@ export const borealisPgApiBaseUrl =
 export const consoleColours = {
   cliCmdName: color.italic,
   cliOption: color.bold.italic,
-  dataFieldName: color.bold,
-  dataFieldValue: color.grey,
   pgExtension: color.green,
 }
 
@@ -89,6 +87,30 @@ export const writeAccessOptionName = 'write-access'
  */
 export const componentServices = {
   notifier: {notify: notifier.notify},
+}
+
+/**
+ * Generates a summary of an item in table format
+ *
+ * @param item The item
+ *
+ * @returns The summary text
+ */
+export function generateItemSummary(item: {
+  data: {fieldName: string; fieldValue: string}[]
+}): string {
+  const leftColumnWidth =
+    item.data.reduce(
+      (accumulator, currentValue) =>
+        currentValue.fieldName.length > accumulator ? currentValue.fieldName.length : accumulator,
+      0,
+    ) + 1
+
+  const rows = item.data.map(
+    row => color.bold(row.fieldName.padStart(leftColumnWidth)) + `: ${row.fieldValue}`,
+  )
+
+  return rows.join('\n')
 }
 
 /**

@@ -12,11 +12,10 @@ import {
   consoleColours,
   jsonOptionName,
   formatJsonResults,
+  generateItemSummary,
 } from '../../../command-components'
 import {createHerokuAuth, fetchAddonAttachmentInfo, removeHerokuAuth} from '../../../heroku-api'
 
-const keyColour = consoleColours.dataFieldName
-const valueColour = consoleColours.dataFieldValue
 const cliCmdColour = consoleColours.cliCmdName
 
 export default class DbRestoreInfoCommand extends Command {
@@ -85,19 +84,15 @@ See the ${cliCmdColour('borealis-pg:restore:execute')} command to perform a rest
 
     this.log()
     this.log(
-      `          ${keyColour('Nightly Backups Status')}: ${valueColour(nightlyBackupsStatus)}`,
-    )
-    this.log(
-      `                 ${keyColour('Clone Supported')}: ${valueColour(cloneSupportedDisplay)}`,
-    )
-    this.log(
-      ` ${keyColour('Point-in-time Restore Supported')}: ${valueColour(restoreSupportedDisplay)}`,
-    )
-    this.log(
-      `        ${keyColour('Earliest Restorable Time')}: ${valueColour(earliestRestoreTimeDisplay)}`,
-    )
-    this.log(
-      `          ${keyColour('Latest Restorable Time')}: ${valueColour(latestRestoreTimeDisplay)}`,
+      generateItemSummary({
+        data: [
+          {fieldName: 'Nightly Backups Status', fieldValue: nightlyBackupsStatus},
+          {fieldName: 'Clone Supported', fieldValue: cloneSupportedDisplay},
+          {fieldName: 'Point-in-time Restore Supported', fieldValue: restoreSupportedDisplay},
+          {fieldName: 'Earliest Restorable Time', fieldValue: earliestRestoreTimeDisplay},
+          {fieldName: 'Latest Restorable Time', fieldValue: latestRestoreTimeDisplay},
+        ],
+      }),
     )
   }
 
