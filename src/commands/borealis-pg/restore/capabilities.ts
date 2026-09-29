@@ -10,6 +10,8 @@ import {
   appOptionName,
   processAddonAttachmentInfo,
   consoleColours,
+  jsonOptionName,
+  formatJsonResults,
 } from '../../../command-components'
 import {createHerokuAuth, fetchAddonAttachmentInfo, removeHerokuAuth} from '../../../heroku-api'
 
@@ -33,6 +35,7 @@ See the ${cliCmdColour('borealis-pg:restore:execute')} command to perform a rest
   static flags = {
     [addonOptionName]: cliOptions.addon,
     [appOptionName]: cliOptions.app,
+    [jsonOptionName]: cliOptions.json,
   }
 
   async run() {
@@ -47,21 +50,30 @@ See the ${cliCmdColour('borealis-pg:restore:execute')} command to perform a rest
     const {addonName} = processAddonAttachmentInfo(attachmentInfo, this.error)
 
     try {
-      const response = await applyActionSpinner<HTTP<DbRestoreInfo>>(
-        `Fetching database restore capabilities of add-on ${color.addon(addonName)}`,
-        HTTP.get(getBorealisPgApiUrl(`/heroku/resources/${addonName}/restore-capabilities`), {
-          headers: {Authorization: getBorealisPgAuthHeader(authorization)},
-        }),
-      )
+      if (flags.json) {
+        const response = await HTTP.get<DbRestoreInfo>(
+          getBorealisPgApiUrl(`/heroku/resources/${addonName}/restore-capabilities`),
+          {headers: {Authorization: getBorealisPgAuthHeader(authorization)}},
+        )
 
-      this.printDbRestoreInfo(response.body)
+        this.log(formatJsonResults(response.body))
+      } else {
+        const response = await applyActionSpinner<HTTP<DbRestoreInfo>>(
+          `Fetching database restore capabilities of add-on ${color.addon(addonName)}`,
+          HTTP.get(getBorealisPgApiUrl(`/heroku/resources/${addonName}/restore-capabilities`), {
+            headers: {Authorization: getBorealisPgAuthHeader(authorization)},
+          }),
+        )
+
+        this.printDbRestoreInfo(response.body)
+      }
     } finally {
       await removeHerokuAuth(this.heroku, authorization.id as string)
     }
   }
 
   private async printDbRestoreInfo(dbRestoreInfo: DbRestoreInfo) {
-    const nightlyBackupsStatus = 'Enabled'
+    const nightlyBackupsStatus = dbRestoreInfo.nightlyBackupsEnabled ? 'Enabled' : 'Disabled'
     const cloneSupportedDisplay = dbRestoreInfo.cloneSupported ? 'Yes' : 'No'
     const restoreSupportedDisplay = dbRestoreInfo.restoreSupported ? 'Yes' : 'No'
     const earliestRestoreTimeDisplay = dbRestoreInfo.earliestRestorableTime
@@ -109,5 +121,6 @@ interface DbRestoreInfo {
   cloneSupported: boolean
   earliestRestorableTime: string | null
   latestRestorableTime: string | null
+  nightlyBackupsEnabled: boolean
   restoreSupported: boolean
 }
