@@ -9,14 +9,11 @@ import {
   cliOptions,
   appOptionName,
   processAddonAttachmentInfo,
-  consoleColours,
   jsonOptionName,
   formatJsonResults,
+  generateItemSummary,
 } from '../../command-components'
 import {createHerokuAuth, fetchAddonAttachmentInfo, removeHerokuAuth} from '../../heroku-api'
-
-const keyColour = consoleColours.dataFieldName
-const valueColour = consoleColours.dataFieldValue
 
 const bytesPerGib = 1024 * 1024 * 1024
 
@@ -125,27 +122,25 @@ export default class AddonInfoCommand extends Command {
     const restoreSourceAddonName = addonInfo.restoreSourceAddonName ?? 'N/A'
 
     this.log()
-    this.log(`                 ${keyColour('Add-on Name')}: ${valueColour(addonInfo.addonName)}`)
-    this.log(`                      ${keyColour('Status')}: ${valueColour(addonStatus)}`)
-    this.log(`                      ${keyColour('Region')}: ${valueColour(region)}`)
-    this.log(`                   ${keyColour('Plan Name')}: ${valueColour(addonInfo.planName)}`)
-    this.log(`                 ${keyColour('Environment')}: ${valueColour(dbTenancyType)}`)
     this.log(
-      `          ${keyColour('PostgreSQL Version')}: ${valueColour(addonInfo.postgresVersion)}`,
-    )
-    this.log(`             ${keyColour('Maximum Storage')}: ${valueColour(dbStorageMaxDisplay)}`)
-    this.log(`                ${keyColour('Storage Used')}: ${valueColour(dbStorageUsageDisplay)}`)
-    this.log(
-      `          ${keyColour('Read-only Replicas')}: ${valueColour(addonInfo.replicaQuantity.toString())}`,
-    )
-    this.log(`                 ${keyColour('App DB Name')}: ${valueColour(appDbName)}`)
-    this.log(`                  ${keyColour('Created At')}: ${valueColour(createdAt)}`)
-    this.log(` ${keyColour('Restored/Cloned From Add-on')}: ${valueColour(restoreSourceAddonName)}`)
-    this.log(
-      `   ${keyColour('Storage Compliance Status')}: ${valueColour(storageComplianceStatus)}`,
-    )
-    this.log(
-      ` ${keyColour('Storage Compliance Deadline')}: ${valueColour(storageComplianceDeadline)}`,
+      generateItemSummary({
+        data: [
+          {fieldName: 'Add-on Name', fieldValue: addonInfo.addonName},
+          {fieldName: 'Status', fieldValue: addonStatus},
+          {fieldName: 'Region', fieldValue: region},
+          {fieldName: 'Plan Name', fieldValue: addonInfo.planName},
+          {fieldName: 'Environment', fieldValue: dbTenancyType},
+          {fieldName: 'PostgreSQL Version', fieldValue: addonInfo.postgresVersion},
+          {fieldName: 'Maximum Storage', fieldValue: dbStorageMaxDisplay},
+          {fieldName: 'Storage Used', fieldValue: dbStorageUsageDisplay},
+          {fieldName: 'Read-only Replicas', fieldValue: addonInfo.replicaQuantity.toString()},
+          {fieldName: 'App DB Name', fieldValue: appDbName},
+          {fieldName: 'Created At', fieldValue: createdAt},
+          {fieldName: 'Restored/Cloned From Add-on', fieldValue: restoreSourceAddonName},
+          {fieldName: 'Storage Compliance Status', fieldValue: storageComplianceStatus},
+          {fieldName: 'Storage Compliance Deadline', fieldValue: storageComplianceDeadline},
+        ],
+      }),
     )
   }
 

@@ -10,6 +10,7 @@ import {
   cliOptions,
   consoleColours,
   formatCliOptionName,
+  generateItemSummary,
   getLocalPgHost,
   portOptionName,
   processAddonAttachmentInfo,
@@ -25,8 +26,6 @@ import {
 } from '../../ssh-tunneling'
 
 const keyboardKeyColour = color.italic
-const connKeyColour = consoleColours.dataFieldName
-const connValueColour = consoleColours.dataFieldValue
 
 export default class TunnelCommand extends Command {
   static description = `Establish a secure tunnel to a Borealis Isolated Postgres add-on
@@ -140,12 +139,18 @@ ${consoleColours.cliCmdName('borealis-pg:psql')} command to launch an interactiv
         this.log()
         this.log('Secure tunnel established. Use the following values to connect to the database:')
 
-        this.log(`      ${connKeyColour('Username')}: ${connValueColour(db.dbUsername)}`)
-        this.log(`      ${connKeyColour('Password')}: ${connValueColour(db.dbPassword)}`)
-        this.log(`          ${connKeyColour('Host')}: ${connValueColour(localPgHost)}`)
-        this.log(`          ${connKeyColour('Port')}: ${connValueColour(localPgPort.toString())}`)
-        this.log(` ${connKeyColour('Database name')}: ${connValueColour(db.dbName)}`)
-        this.log(`           ${connKeyColour('URL')}: ${connValueColour(dbUrl)}`)
+        this.log(
+          generateItemSummary({
+            data: [
+              {fieldName: 'Username', fieldValue: db.dbUsername},
+              {fieldName: 'Password', fieldValue: db.dbPassword},
+              {fieldName: 'Host', fieldValue: localPgHost},
+              {fieldName: 'Port', fieldValue: localPgPort.toString()},
+              {fieldName: 'Database name', fieldValue: db.dbName},
+              {fieldName: 'Connection URL', fieldValue: dbUrl},
+            ],
+          }),
+        )
 
         this.log(`
 This process does not accept any keyboard input and will continue to run
