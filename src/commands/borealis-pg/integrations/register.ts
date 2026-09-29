@@ -10,6 +10,8 @@ import {
   cliOptions,
   consoleColours,
   formatCliOptionName,
+  formatJsonResults,
+  jsonOptionName,
   processAddonAttachmentInfo,
   writeAccessOptionName,
 } from '../../../command-components'
@@ -62,6 +64,7 @@ supports it.`
   static flags = {
     [addonOptionName]: cliOptions.addon,
     [appOptionName]: cliOptions.app,
+    [jsonOptionName]: cliOptions.json,
     [dataIntegrationOptionName]: flags.string({
       char: 'n',
       description: 'name of the add-on data integration',
@@ -88,16 +91,26 @@ supports it.`
     const {addonName} = processAddonAttachmentInfo(attachmentInfo, this.error)
 
     try {
-      const dataIntegrationInfo = await applyActionSpinner(
-        `Registering data integration with add-on ${color.addon(addonName)}`,
-        this.registerIntegration(
+      if (flags.json) {
+        const dataIntegrationInfo = await this.registerIntegration(
           addonName,
           {integrationName, sshPublicKey, enableWriteAccess},
           authorization,
-        ),
-      )
+        )
 
-      this.printResult(dataIntegrationInfo)
+        this.log(formatJsonResults(dataIntegrationInfo))
+      } else {
+        const dataIntegrationInfo = await applyActionSpinner(
+          `Registering data integration with add-on ${color.addon(addonName)}`,
+          this.registerIntegration(
+            addonName,
+            {integrationName, sshPublicKey, enableWriteAccess},
+            authorization,
+          ),
+        )
+
+        this.printResult(dataIntegrationInfo)
+      }
     } finally {
       await removeHerokuAuth(this.heroku, authorization.id as string)
     }
