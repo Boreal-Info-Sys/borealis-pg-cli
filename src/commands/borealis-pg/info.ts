@@ -10,6 +10,8 @@ import {
   appOptionName,
   processAddonAttachmentInfo,
   consoleColours,
+  jsonOptionName,
+  formatJsonResults,
 } from '../../command-components'
 import {createHerokuAuth, fetchAddonAttachmentInfo, removeHerokuAuth} from '../../heroku-api'
 
@@ -59,6 +61,7 @@ export default class AddonInfoCommand extends Command {
   static flags = {
     [addonOptionName]: cliOptions.addon,
     [appOptionName]: cliOptions.app,
+    [jsonOptionName]: cliOptions.json,
   }
 
   async run() {
@@ -73,20 +76,29 @@ export default class AddonInfoCommand extends Command {
     const {addonName} = processAddonAttachmentInfo(attachmentInfo, this.error)
 
     try {
-      const response = await applyActionSpinner<HTTP<AddonInfo>>(
-        `Fetching information about add-on ${color.addon(addonName)}`,
-        HTTP.get(getBorealisPgApiUrl(`/heroku/resources/${addonName}`), {
-          headers: {Authorization: getBorealisPgAuthHeader(authorization)},
-        }),
-      )
+      if (flags.json) {
+        const response = await HTTP.get<AddonInfo>(
+          getBorealisPgApiUrl(`/heroku/resources/${addonName}`),
+          {headers: {Authorization: getBorealisPgAuthHeader(authorization)}},
+        )
 
-      this.printAddonInfo(response.body)
+        this.log(formatJsonResults(response.body))
+      } else {
+        const response = await applyActionSpinner<HTTP<AddonInfo>>(
+          `Fetching information about add-on ${color.addon(addonName)}`,
+          HTTP.get(getBorealisPgApiUrl(`/heroku/resources/${addonName}`), {
+            headers: {Authorization: getBorealisPgAuthHeader(authorization)},
+          }),
+        )
+
+        this.printAddonInfoTable(response.body)
+      }
     } finally {
       await removeHerokuAuth(this.heroku, authorization.id as string)
     }
   }
 
-  private async printAddonInfo(addonInfo: AddonInfo) {
+  private async printAddonInfoTable(addonInfo: AddonInfo) {
     const region = supportedRegions[addonInfo.region] ?? addonInfo.region
     const dbTenancyType = dbTenancyTypes[addonInfo.dbTenancyType] ?? addonInfo.dbTenancyType
 
