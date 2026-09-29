@@ -1,7 +1,8 @@
 # Change Log
 This project adheres to [Semantic Versioning](http://semver.org/). All notable changes will be documented in this file.
 
-## [Unreleased](https://github.com/Boreal-Info-Sys/borealis-pg-cli/compare/v1.7.1...HEAD)
+## [2.0.0](https://github.com/Boreal-Info-Sys/borealis-pg-cli/compare/v1.7.1...v2.0.0)
+- Dashed borders on result tables (due to switching from oclif's old `ux` module to tty-table)
 - Provide data integration/PostgreSQL extension name hint in removal command prompts
 - Render an add-on's PostgreSQL extension list as a table
 - Introduces a `--json` option for commands that return structured data
