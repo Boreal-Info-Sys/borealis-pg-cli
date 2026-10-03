@@ -1,5 +1,5 @@
+import color from '@heroku/heroku-cli-util/color'
 import {HTTP, HTTPError} from '@heroku/http-call'
-import color from '@heroku-cli/color'
 import {APIClient} from '@heroku-cli/command'
 import {HerokuAPIError} from '@heroku-cli/command/lib/api-client'
 import {AddOn, AddOnAttachment, OAuthAuthorization} from '@heroku-cli/schema'
@@ -7,7 +7,7 @@ import {anyString, anything, deepEqual, instance, mock, verify, when} from 'ts-m
 import {createHerokuAuth, fetchAddonAttachmentInfo, removeHerokuAuth} from './heroku-api'
 import {expect} from './test-utils'
 
-const cliOptionColour = color.bold.italic
+const cliOptionColour = color.code
 
 describe('createHerokuAuth', () => {
   const fakeAuthorization = {id: 'my-authorization', access_token: {token: 'my-auth-token'}}

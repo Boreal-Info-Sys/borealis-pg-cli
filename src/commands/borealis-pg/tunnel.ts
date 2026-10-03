@@ -1,5 +1,5 @@
+import color from '@heroku/heroku-cli-util/color'
 import {HTTP, HTTPError} from '@heroku/http-call'
-import color from '@heroku-cli/color'
 import {Command} from '@heroku-cli/command'
 import {Client as SshClient} from 'ssh2'
 import {applyActionSpinner} from '../../async-actions'
@@ -25,7 +25,7 @@ import {
   tunnelServices,
 } from '../../ssh-tunneling'
 
-const keyboardKeyColour = color.italic
+const keyboardKeyColour = color.code
 
 export default class TunnelCommand extends Command {
   static description = `Establish a secure tunnel to a Borealis Isolated Postgres add-on
