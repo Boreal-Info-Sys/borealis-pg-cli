@@ -34,12 +34,16 @@ import {
   tunnelServices,
 } from '../../ssh-tunneling'
 
-const defaultOutputFormat = 'table'
 const dbCommandOptionName = 'db-cmd'
 const dbCommandFileOptionName = 'db-cmd-file'
 const outputFormatOptionName = 'format'
 const personalUserOptionName = 'personal-user'
 const shellCommandOptionName = 'shell-cmd'
+
+const defaultOutputFormat = 'table'
+const csvOutputFormat = 'csv'
+const jsonOutputFormat = 'json'
+const yamlOutputFormat = 'yaml'
 
 const cliCmdColour = consoleColours.cliCmdName
 const envVarColour = color.bold
@@ -112,7 +116,7 @@ like pgAdmin).`
       default: defaultOutputFormat,
       description: 'output format for database command results',
       exclusive: [jsonOptionName, shellCommandOptionName],
-      options: [defaultOutputFormat, 'csv', 'json', 'yaml'],
+      options: [defaultOutputFormat, csvOutputFormat, jsonOutputFormat, yamlOutputFormat],
     }),
     [personalUserOptionName]: flags.boolean({
       char: 'u',
@@ -153,7 +157,7 @@ like pgAdmin).`
 
     /* istanbul ignore next */
     const normalizedOutputFormat: string =
-      (flags.json ? 'json' : flags.format) || defaultOutputFormat
+      (flags.json ? jsonOutputFormat : flags.format) || defaultOutputFormat
 
     const attachmentInfo = await fetchAddonAttachmentInfo(
       this.heroku,
@@ -174,7 +178,10 @@ like pgAdmin).`
     const fullConnInfo = {ssh: sshConnInfo, db: dbConnInfo, localPgHost, localPgPort: flags.port}
 
     if (dbCommand) {
-      console.warn('Executing database command...')
+      if (normalizedOutputFormat === defaultOutputFormat) {
+        console.warn('Executing database command...')
+      }
+
       this.executeDbCommand(fullConnInfo, dbCommand, normalizedOutputFormat)
     } else {
       console.warn('Executing shell command...')
@@ -325,11 +332,11 @@ like pgAdmin).`
             const resultInstance = Array.isArray(results) ? results[results.length - 1] : results
 
             if (resultInstance.fields && resultInstance.fields.length > 0) {
-              if (outputFormat == 'csv') {
+              if (outputFormat == csvOutputFormat) {
                 this.log(await renderResultsCsv(resultInstance))
-              } else if (outputFormat === 'json') {
+              } else if (outputFormat === jsonOutputFormat) {
                 this.log(renderResultsJson(resultInstance))
-              } else if (outputFormat == 'yaml') {
+              } else if (outputFormat == yamlOutputFormat) {
                 this.log(renderResultsYaml(resultInstance))
               } else {
                 this.log(renderResultsTable(resultInstance))

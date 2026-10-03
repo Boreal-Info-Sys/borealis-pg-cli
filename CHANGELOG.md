@@ -1,6 +1,9 @@
 # Change Log
 This project adheres to [Semantic Versioning](http://semver.org/). All notable changes will be documented in this file.
 
+## [Unreleased](https://github.com/Boreal-Info-Sys/borealis-pg-cli/compare/v2.0.0...HEAD)
+- Fixed: Do not output an execution-in-progress message when `borealis-pg:run` is executed with a machine-readable output format
+
 ## [2.0.0](https://github.com/Boreal-Info-Sys/borealis-pg-cli/compare/v1.7.1...v2.0.0)
 - Dashed borders on result tables (due to switching from oclif's old `ux` module to tty-table)
 - Provide data integration/PostgreSQL extension name hint in removal command prompts
