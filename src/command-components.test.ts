@@ -1,4 +1,4 @@
-import color from '@heroku-cli/color'
+import color from '@heroku/heroku-cli-util/color'
 import {AddOnAttachment} from '@heroku-cli/schema'
 import {anyString, anything, instance, mock, verify, when} from 'ts-mockito'
 import {
@@ -10,7 +10,7 @@ import {
 } from './command-components'
 import {expect} from './test-utils'
 
-describe('generateEntitySummary', () => {
+describe('generateItemSummary', () => {
   it('produces a summary table', () => {
     const result = generateItemSummary({
       data: [
@@ -54,7 +54,7 @@ describe('formatCliOptionName', () => {
 
     const result = formatCliOptionName(cliOptionName)
 
-    expect(result).to.equal(color.bold.italic(`--${cliOptionName}`))
+    expect(result).to.equal(color.code(`--${cliOptionName}`))
   })
 })
 

@@ -1,5 +1,5 @@
+import color from '@heroku/heroku-cli-util/color'
 import {HTTP, HTTPError} from '@heroku/http-call'
-import color from '@heroku-cli/color'
 import {Command} from '@heroku-cli/command'
 import {OAuthAuthorization} from '@heroku-cli/schema'
 import {applyActionSpinner} from '../../../async-actions'

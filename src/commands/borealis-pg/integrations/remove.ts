@@ -1,5 +1,5 @@
+import color from '@heroku/heroku-cli-util/color'
 import {HTTP, HTTPError} from '@heroku/http-call'
-import color from '@heroku-cli/color'
 import {Command, flags} from '@heroku-cli/command'
 import inquirer from 'inquirer'
 import {applyActionSpinner} from '../../../async-actions'
@@ -12,7 +12,7 @@ import {
 } from '../../../command-components'
 import {createHerokuAuth, fetchAddonAttachmentInfo, removeHerokuAuth} from '../../../heroku-api'
 
-const dataIntegrationNameColour = color.grey
+const dataIntegrationNameColour = color.bold
 
 const confirmOptionName = 'confirm'
 const dataIntegrationOptionName = 'name'

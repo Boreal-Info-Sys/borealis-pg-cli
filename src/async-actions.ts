@@ -1,4 +1,4 @@
-import color from '@heroku-cli/color'
+import color from '@heroku/heroku-cli-util/color'
 import {ux} from '@oclif/core'
 
 /**
@@ -17,7 +17,7 @@ export async function applyActionSpinner<T>(message: string, action: Promise<T>)
 
     return result
   } catch (error) {
-    ux.action.stop(color.bold.redBright('!'))
+    ux.action.stop(color.failure('!'))
 
     throw error
   }

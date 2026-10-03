@@ -1,4 +1,4 @@
-import color from '@heroku-cli/color'
+import color from '@heroku/heroku-cli-util/color'
 import {flags} from '@heroku-cli/command'
 import {AddOnAttachment} from '@heroku-cli/schema'
 import {Args} from '@oclif/core'
@@ -26,8 +26,8 @@ export const borealisPgApiBaseUrl =
   process.env.BOREALIS_PG_API_BASE_URL || 'https://pg-heroku-addon-api.borealis-data.com'
 
 export const consoleColours = {
-  cliCmdName: color.italic,
-  cliOption: color.bold.italic,
+  cliCmdName: color.code,
+  cliOption: color.code,
   pgExtension: color.green,
 }
 

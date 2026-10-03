@@ -1,5 +1,5 @@
+import color from '@heroku/heroku-cli-util/color'
 import {HTTPError} from '@heroku/http-call'
-import color from '@heroku-cli/color'
 import {APIClient} from '@heroku-cli/command'
 import {AddOn, AddOnAttachment, OAuthAuthorization} from '@heroku-cli/schema'
 import {

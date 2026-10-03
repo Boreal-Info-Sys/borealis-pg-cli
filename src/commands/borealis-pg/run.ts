@@ -1,5 +1,5 @@
+import color from '@heroku/heroku-cli-util/color'
 import {HTTP, HTTPError} from '@heroku/http-call'
-import color from '@heroku-cli/color'
 import {Command, flags} from '@heroku-cli/command'
 import {ConfigVars} from '@heroku-cli/schema'
 import {stringify as csvStringify} from 'csv-stringify'
@@ -47,6 +47,7 @@ const yamlOutputFormat = 'yaml'
 
 const cliCmdColour = consoleColours.cliCmdName
 const envVarColour = color.bold
+const configVarColour = color.name
 
 export default class RunCommand extends Command {
   static description = `Run a command with a secure tunnel to a Borealis Isolated Postgres add-on
@@ -282,8 +283,7 @@ like pgAdmin).`
       }
     } else {
       this.error(
-        `The ${color.configVar(appConnInfoConfigVarName)} config variable value for ` +
-          `${color.app(appName)} is invalid. ` +
+        `The ${configVarColour(appConnInfoConfigVarName)} config variable value for ${color.app(appName)} is invalid. ` +
           'This may indicate that the config variable was manually edited.',
       )
     }
