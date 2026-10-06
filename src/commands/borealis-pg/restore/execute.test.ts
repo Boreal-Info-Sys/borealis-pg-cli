@@ -200,7 +200,6 @@ describe('database restore execution command', () => {
       message: `Add-on ${fakeNewAddonName} is available`,
       sound: true,
       title: 'borealis-pg-cli',
-      timeout: false,
     })
 
     expect(nock.pendingMocks()).to.be.empty
@@ -277,7 +276,6 @@ describe('database restore execution command', () => {
       message: `Add-on ${fakeNewAddonName} is available`,
       sound: true,
       title: 'borealis-pg-cli',
-      timeout: false,
     })
 
     expect(nock.pendingMocks()).to.be.empty
@@ -371,7 +369,6 @@ describe('database restore execution command', () => {
       message: `Add-on ${fakeNewAddonName} was cancelled`,
       sound: true,
       title: 'borealis-pg-cli',
-      timeout: false,
     })
 
     expect(nock.pendingMocks()).to.be.empty

@@ -144,7 +144,6 @@ latest restorable times of an add-on.`
         message: `Add-on ${newAddonName} is available`,
         sound: true,
         title: 'borealis-pg-cli',
-        timeout: false,
       })
     } else {
       console.warn(
@@ -218,7 +217,6 @@ latest restorable times of an add-on.`
           message: `Add-on ${addonName} was cancelled`,
           sound: true,
           title: 'borealis-pg-cli',
-          timeout: false,
         })
         this.error('Provisioning cancelled. The new add-on was deprovisioned.')
       } else {
