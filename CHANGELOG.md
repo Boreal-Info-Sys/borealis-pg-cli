@@ -1,7 +1,7 @@
 # Change Log
 This project adheres to [Semantic Versioning](http://semver.org/). All notable changes will be documented in this file.
 
-## [Unreleased](https://github.com/Boreal-Info-Sys/borealis-pg-cli/compare/v2.0.0...HEAD)
+## [2.1.0](https://github.com/Boreal-Info-Sys/borealis-pg-cli/compare/v2.0.0...v2.1.0)
 - Fixed: Do not output an execution-in-progress message when `borealis-pg:run` is executed with a machine-readable output format
 - Incorporate modern Heroku CLI colours
 - Fixed: Always show a notification if the destination add-on is destroyed while waiting for `borealis-pg:restore:execute`
