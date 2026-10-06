@@ -144,7 +144,6 @@ latest restorable times of an add-on.`
         message: `Add-on ${newAddonName} is available`,
         sound: true,
         title: 'borealis-pg-cli',
-        timeout: false,
       })
     } else {
       console.warn(
@@ -176,9 +175,23 @@ latest restorable times of an add-on.`
         setTimeout(resolve, herokuApiOptions.addonStatePollIntervalMs)
       })
 
-      const herokuAddon = await this.fetchHerokuAddonInfo(addonName)
+      try {
+        const herokuAddon = await this.fetchHerokuAddonInfo(addonName)
 
-      herokuAddonStatus = herokuAddon.state as string
+        herokuAddonStatus = herokuAddon.state as string
+      } catch (error) {
+        const httpError = error as HTTPError
+        if (httpError?.http?.statusCode === 404) {
+          componentServices.notifier.notify({
+            message: `Add-on ${addonName} was cancelled`,
+            sound: true,
+            title: 'borealis-pg-cli',
+          })
+          this.error('Provisioning cancelled. The new add-on was deprovisioned.')
+        } else {
+          throw error
+        }
+      }
     }
 
     // If a restore/clone takes long enough, the add-on service will indicate to the Heroku API that
@@ -213,12 +226,11 @@ latest restorable times of an add-on.`
       return borealisAddonResponse.body.status
     } catch (error) {
       const httpError = error as HTTPError
-      if (httpError.statusCode === 404) {
+      if (httpError.http.statusCode === 404) {
         componentServices.notifier.notify({
           message: `Add-on ${addonName} was cancelled`,
           sound: true,
           title: 'borealis-pg-cli',
-          timeout: false,
         })
         this.error('Provisioning cancelled. The new add-on was deprovisioned.')
       } else {

@@ -6,6 +6,7 @@
   "bugs": "https://github.com/Boreal-Info-Sys/borealis-pg-cli/issues",
   "dependencies": {
     "@heroku-cli/command": "^13.2.2",
+    "@heroku-cli/notifications": "^1.2.9",
     "@heroku/heroku-cli-util": "^10.10.1",
     "@heroku/http-call": "^5.6.2",
     "@oclif/core": "^4.14.0",
@@ -14,7 +15,6 @@
     "inquirer": "^14.2.2",
     "js-yaml": "^5.4.2",
     "luxon": "^3.7.2",
-    "node-notifier": "^10.0.1",
     "pg": "^8.23.0",
     "ssh2": "^1.17.0",
     "tty-table": "^7.0.1"
@@ -29,7 +29,6 @@
     "@types/luxon": "3.7.5",
     "@types/mocha": "10.0.10",
     "@types/node": "22.20.2",
-    "@types/node-notifier": "8.0.5",
     "@types/pg": "8.23.1",
     "@types/ssh2": "1.15.6",
     "chai": "6.2.2",
@@ -48,11 +47,6 @@
     "ts-node": "10.9.2",
     "typescript": "6.0.3",
     "typescript-eslint": "8.70.1"
-  },
-  "overrides": {
-    "node-notifier": {
-      "uuid": "^11.1.1"
-    }
   },
   "allowScripts": {
     "cpu-features": false,

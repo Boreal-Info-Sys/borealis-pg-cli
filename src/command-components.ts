@@ -1,10 +1,10 @@
 import color from '@heroku/heroku-cli-util/color'
 import {flags} from '@heroku-cli/command'
+import {notify} from '@heroku-cli/notifications'
 import {AddOnAttachment} from '@heroku-cli/schema'
 import {Args} from '@oclif/core'
 import dotenv from 'dotenv'
 import dns from 'node:dns/promises'
-import notifier from 'node-notifier'
 import path from 'path'
 import {Header} from 'tty-table'
 
@@ -86,7 +86,7 @@ export const writeAccessOptionName = 'write-access'
  * Since oclif doesn't support dependency injection for commands, this is the next best thing.
  */
 export const componentServices = {
-  notifier: {notify: notifier.notify},
+  notifier: {notify},
 }
 
 /**
