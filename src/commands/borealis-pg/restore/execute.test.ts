@@ -315,7 +315,95 @@ describe('database restore execution command', () => {
     expect(nock.pendingMocks()).to.be.empty
   })
 
-  it('exits with an error when the add-on is deprovisioned while waiting for it', async () => {
+  it('exits with an error when the add-on is deprovisioned while waiting for Heroku', async () => {
+    nock(herokuApiBaseUrl)
+      .post(`/apps/${fakeDestinationHerokuAppName}/addons`, {
+        config: {'restore-to-time': fakeRestoreToTime, 'restore-token': fakeDbRestoreToken},
+        plan: `borealis-pg:${fakeNewPlanName}`,
+      })
+      .reply(201, {name: fakeNewAddonName})
+      .get(`/addons/${fakeNewAddonName}`)
+      .reply(
+        // Response when the destination Heroku add-on is destroyed
+        404,
+        {
+          app: {id: fakeDestinationHerokuAppId, name: fakeDestinationHerokuAppName},
+          plan: {id: fakeNewPlanId, name: fakeNewPlanName},
+          state: 'provisioned',
+        },
+      )
+
+    nock(borealisPgApiBaseUrl, {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}})
+      .post(`/heroku/resources/${fakeSourceAddonName}/restore-tokens`)
+      .reply(201, {restoreToken: fakeDbRestoreToken})
+
+    const {stdout, error} = await runCommand([
+      'borealis-pg:restore:execute',
+      '-a',
+      fakeSourceHerokuAppName,
+      '-d',
+      fakeDestinationHerokuAppName,
+      '-n',
+      fakeNewPlanName,
+      '-t',
+      fakeRestoreToTime,
+      '--wait',
+    ])
+
+    expect(stdout).to.equal('')
+    expect(error?.message).to.contain('Provisioning cancelled. The new add-on was deprovisioned.')
+
+    verify(mockNotifierType.notify(anything())).once()
+    const [notification] = capture(mockNotifierType.notify).last()
+    expect(notification).to.deep.equal({
+      message: `Add-on ${fakeNewAddonName} was cancelled`,
+      sound: true,
+      title: 'borealis-pg-cli',
+    })
+
+    expect(nock.pendingMocks()).to.be.empty
+  })
+
+  it('exits with an error when there is an unexpected error while waiting for Heroku', async () => {
+    nock(herokuApiBaseUrl)
+      .post(`/apps/${fakeDestinationHerokuAppName}/addons`, {
+        config: {'restore-to-time': fakeRestoreToTime, 'restore-token': fakeDbRestoreToken},
+        plan: `borealis-pg:${fakeNewPlanName}`,
+      })
+      .reply(201, {name: fakeNewAddonName})
+      .get(`/addons/${fakeNewAddonName}`)
+      .reply(503, {
+        app: {id: fakeDestinationHerokuAppId, name: fakeDestinationHerokuAppName},
+        plan: {id: fakeNewPlanId, name: fakeNewPlanName},
+        state: 'provisioned',
+      })
+
+    nock(borealisPgApiBaseUrl, {reqheaders: {authorization: `Bearer ${fakeHerokuAuthToken}`}})
+      .post(`/heroku/resources/${fakeSourceAddonName}/restore-tokens`)
+      .reply(201, {restoreToken: fakeDbRestoreToken})
+
+    const {stdout, error} = await runCommand([
+      'borealis-pg:restore:execute',
+      '-a',
+      fakeSourceHerokuAppName,
+      '-d',
+      fakeDestinationHerokuAppName,
+      '-n',
+      fakeNewPlanName,
+      '-t',
+      fakeRestoreToTime,
+      '--wait',
+    ])
+
+    expect(stdout).to.equal('')
+    expect(error?.message).to.contain('503')
+
+    verify(mockNotifierType.notify(anything())).never()
+
+    expect(nock.pendingMocks()).to.be.empty
+  })
+
+  it('exits with an error when the add-on is deprovisioned while waiting for Borealis', async () => {
     nock(herokuApiBaseUrl)
       .post(`/apps/${fakeDestinationHerokuAppName}/addons`, {
         config: {'restore-to-time': fakeRestoreToTime, 'restore-token': fakeDbRestoreToken},
