@@ -20,6 +20,12 @@ First, ensure the [Heroku CLI](https://devcenter.heroku.com/articles/heroku-cli)
 $ heroku plugins:install borealis-pg-cli
 ```
 
+For added convenience, execute this command and then follow the instructions it outputs to enable [autocomplete](https://devcenter.heroku.com/articles/heroku-cli-autocomplete#installing-autocomplete) for all installed Heroku CLI commands:
+
+```sh-session
+$ heroku autocomplete
+```
+
 # Commands
 <!-- commands -->
 * [`heroku borealis-pg`](#heroku-borealis-pg)
