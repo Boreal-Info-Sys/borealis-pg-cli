@@ -10,6 +10,9 @@ on:
 
   workflow_dispatch: # Allows the workflow to be triggered manually
 
+permissions:
+  contents: read
+
 env:
   HEROKU_NODE_VERSION: 22 # Chosen to match what is used internally by the Heroku CLI
 
