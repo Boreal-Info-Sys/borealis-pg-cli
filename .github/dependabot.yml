@@ -8,10 +8,9 @@ updates:
     cooldown:
       default-days: 10
     groups:
-      production-dependencies:
-        dependency-type: production
-      development-dependencies:
-        dependency-type: development
+      node:
+        patterns:
+          - '*'
     versioning-strategy: increase
 
   # Actions used in GitHub Workflows
