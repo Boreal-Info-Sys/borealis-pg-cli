@@ -7,7 +7,7 @@
   "dependencies": {
     "@heroku-cli/command": "^13.2.6",
     "@heroku-cli/notifications": "^1.2.10",
-    "@heroku/heroku-cli-util": "^10.10.2",
+    "@heroku/heroku-cli-util": "^10.10.3",
     "@heroku/http-call": "^5.6.3",
     "@oclif/core": "^4.14.0",
     "csv-stringify": "^6.9.0",
