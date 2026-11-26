@@ -17,7 +17,7 @@
     "luxon": "^3.7.2",
     "pg": "^8.23.1",
     "ssh2": "^1.17.0",
-    "tty-table": "^7.1.0"
+    "tty-table": "^7.2.2"
   },
   "devDependencies": {
     "@achingbrain/chai-string": "2.0.1",
@@ -46,7 +46,7 @@
     "ts-mockito": "2.6.1",
     "ts-node": "10.9.2",
     "typescript": "6.0.3",
-    "typescript-eslint": "8.72.2"
+    "typescript-eslint": "8.73.0"
   },
   "allowScripts": {
     "cpu-features": false,
